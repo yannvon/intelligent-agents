@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="repast">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/repast.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

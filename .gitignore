@@ -24,3 +24,5 @@ hs_err_pid*
 
 #IDE metadata
 **.idea/**
+
+rabbits/.idea/*
