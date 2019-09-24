@@ -9,6 +9,12 @@ import uchicago.src.sim.gui.SimGraphics;
  */
 
 public class RabbitsGrassSimulationAgent implements Drawable {
+	
+	private static final int ENERGY=20;
+	
+	private int x,y;
+	
+	private int energy=ENERGY;
 
 	public void draw(SimGraphics arg0) {
 		// TODO Auto-generated method stub
@@ -16,13 +22,11 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	}
 
 	public int getX() {
-		// TODO Auto-generated method stub
-		return 0;
+		return x;
 	}
 
 	public int getY() {
-		// TODO Auto-generated method stub
-		return 0;
+		return y;
 	}
 
 }
