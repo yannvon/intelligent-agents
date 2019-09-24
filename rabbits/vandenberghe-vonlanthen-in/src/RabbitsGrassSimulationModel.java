@@ -1,10 +1,12 @@
 import java.awt.Color;
+import java.util.ArrayList;
 
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.engine.SimModelImpl;
 import uchicago.src.sim.gui.ColorMap;
 import uchicago.src.sim.gui.DisplaySurface;
+import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.gui.Value2DDisplay;
 
 /**
@@ -23,23 +25,27 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 	private DisplaySurface displaySurf;
 
+	private ArrayList<RabbitsGrassSimulationAgent> agents;
+
 	// DEFAULT VALUES
 	private static final int GRID_SIZE = 20, NUM_RABBITS = 5, NUM_GRASS = 10, GROW_RATE = 5, BIRTH_THRESHOLD = 10;
 
 	/*
-	 *  PARAMETERS
+	 * PARAMETERS
 	 */
-	
-	//COMPULSORY DO NOT TOUCH
+
+	// COMPULSORY DO NOT TOUCH
 	private int gridSize = GRID_SIZE, numInitRabbits = NUM_RABBITS, numInitGrass = NUM_GRASS,
 			grassGrowthRate = GROW_RATE, birthThreshold = BIRTH_THRESHOLD;
-	
-	//ADDED
-	private int minEnergy=10, maxEnergy=30;
 
-	
-	/** MAIN: run rabbit grass simulation
-	 * @param args args[0] parameters file, args[1] true if batch mode
+	// ADDED
+	private int minEnergy = 10, maxEnergy = 30;
+
+	/**
+	 * MAIN: run rabbit grass simulation
+	 * 
+	 * @param args
+	 *            args[0] parameters file, args[1] true if batch mode
 	 */
 	public static void main(String[] args) {
 
@@ -60,6 +66,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 		space = null;
 
+		agents = new ArrayList<>();
+
 		if (displaySurf != null) {
 			displaySurf.dispose();
 		}
@@ -75,41 +83,60 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		buildModel();
 		buildSchedule();
 		buildDisplay();
-		
+
 		displaySurf.display();
 
 	}
 
 	public void buildModel() {
 		space = new RabbitsGrassSimulationSpace(gridSize);
+		
+		for(int i = 0;i<numInitRabbits;i++) {
+			addNewAgent();
+		}
+		
+		
+
+	    for(RabbitsGrassSimulationAgent a : agents){
+	      a.report();
+	    }
 	}
 
 	public void buildSchedule() {
 	}
 
 	public void buildDisplay() {
-		
+
 		ColorMap map = new ColorMap();
 
-	    map.mapColor(0, Color.white);
-	    map.mapColor(1, Color.green);
-	    map.mapColor(2, Color.red);
+		map.mapColor(0, Color.white);
+		map.mapColor(1, Color.green);
+		map.mapColor(2, Color.red);
 
-	    Value2DDisplay displayColor =
-	        new Value2DDisplay(space.getGrid(), map);
+		Value2DDisplay displayColor = new Value2DDisplay(space.getGrassSpace(), map);
 
-	    displaySurf.addDisplayable(displayColor, "Color");
+		displaySurf.addDisplayable(displayColor, "Color");
+		
+	    Object2DDisplay displayAgents = new Object2DDisplay(space.getAgentSpace());
+	    displayAgents.setObjectList(agents);
+	    displaySurf.addDisplayable(displayAgents, "Agents");
+	}
+
+	private void addNewAgent() {
+		RabbitsGrassSimulationAgent a = new RabbitsGrassSimulationAgent(minEnergy, maxEnergy);
+		agents.add(a);
+		space.addAgent(a);
 	}
 
 	public String[] getInitParam() {
 		// Parameters to be set by users via the Repast UI slider bar
 		// Do "not" modify the parameters names provided in the skeleton code, you can
 		// add more if you want
-		String[] params = { "GridSize", "NumInitRabbits", "NumInitGrass", "GrassGrowthRate", "BirthThreshold", 
+		String[] params = { "GridSize", "NumInitRabbits", "NumInitGrass", "GrassGrowthRate", "BirthThreshold",
 				/*
 				 * ADDED
 				 */
-				"MaxEnergy","MinEnergy" };
+				"MaxEnergy", "MinEnergy" };
 		return params;
 	}
 
@@ -204,7 +231,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	/**
-	 * @param maxEnergy the maxEnergy to set
+	 * @param maxEnergy
+	 *            the maxEnergy to set
 	 */
 	public void setMaxEnergy(int maxEnergy) {
 		this.maxEnergy = maxEnergy;
@@ -218,7 +246,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	/**
-	 * @param minEnergy the minEnergy to set
+	 * @param minEnergy
+	 *            the minEnergy to set
 	 */
 	public void setMinEnergy(int minEnergy) {
 		this.minEnergy = minEnergy;
