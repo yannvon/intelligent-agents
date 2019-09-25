@@ -19,6 +19,9 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	private static Image DEAD_IM;
 
 	private static final int ENERGY = 20;
+	
+	private RabbitsGrassSimulationSpace space;
+
 
 	private int x, y;
 
@@ -58,6 +61,15 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		}
 
 	}
+	/**
+	 * Execute a step of the agent
+	 */
+	public void step() {
+		
+		energy--;
+		
+
+	}
 
 	public int getX() {
 		return x;
@@ -87,13 +99,10 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		return energy;
 	}
 
-	/**
-	 * Execute a step of the agent
-	 */
-	public void step() {
-
-		energy--;
-
+	
+	
+	public void setSpace(RabbitsGrassSimulationSpace space) {
+		this.space = space;
 	}
 
 }

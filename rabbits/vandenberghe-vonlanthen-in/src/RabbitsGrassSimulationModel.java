@@ -41,7 +41,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			grassGrowthRate = GROW_RATE, birthThreshold = BIRTH_THRESHOLD;
 
 	// ADDED
-	private int minEnergy = 10, maxEnergy = 30;
+	private int minEnergy = 10, maxEnergy = 30, maxGrassCal=10, minGrassCal=5;
+
+
 
 	/**
 	 * MAIN: run rabbit grass simulation
@@ -93,7 +95,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	public void buildModel() {
-		space = new RabbitsGrassSimulationSpace(gridSize);
+		space = new RabbitsGrassSimulationSpace(gridSize,numInitGrass,minGrassCal,maxGrassCal);
 		
 		for(int i = 0;i<numInitRabbits;i++) {
 			addNewAgent();
@@ -149,15 +151,10 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	 */
 	public void buildDisplay() {
 
-		ColorMap map = new ColorMap();
 
-		map.mapColor(0, Color.white);
-		map.mapColor(1, Color.green);
-		map.mapColor(2, Color.red);
+		Object2DDisplay displayColor = new Object2DDisplay(space.getGrassSpace());
 
-		Value2DDisplay displayColor = new Value2DDisplay(space.getGrassSpace(), map);
-
-		displaySurf.addDisplayable(displayColor, "Color");
+		displaySurf.addDisplayable(displayColor, "Field");
 		
 	    Object2DDisplay displayAgents = new Object2DDisplay(space.getAgentSpace());
 	    displayAgents.setObjectList(agents);
@@ -178,7 +175,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 				/*
 				 * ADDED
 				 */
-				"MaxEnergy", "MinEnergy" };
+				"MaxEnergy", "MinEnergy","MaxGrassCal","MinGrassCal" };
 		return params;
 	}
 
@@ -293,5 +290,21 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	 */
 	public void setMinEnergy(int minEnergy) {
 		this.minEnergy = minEnergy;
+	}
+	
+	public int getMaxGrassCal() {
+		return maxGrassCal;
+	}
+
+	public void setMaxGrassCal(int maxGrassCal) {
+		this.maxGrassCal = maxGrassCal;
+	}
+
+	public int getMinGrassCal() {
+		return minGrassCal;
+	}
+
+	public void setMinGrassCal(int minGrassCal) {
+		this.minGrassCal = minGrassCal;
 	}
 }
