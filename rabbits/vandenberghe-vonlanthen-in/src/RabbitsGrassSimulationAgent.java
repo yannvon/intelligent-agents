@@ -14,27 +14,28 @@ import uchicago.src.sim.gui.SimGraphics;
  */
 
 public class RabbitsGrassSimulationAgent implements Drawable {
-	
-	private static  Image[] IM;
-	
+
+	private static Image[] IM;
+	private static Image DEAD_IM;
 
 	private static final int ENERGY = 20;
 
 	private int x, y;
-	
+
 	private int clock;
 
 	private int energy = ENERGY;
-	
+
 	private static int idNumber = 0;
 	private final int id;
 
 	public RabbitsGrassSimulationAgent(int minEnergy, int maxEnergy) {
-		if(IM == null) {
+		if (IM == null) {
 			try {
+				DEAD_IM = ImageIO.read(new File("images/bunnyDead.png"));
 				IM = new Image[6];
-				for(int i = 0; i<6; i++) {
-					IM[i] = ImageIO.read(new File("images/bunny"+i+".png"));
+				for (int i = 0; i < 6; i++) {
+					IM[i] = ImageIO.read(new File("images/bunny" + i + ".png"));
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -43,14 +44,18 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		}
 		x = -1;
 		y = -1;
-		clock=0;
+		clock = 0;
 		energy = (int) ((Math.random() * (maxEnergy - minEnergy)) + minEnergy);
 		id = idNumber++;
 	}
 
 	public void draw(SimGraphics arg0) {
-		//arg0.drawFastRoundRect(Color.green);
-		arg0.drawImageToFit(IM[(clock++/5)%6]);
+		// arg0.drawFastRoundRect(Color.green);
+		if (energy <= 0) {
+			arg0.drawImageToFit(DEAD_IM);
+		} else {
+			arg0.drawImageToFit(IM[(clock++ / 5) % 6]);
+		}
 
 	}
 
@@ -66,14 +71,10 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		x = newX;
 		y = newY;
 	}
-	
-	public void report(){
-	    System.out.println(getID() +
-	                       " at " +
-	                       x + ", " + y +
-	                       " has " +
-	                       getEnergy() + " energy.");
-	  }
+
+	public void report() {
+		System.out.println(getID() + " at " + x + ", " + y + " has " + getEnergy() + " energy.");
+	}
 
 	public String getID() {
 		return "Rabbit " + id;
@@ -90,9 +91,9 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	 * Execute a step of the agent
 	 */
 	public void step() {
-		
+
 		energy--;
-		
+
 	}
 
 }
