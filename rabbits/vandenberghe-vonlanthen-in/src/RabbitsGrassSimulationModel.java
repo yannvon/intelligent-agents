@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.util.ArrayList;
 
+import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.engine.SimModelImpl;
@@ -8,6 +9,7 @@ import uchicago.src.sim.gui.ColorMap;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.gui.Value2DDisplay;
+import uchicago.src.sim.util.SimUtilities;
 
 /**
  * Class that implements the simulation model for the rabbits grass simulation.
@@ -25,7 +27,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 	private DisplaySurface displaySurf;
 
-	private ArrayList<RabbitsGrassSimulationAgent> agents;
+	private ArrayList<RabbitsGrassSimulationAgent> agents,toRemove;
 
 	// DEFAULT VALUES
 	private static final int GRID_SIZE = 20, NUM_RABBITS = 5, NUM_GRASS = 10, GROW_RATE = 5, BIRTH_THRESHOLD = 10;
@@ -65,8 +67,10 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		System.out.println("Running setup");
 
 		space = null;
+		schedule = new Schedule(1);
 
 		agents = new ArrayList<>();
+		toRemove = new ArrayList<>();
 
 		if (displaySurf != null) {
 			displaySurf.dispose();
@@ -102,9 +106,47 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	    }
 	}
 
+	/**
+	 * Build Schedule
+	 */
 	public void buildSchedule() {
+		
+		/**
+		 *	Action at each step
+		 */
+		class RabbitGrassStep extends BasicAction {
+		      public void execute() {
+		    	  
+		    	  // Remove dead rabbits
+		    	agents.removeAll(toRemove);
+		    	for(RabbitsGrassSimulationAgent deadAg : toRemove) {
+		    		space.removeAgent(deadAg.getX(), deadAg.getY());
+		    	}
+		    	toRemove.clear();
+		    	  
+		    	//execute step for each rabbit
+		        SimUtilities.shuffle(agents);
+		        for(RabbitsGrassSimulationAgent ag : agents){
+		          ag.step();
+		          if(ag.getEnergy()<=0) {
+		        	  toRemove.add(ag);
+		          }
+		        }
+		        
+		        
+		        
+		        displaySurf.updateDisplay();
+		        
+		        
+		      }
+		    }
+
+		    schedule.scheduleActionBeginning(0, new RabbitGrassStep());
 	}
 
+	/**
+	 *  Display
+	 */
 	public void buildDisplay() {
 
 		ColorMap map = new ColorMap();

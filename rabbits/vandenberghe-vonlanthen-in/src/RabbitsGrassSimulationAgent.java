@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
@@ -16,12 +15,14 @@ import uchicago.src.sim.gui.SimGraphics;
 
 public class RabbitsGrassSimulationAgent implements Drawable {
 	
-	private static  Image IM;
+	private static  Image[] IM;
 	
 
 	private static final int ENERGY = 20;
 
 	private int x, y;
+	
+	private int clock;
 
 	private int energy = ENERGY;
 	
@@ -31,7 +32,10 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	public RabbitsGrassSimulationAgent(int minEnergy, int maxEnergy) {
 		if(IM == null) {
 			try {
-				IM = ImageIO.read(new File("images/bunny.jpg"));
+				IM = new Image[6];
+				for(int i = 0; i<6; i++) {
+					IM[i] = ImageIO.read(new File("images/bunny"+i+".png"));
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -39,13 +43,14 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		}
 		x = -1;
 		y = -1;
+		clock=0;
 		energy = (int) ((Math.random() * (maxEnergy - minEnergy)) + minEnergy);
 		id = idNumber++;
 	}
 
 	public void draw(SimGraphics arg0) {
-		arg0.drawFastRoundRect(Color.blue);
-		//arg0.drawImage(IM);
+		//arg0.drawFastRoundRect(Color.green);
+		arg0.drawImageToFit(IM[(clock++/5)%6]);
 
 	}
 
@@ -79,6 +84,15 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	 */
 	public int getEnergy() {
 		return energy;
+	}
+
+	/**
+	 * Execute a step of the agent
+	 */
+	public void step() {
+		
+		energy--;
+		
 	}
 
 }
