@@ -52,6 +52,9 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		x = -1;
 		y = -1;
 		clock = 0;
+		if(minEnergy>maxEnergy) {
+			minEnergy = 1;
+		}
 		energy = (int) ((Math.random() * (maxEnergy - minEnergy)) + minEnergy);
 		id = idNumber++;
 	}

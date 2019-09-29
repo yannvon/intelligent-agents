@@ -16,8 +16,6 @@ import uchicago.src.sim.space.Object2DGrid;
 
 public class RabbitsGrassSimulationSpace {
 
-
-
 	private Object2DGrid grassSpace;
 	private Object2DGrid agentSpace;
 
@@ -40,8 +38,7 @@ public class RabbitsGrassSimulationSpace {
 			success = addGrass();
 		}
 	}
-	
-	
+
 	/*
 	 * ============================================================================
 	 * ----------------------- GRASS RELATED METHODS ------------------------------
@@ -54,7 +51,7 @@ public class RabbitsGrassSimulationSpace {
 	}
 
 	public boolean hasCellGrass(int x, int y) {
-		return ((Cell) agentSpace.getObjectAt(x, y)).type == Cell.Type.GRASS;
+		return ((Cell) grassSpace.getObjectAt(x, y)).type == Cell.Type.GRASS;
 	}
 
 	public boolean addGrass() {
@@ -80,6 +77,19 @@ public class RabbitsGrassSimulationSpace {
 	public int eatGrass(int x, int y) {
 		Cell cell = (Cell) grassSpace.getObjectAt(x, y);
 		return cell.cutGrass();
+	}
+
+	public int countGrass() {
+		int c = 0;
+		for (int i = 0; i < grassSpace.getSizeX(); i++) {
+			for (int j = 0; j < grassSpace.getSizeY(); j++) {
+				if(hasCellGrass(i, j)) {
+					c++;
+				}
+
+			}
+		}
+		return c;
 	}
 
 	/*
@@ -127,32 +137,31 @@ public class RabbitsGrassSimulationSpace {
 	}
 
 	public boolean moveIfCan(int x, int y, Move direction) {
-		if(isCellOccupied(x, y)) {
-			int nextX = x,nextY = y;
+		if (isCellOccupied(x, y)) {
+			int nextX = x, nextY = y;
 			switch (direction) {
 			case UP:
-				nextY= (y+1 +agentSpace.getSizeY()) % agentSpace.getSizeY();
+				nextY = (y + 1 + agentSpace.getSizeY()) % agentSpace.getSizeY();
 				break;
 			case DOWN:
-				nextY=(agentSpace.getSizeY() +y-1) % agentSpace.getSizeY();
+				nextY = (agentSpace.getSizeY() + y - 1) % agentSpace.getSizeY();
 				break;
 			case LEFT:
-				nextX=(agentSpace.getSizeX() +x-1) % agentSpace.getSizeX();
+				nextX = (agentSpace.getSizeX() + x - 1) % agentSpace.getSizeX();
 				break;
 			case RIGHT:
-				nextX=(agentSpace.getSizeX() +x+1) % agentSpace.getSizeX();
+				nextX = (agentSpace.getSizeX() + x + 1) % agentSpace.getSizeX();
 				break;
 			}
-			
-			if(!isCellOccupied(nextX,nextY)) {
+
+			if (!isCellOccupied(nextX, nextY)) {
 				RabbitsGrassSimulationAgent ag = (RabbitsGrassSimulationAgent) agentSpace.getObjectAt(x, y);
 				agentSpace.putObjectAt(x, y, null);
-				agentSpace.putObjectAt(nextX,nextY, ag );
+				agentSpace.putObjectAt(nextX, nextY, ag);
 				ag.setXY(nextX, nextY);
 				return true;
 			}
-			
-			
+
 		}
 
 		return false;
@@ -186,6 +195,9 @@ public class RabbitsGrassSimulationSpace {
 		}
 
 		public void growGrass(int minCalories, int maxCalories) {
+			if (minCalories > maxCalories) {
+				minCalories = 1;
+			}
 			calories = (int) ((Math.random() * (maxCalories - minCalories)) + minCalories);
 			type = Type.GRASS;
 		}
