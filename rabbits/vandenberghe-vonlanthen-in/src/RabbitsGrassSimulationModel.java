@@ -1,14 +1,11 @@
-import java.awt.Color;
 import java.util.ArrayList;
 
 import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.engine.SimModelImpl;
-import uchicago.src.sim.gui.ColorMap;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
-import uchicago.src.sim.gui.Value2DDisplay;
 import uchicago.src.sim.util.SimUtilities;
 
 /**
@@ -130,6 +127,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		        SimUtilities.shuffle(agents);
 		        for(RabbitsGrassSimulationAgent ag : agents){
 		          ag.step();
+		          //ag.report();
 		          if(ag.getEnergy()<=0) {
 		        	  toRemove.add(ag);
 		          }

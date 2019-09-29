@@ -65,11 +65,17 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	 * Execute a step of the agent
 	 */
 	public void step() {
+		int dirID = (int) (Math.random()*RabbitsGrassSimulationSpace.Move.values().length);
 		
+		if( space.moveIfCan(x, y, RabbitsGrassSimulationSpace.Move.values()[dirID])) {
+			energy += space.eatGrass(x, y);
+		}else {
+			System.out.println("Warning Blocked");
+			report();
+		}
 		energy--;
-		
-
 	}
+	
 
 	public int getX() {
 		return x;
@@ -85,7 +91,7 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	}
 
 	public void report() {
-		System.out.println(getID() + " at " + x + ", " + y + " has " + getEnergy() + " energy.");
+		System.out.println(getID() + " at (" + x + ", " + y + ") has " + getEnergy() + " energy.");
 	}
 
 	public String getID() {

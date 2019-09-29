@@ -16,46 +16,47 @@ import uchicago.src.sim.space.Object2DGrid;
 
 public class RabbitsGrassSimulationSpace {
 
+
+
 	private Object2DGrid grassSpace;
 	private Object2DGrid agentSpace;
-	
-	private int minGrassCal,maxGrassCal;
 
-	public RabbitsGrassSimulationSpace(int size,int initGrass, int minGrassCal, int maxGrassCal) {
+	private int minGrassCal, maxGrassCal;
+
+	public RabbitsGrassSimulationSpace(int size, int initGrass, int minGrassCal, int maxGrassCal) {
 
 		agentSpace = new Object2DGrid(size, size);
 		grassSpace = new Object2DGrid(size, size);
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < size; j++) {
-				grassSpace.putObjectAt(i, j, new Plain(i, j));
+				grassSpace.putObjectAt(i, j, new Cell(i, j));
 			}
 		}
 		this.minGrassCal = minGrassCal;
 		this.maxGrassCal = maxGrassCal;
-		
+
 		boolean success = true;
-		for(int i =0 ;i<initGrass && success ; i++) {
+		for (int i = 0; i < initGrass && success; i++) {
 			success = addGrass();
 		}
 	}
+	
+	
+	/*
+	 * ============================================================================
+	 * ----------------------- GRASS RELATED METHODS ------------------------------
+	 * ============================================================================
+	 * 
+	 */
 
 	public Object2DGrid getGrassSpace() {
 		return grassSpace;
 	}
 
-	public boolean isCellOccupied(int x, int y) {
-		if (agentSpace.getObjectAt(x, y) != null)
-			return true;
-		return false;
-	}
-	
-	public boolean isCellGrass(int x, int y) {
-		if (agentSpace.getObjectAt(x, y) instanceof Grass)
-			return true;
-		return false;
+	public boolean hasCellGrass(int x, int y) {
+		return ((Cell) agentSpace.getObjectAt(x, y)).type == Cell.Type.GRASS;
 	}
 
-	
 	public boolean addGrass() {
 		boolean retVal = false;
 		int count = 0;
@@ -64,14 +65,41 @@ public class RabbitsGrassSimulationSpace {
 		while ((retVal == false) && (count < countLimit)) {
 			int x = (int) (Math.random() * (agentSpace.getSizeX()));
 			int y = (int) (Math.random() * (agentSpace.getSizeY()));
-			if (!isCellGrass(x, y)) {
-				grassSpace.putObjectAt(x, y, new Grass(minGrassCal, maxGrassCal, x, y));
+			Cell cell = (Cell) grassSpace.getObjectAt(x, y);
+			if (cell.type == Cell.Type.GROUND) {
+				cell.growGrass(minGrassCal, maxGrassCal);
+				;
 				retVal = true;
 			}
 			count++;
 		}
 
 		return retVal;
+	}
+
+	public int eatGrass(int x, int y) {
+		Cell cell = (Cell) grassSpace.getObjectAt(x, y);
+		return cell.cutGrass();
+	}
+
+	/*
+	 * ============================================================================
+	 * ----------------------- AGENT RELATED METHODS ------------------------------
+	 * ============================================================================
+	 * 
+	 */
+	public enum Move {
+		UP, RIGHT, DOWN, LEFT
+	}
+
+	public Discrete2DSpace getAgentSpace() {
+		return agentSpace;
+	}
+
+	public boolean isCellOccupied(int x, int y) {
+		if (agentSpace.getObjectAt(x, y) != null)
+			return true;
+		return false;
 	}
 
 	public boolean addAgent(RabbitsGrassSimulationAgent agent) {
@@ -93,80 +121,99 @@ public class RabbitsGrassSimulationSpace {
 
 		return retVal;
 	}
+
 	public void removeAgent(int x, int y) {
 		agentSpace.putObjectAt(x, y, null);
 	}
 
-	public Discrete2DSpace getAgentSpace() {
-		return agentSpace;
-	}
-	
-	public static class Plain implements Drawable{
+	public boolean moveIfCan(int x, int y, Move direction) {
+		if(isCellOccupied(x, y)) {
+			int nextX = x,nextY = y;
+			switch (direction) {
+			case UP:
+				nextY= (y+1 +agentSpace.getSizeY()) % agentSpace.getSizeY();
+				break;
+			case DOWN:
+				nextY=(agentSpace.getSizeY() +y-1) % agentSpace.getSizeY();
+				break;
+			case LEFT:
+				nextX=(agentSpace.getSizeX() +x-1) % agentSpace.getSizeX();
+				break;
+			case RIGHT:
+				nextX=(agentSpace.getSizeX() +x+1) % agentSpace.getSizeX();
+				break;
+			}
+			
+			if(!isCellOccupied(nextX,nextY)) {
+				RabbitsGrassSimulationAgent ag = (RabbitsGrassSimulationAgent) agentSpace.getObjectAt(x, y);
+				agentSpace.putObjectAt(x, y, null);
+				agentSpace.putObjectAt(nextX,nextY, ag );
+				ag.setXY(nextX, nextY);
+				return true;
+			}
+			
+			
+		}
 
-		private int x,y;
-		
-		private static Image im;
-		
-		public Plain( int x, int y) {
-			if(im ==null) {
+		return false;
+	}
+
+	public static class Cell implements Drawable {
+		public enum Type {
+			GROUND, GRASS
+		}
+
+		private int calories;
+		private int x, y;
+		private Type type;
+
+		private static Image imGrass, imGround;
+
+		public Cell(int x, int y) {
+			if (imGrass == null || imGround == null) {
 				try {
-					im = ImageIO.read(new File("images/dirt.png"));
-				}catch(Exception e) {
+					imGrass = ImageIO.read(new File("images/grass.png"));
+					imGround = ImageIO.read(new File("images/dirt.png"));
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			
+
+			calories = 0;
 			this.x = x;
 			this.y = y;
-		}
-		
-		@Override
-		public void draw(SimGraphics g) {
-			g.drawImageToFit(im);
-			
+			type = Type.GROUND;
 		}
 
-		@Override
-		public int getX() {
-			return x;
-		}
-
-		@Override
-		public int getY() {
-			return y;
-		}
-		
-	}
-	
-	public static class Grass implements Drawable{
-		int calories;
-		private int x,y;
-		
-		private static Image im;
-		
-		public Grass(int minCalories,int maxCalories, int x, int y) {
-			if(im ==null) {
-				try {
-					im = ImageIO.read(new File("images/grass.png"));
-				}catch(Exception e) {
-					e.printStackTrace();
-				}
-			}
-			
+		public void growGrass(int minCalories, int maxCalories) {
 			calories = (int) ((Math.random() * (maxCalories - minCalories)) + minCalories);
-			this.x = x;
-			this.y = y;
+			type = Type.GRASS;
 		}
-		
+
+		public int cutGrass() {
+			int temp = calories;
+			calories = 0;
+			type = Type.GROUND;
+			return temp;
+		}
+
 		@Override
 		public void draw(SimGraphics g) {
-			g.drawImageToFit(im);
-			
+			switch (type) {
+			case GROUND:
+				g.drawImageToFit(imGround);
+				break;
+			case GRASS:
+				g.drawImageToFit(imGrass);
+			}
+
 		}
+
 		@Override
 		public int getX() {
 			return x;
 		}
+
 		@Override
 		public int getY() {
 			return y;
