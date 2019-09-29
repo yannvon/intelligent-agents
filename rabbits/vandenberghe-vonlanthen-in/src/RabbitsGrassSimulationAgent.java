@@ -17,10 +17,13 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 
 	private static Image[] IM;
 	private static Image DEAD_IM;
+	private static Image REP_IM;
 
 	private static final int ENERGY = 20;
 	
 	private RabbitsGrassSimulationSpace space;
+	
+	private int reproduceCount =0;
 
 
 	private int x, y;
@@ -36,6 +39,7 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		if (IM == null) {
 			try {
 				DEAD_IM = ImageIO.read(new File("images/bunnyDead.png"));
+				REP_IM = ImageIO.read(new File("images/bunnyHeart.png"));
 				IM = new Image[6];
 				for (int i = 0; i < 6; i++) {
 					IM[i] = ImageIO.read(new File("images/bunny" + i + ".png"));
@@ -54,7 +58,10 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 
 	public void draw(SimGraphics arg0) {
 		// arg0.drawFastRoundRect(Color.green);
-		if (energy <= 0) {
+		if(reproduceCount>0) {
+			arg0.drawImageToFit(REP_IM);
+			reproduceCount--;
+		}else if (energy <= 0) {
 			arg0.drawImageToFit(DEAD_IM);
 		} else {
 			arg0.drawImageToFit(IM[(clock++ / 5) % 6]);
@@ -67,15 +74,18 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	public void step() {
 		int dirID = (int) (Math.random()*RabbitsGrassSimulationSpace.Move.values().length);
 		
-		if( space.moveIfCan(x, y, RabbitsGrassSimulationSpace.Move.values()[dirID])) {
-			energy += space.eatGrass(x, y);
-		}else {
-			System.out.println("Warning Blocked");
-			report();
-		}
+		space.moveIfCan(x, y, RabbitsGrassSimulationSpace.Move.values()[dirID]);
+		energy += space.eatGrass(x, y);
+		
+		
 		energy--;
 	}
 	
+	
+	public void reproduce(int minEnergy,int maxEnergy) {
+		reproduceCount +=1;
+		energy = (int) ((Math.random() * (maxEnergy - minEnergy)) + minEnergy);
+	}
 
 	public int getX() {
 		return x;

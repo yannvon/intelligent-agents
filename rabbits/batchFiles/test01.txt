@@ -1,0 +1,12 @@
+runs: 30
+BirthThreshold {
+ start: 30
+ end: 110
+ incr: 20
+}
+
+GrassGrowthRate {
+ start: 1
+ end: 20
+ incr: 1
+}

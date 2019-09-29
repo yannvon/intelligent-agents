@@ -25,9 +25,10 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	private DisplaySurface displaySurf;
 
 	private ArrayList<RabbitsGrassSimulationAgent> agents,toRemove;
+	private int toAdd;
 
 	// DEFAULT VALUES
-	private static final int GRID_SIZE = 20, NUM_RABBITS = 5, NUM_GRASS = 10, GROW_RATE = 5, BIRTH_THRESHOLD = 10;
+	private static final int GRID_SIZE = 20, NUM_RABBITS = 5, NUM_GRASS = 10, GROW_RATE = 5, BIRTH_THRESHOLD = 30;
 
 	/*
 	 * PARAMETERS
@@ -70,6 +71,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 		agents = new ArrayList<>();
 		toRemove = new ArrayList<>();
+		toAdd =0;
 
 		if (displaySurf != null) {
 			displaySurf.dispose();
@@ -122,6 +124,11 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		    		space.removeAgent(deadAg.getX(), deadAg.getY());
 		    	}
 		    	toRemove.clear();
+		    	for(int i = 0;i<toAdd;i++) {
+		    		addNewAgent();
+		    	}
+		    	toAdd=0;
+		    	
 		    	  
 		    	//execute step for each rabbit
 		        SimUtilities.shuffle(agents);
@@ -131,6 +138,14 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		          if(ag.getEnergy()<=0) {
 		        	  toRemove.add(ag);
 		          }
+		          if(ag.getEnergy()>birthThreshold) {
+		        	  ag.reproduce(minEnergy, maxEnergy);
+		        	  toAdd++;
+		          }
+		        }
+		        
+		        for(int i=0;i<grassGrowthRate;i++) {
+		        	space.addGrass();
 		        }
 		        
 		        
@@ -161,8 +176,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 	private void addNewAgent() {
 		RabbitsGrassSimulationAgent a = new RabbitsGrassSimulationAgent(minEnergy, maxEnergy);
-		agents.add(a);
-		space.addAgent(a);
+		if(space.addAgent(a)) {
+			agents.add(a);
+		}
 	}
 
 	public String[] getInitParam() {
