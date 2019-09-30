@@ -38,11 +38,12 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	public RabbitsGrassSimulationAgent(int minEnergy, int maxEnergy) {
 		if (IM == null) {
 			try {
-				DEAD_IM = ImageIO.read(new File("images/bunnyDead.png"));
-				REP_IM = ImageIO.read(new File("images/bunnyHeart.png"));
+				
+				DEAD_IM = ImageIO.read(getClass().getResource("bunnyDead.png"));
+				REP_IM = ImageIO.read(getClass().getResource("bunnyHeart.png"));
 				IM = new Image[6];
 				for (int i = 0; i < 6; i++) {
-					IM[i] = ImageIO.read(new File("images/bunny" + i + ".png"));
+					IM[i] = ImageIO.read(getClass().getResource("bunny" + i + ".png"));
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

@@ -180,8 +180,8 @@ public class RabbitsGrassSimulationSpace {
 		public Cell(int x, int y) {
 			if (imGrass == null || imGround == null) {
 				try {
-					imGrass = ImageIO.read(new File("images/grass.png"));
-					imGround = ImageIO.read(new File("images/dirt.png"));
+					imGrass = ImageIO.read(getClass().getResource("grass.png"));
+					imGround = ImageIO.read(getClass().getResource("dirt.png"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -93,7 +93,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	
 
 	public void setup() {
-		System.out.println("Running setup");
 
 		space = null;
 		schedule = new Schedule(1);
