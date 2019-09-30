@@ -19,9 +19,9 @@ public class RabbitsGrassSimulationSpace {
 	private Object2DGrid grassSpace;
 	private Object2DGrid agentSpace;
 
-	private int minGrassCal, maxGrassCal;
+	private int grassCal;
 
-	public RabbitsGrassSimulationSpace(int size, int initGrass, int minGrassCal, int maxGrassCal) {
+	public RabbitsGrassSimulationSpace(int size, int initGrass, int grassCal) {
 
 		agentSpace = new Object2DGrid(size, size);
 		grassSpace = new Object2DGrid(size, size);
@@ -30,8 +30,7 @@ public class RabbitsGrassSimulationSpace {
 				grassSpace.putObjectAt(i, j, new Cell(i, j));
 			}
 		}
-		this.minGrassCal = minGrassCal;
-		this.maxGrassCal = maxGrassCal;
+		this.grassCal = grassCal;
 
 		boolean success = true;
 		for (int i = 0; i < initGrass && success; i++) {
@@ -64,7 +63,7 @@ public class RabbitsGrassSimulationSpace {
 			int y = (int) (Math.random() * (agentSpace.getSizeY()));
 			Cell cell = (Cell) grassSpace.getObjectAt(x, y);
 			if (cell.type == Cell.Type.GROUND) {
-				cell.growGrass(minGrassCal, maxGrassCal);
+				cell.growGrass(grassCal);
 				;
 				retVal = true;
 			}
@@ -194,11 +193,8 @@ public class RabbitsGrassSimulationSpace {
 			type = Type.GROUND;
 		}
 
-		public void growGrass(int minCalories, int maxCalories) {
-			if (minCalories > maxCalories) {
-				minCalories = 1;
-			}
-			calories = (int) ((Math.random() * (maxCalories - minCalories)) + minCalories);
+		public void growGrass(int calories) {
+			this.calories = calories;
 			type = Type.GRASS;
 		}
 

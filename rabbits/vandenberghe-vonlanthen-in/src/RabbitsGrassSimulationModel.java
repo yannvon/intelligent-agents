@@ -44,7 +44,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			grassGrowthRate = GROW_RATE, birthThreshold = BIRTH_THRESHOLD;
 
 	// ADDED
-	private int minEnergy = 10, maxEnergy = 30, maxGrassCal=10, minGrassCal=5;
+	private int minEnergy = 10, maxEnergy = 30, grassCal=10;
 
 
 
@@ -133,7 +133,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	public void buildModel() {
-		space = new RabbitsGrassSimulationSpace(gridSize,numInitGrass,minGrassCal,maxGrassCal);
+		space = new RabbitsGrassSimulationSpace(gridSize,numInitGrass,grassCal);
 		
 		for(int i = 0;i<numInitRabbits;i++) {
 			addNewAgent();
@@ -239,7 +239,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 				/*
 				 * ADDED
 				 */
-				"MaxEnergy", "MinEnergy","MaxGrassCal","MinGrassCal" };
+				"MaxEnergy", "MinEnergy","GrassCal" };
 		return params;
 	}
 
@@ -356,19 +356,11 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		this.minEnergy = minEnergy;
 	}
 	
-	public int getMaxGrassCal() {
-		return maxGrassCal;
+	public int getGrassCal() {
+		return grassCal;
 	}
 
-	public void setMaxGrassCal(int maxGrassCal) {
-		this.maxGrassCal = maxGrassCal;
-	}
-
-	public int getMinGrassCal() {
-		return minGrassCal;
-	}
-
-	public void setMinGrassCal(int minGrassCal) {
-		this.minGrassCal = minGrassCal;
+	public void setGrassCal(int grassCal) {
+		this.grassCal = grassCal;
 	}
 }
