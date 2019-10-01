@@ -1,5 +1,5 @@
+import java.awt.Color;
 import java.awt.Image;
-import java.io.File;
 
 import javax.imageio.ImageIO;
 
@@ -178,14 +178,14 @@ public class RabbitsGrassSimulationSpace {
 		private static Image imGrass, imGround;
 
 		public Cell(int x, int y) {
-			if (imGrass == null || imGround == null) {
+			/*if (imGrass == null || imGround == null) {
 				try {
 					imGrass = ImageIO.read(getClass().getResource("grass.png"));
 					imGround = ImageIO.read(getClass().getResource("dirt.png"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}
+			}*/
 
 			calories = 0;
 			this.x = x;
@@ -209,10 +209,12 @@ public class RabbitsGrassSimulationSpace {
 		public void draw(SimGraphics g) {
 			switch (type) {
 			case GROUND:
-				g.drawImageToFit(imGround);
+				g.drawRect(Color.WHITE);
+				//g.drawImageToFit(imGround);
 				break;
 			case GRASS:
-				g.drawImageToFit(imGrass);
+				g.drawRect(Color.GREEN);
+				//g.drawImageToFit(imGrass);
 			}
 
 		}

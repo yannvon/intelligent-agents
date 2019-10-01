@@ -1,5 +1,5 @@
+import java.awt.Color;
 import java.awt.Image;
-import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -36,7 +36,7 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	private final int id;
 
 	public RabbitsGrassSimulationAgent(int minEnergy, int maxEnergy) {
-		if (IM == null) {
+		/*if (IM == null) {
 			try {
 				
 				DEAD_IM = ImageIO.read(getClass().getResource("bunnyDead.png"));
@@ -49,7 +49,7 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
+		}*/
 		x = -1;
 		y = -1;
 		clock = 0;
@@ -61,15 +61,16 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	}
 
 	public void draw(SimGraphics arg0) {
-		// arg0.drawFastRoundRect(Color.green);
-		if(reproduceCount>0) {
+		arg0.drawOval(Color.blue);
+		
+		/*if(reproduceCount>0) {
 			arg0.drawImageToFit(REP_IM);
 			reproduceCount--;
 		}else if (energy <= 0) {
 			arg0.drawImageToFit(DEAD_IM);
 		} else {
 			arg0.drawImageToFit(IM[(clock++ / 5) % 6]);
-		}
+		}*/
 
 	}
 	/**
