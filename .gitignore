@@ -15,14 +15,12 @@ hs_err_pid*
 
 #IDE metadata
 **.idea/**
-
 *.iml
-
-rabbits/.idea/*
-
+.idea/*
 rabbits/lib/*
 
-.idea/*
+**/.idea/*
 
-logist/*
+# logist and all other libraries
+# logist/*
 
