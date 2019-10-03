@@ -137,8 +137,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		for(int i = 0;i<numInitRabbits;i++) {
 			addNewAgent();
 		}
-		
-		
 
 	    for(RabbitsGrassSimulationAgent a : agents){
 	      a.report();
@@ -185,12 +183,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		        for(int i=0;i<grassGrowthRate;i++) {
 		        	space.addGrass();
 		        }
-		        
-		        
-		        
+
 		        displaySurf.updateDisplay();
-		        
-		        
 		      }
 		    }
 
