@@ -69,6 +69,8 @@ public class ReactiveLoic implements ReactiveBehavior {
 		
 		List<City> cities = topology.cities();
 		List<State> tempStates = new ArrayList<ReactiveLoic.State>();
+		Vehicle vehicle = agent.vehicles().get(0);
+		
 		for(City cit : cities) {
 			for(City t: cities) {
 				State st = new State(cit,t);
@@ -104,7 +106,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 						reward+= td.probability(m, t2)*vecVal.get(new State(m,t2));
 					}
 					reward *= discount;
-					reward = -m.distanceTo(s.current);
+					reward = -m.distanceTo(s.current)*vehicle.costPerKm();
 					
 					if(maxV<reward) {
 						maxV = reward;
@@ -121,7 +123,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 						reward+= td.probability(s.task, t2)*vecVal.get(new State(s.task,t2));
 					}
 					reward *= discount;
-					reward = td.reward(s.current, s.task)-s.task.distanceTo(s.current);
+					reward = td.reward(s.current, s.task)-s.task.distanceTo(s.current)*vehicle.costPerKm();
 					
 					if(maxV<reward) {
 						maxV = reward;

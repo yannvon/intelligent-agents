@@ -11,13 +11,13 @@
 	</agent>
 	<agent name="reactive-loic">
 		<set class-path="bin/"/>
-		<set class-name="template.ReactiveLoic"/>
+		<set class-name="qlearning.ReactiveLoic"/>
 		<set discount-factor=".50"/>
 		<set it="1000.0"/>
 	</agent>
 	<agent name="reactive-loic-exp">
 		<set class-path="bin/"/>
-		<set class-name="template.ReactiveLoic"/>
+		<set class-name="qlearning.ReactiveLoic"/>
 		<set discount-factor=".90"/>
 		<set it="1000.0"/>
 	</agent>
