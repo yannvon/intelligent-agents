@@ -203,7 +203,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		
 		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
 			System.out.println("REACTIVE YANN: \tACTION "+numActions+" \tPROFIT: "+myAgent.getTotalProfit()+
-					" \taverage: "+(myAgent.getTotalProfit() / numActions));
+					" \taverage: "+(myAgent.getTotalProfit() / numActions)+"\tavg/km: "+(myAgent.getTotalProfit() / vehicle.getDistance()));
 		}
 		numActions++;
 		return action;
