@@ -166,13 +166,12 @@ public class ReactiveTest implements ReactiveBehavior {
 			if(availableTask.reward/availableTask.pickupCity.distanceTo(availableTask.deliveryCity)>200) {
 				action = new Pickup(availableTask);
 			}else {
-				System.out.println("REFUSING " +availableTask.toString());
 				action = new Move(availableTask.pickupCity.randomNeighbor(rdm));
 			}
 		}
 
 		if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {
-			System.out.println("REACTIVE LOIC: \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
+			System.out.println("REACTIVE TEST: \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
 					+ " \taverage: " + (myAgent.getTotalProfit() / numActions) + "\tavg/km: "
 					+ (myAgent.getTotalProfit() / vehicle.getDistance()));
 		}

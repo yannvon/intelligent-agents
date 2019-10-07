@@ -16,7 +16,7 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveLoic implements ReactiveBehavior {
+public class ReactiveLoic2 implements ReactiveBehavior {
 
 	private int numActions;
 	private Agent myAgent;
@@ -61,11 +61,11 @@ public class ReactiveLoic implements ReactiveBehavior {
 		this.numActions = 0;
 		this.myAgent = agent;
 
-		vecVal = new HashMap<ReactiveLoic.State, Double>();
-		vecAct = new HashMap<ReactiveLoic.State, Topology.City>();
+		vecVal = new HashMap<ReactiveLoic2.State, Double>();
+		vecAct = new HashMap<ReactiveLoic2.State, Topology.City>();
 
 		List<City> cities = topology.cities();
-		List<State> tempStates = new ArrayList<ReactiveLoic.State>();
+		List<State> tempStates = new ArrayList<ReactiveLoic2.State>();
 		Vehicle vehicle = agent.vehicles().get(0);
 
 		for (City cit : cities) {
@@ -105,7 +105,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 						reward += td.probability(m, t2) * vecVal.get(new State(m, t2));
 					}
 					reward *= discount;
-					reward -= m.distanceTo(s.current) * vehicle.costPerKm();
+					reward -=  m.distanceTo(s.current) * vehicle.costPerKm();
 
 					if (maxV < reward) {
 						maxV = reward;
@@ -122,7 +122,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 						reward += td.probability(s.task, t2) * vecVal.get(new State(s.task, t2));
 					}
 					reward *= discount;
-					reward += td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm();
+					reward += (td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm())/s.task.distanceTo(s.current) ;
 
 					if (maxV < reward) {
 						maxV = reward;
