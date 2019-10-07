@@ -98,7 +98,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 				 * For all movements
 				 */
 				for(City m:s.current.neighbors()) {
-					if(m.equals(s.task)) {
+					if(m.equals(s.task) || m.equals(s.current)) {
 						continue;
 					}
 					double reward = 0;
