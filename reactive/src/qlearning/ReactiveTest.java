@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import logist.agent.Agent;
 import logist.behavior.ReactiveBehavior;
@@ -16,10 +17,11 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveLoic2 implements ReactiveBehavior {
+public class ReactiveTest implements ReactiveBehavior {
 
 	private int numActions;
 	private Agent myAgent;
+	private Random rdm;
 
 	private HashMap<State, Double> vecVal;
 	private HashMap<State, City> vecAct;
@@ -60,23 +62,24 @@ public class ReactiveLoic2 implements ReactiveBehavior {
 
 		this.numActions = 0;
 		this.myAgent = agent;
+		this.rdm = new Random();
 
-		vecVal = new HashMap<ReactiveLoic2.State, Double>();
-		vecAct = new HashMap<ReactiveLoic2.State, Topology.City>();
+		vecVal = new HashMap<ReactiveTest.State, Double>();
+		vecAct = new HashMap<ReactiveTest.State, Topology.City>();
 
 		List<City> cities = topology.cities();
-		List<State> tempStates = new ArrayList<ReactiveLoic2.State>();
+		List<State> tempStates = new ArrayList<ReactiveTest.State>();
 		Vehicle vehicle = agent.vehicles().get(0);
 
 		for (City cit : cities) {
 			for (City t : cities) {
 				State st = new State(cit, t);
-				vecVal.put(st, 1.0);
+				vecVal.put(st, 100.0);
 				vecAct.put(st, null);
 				tempStates.add(st);
 			}
 			State st = new State(cit, null);
-			vecVal.put(st, 1.0);
+			vecVal.put(st, 100.0);
 			vecAct.put(st, null);
 			tempStates.add(st);
 		}
@@ -105,7 +108,7 @@ public class ReactiveLoic2 implements ReactiveBehavior {
 						reward += td.probability(m, t2) * vecVal.get(new State(m, t2));
 					}
 					reward *= discount;
-					reward -= m.distanceTo(s.current) * vehicle.costPerKm();
+					reward -= m.distanceTo(s.current);
 
 					if (maxV < reward) {
 						maxV = reward;
@@ -122,23 +125,29 @@ public class ReactiveLoic2 implements ReactiveBehavior {
 						reward += td.probability(s.task, t2) * vecVal.get(new State(s.task, t2));
 					}
 					reward *= discount;
-					reward += td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm();
+					reward += td.reward(s.current, s.task)/(vehicle.costPerKm());
 
 					if (maxV < reward) {
 						maxV = reward;
 						bestAc = s.task;
 					}
 				}
-				if (bestAc == null) {
-					System.out.println("error" + s.toString());
-				}
+				
+				/*
+				 * Check if the value changed
+				 */
 				if(Math.abs(vecVal.get(s)-maxV) > 0.01) {
 					changed = true;
 				}
+				
+				/*
+				 * Update values
+				 */
 				vecVal.put(s, maxV);
 				vecAct.put(s, bestAc);
 
 			}
+			
 			System.out.println("Training it :" + it);
 		} while (changed);
 
@@ -154,9 +163,12 @@ public class ReactiveLoic2 implements ReactiveBehavior {
 			st = new State(vehicle.getCurrentCity(), null);
 			action = new Move(vecAct.get(st));
 		} else {
-			st = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
-			City next = vecAct.get(st);
-			action = next.equals(availableTask.deliveryCity) ? new Pickup(availableTask) : new Move(next);
+			if(availableTask.reward/availableTask.pickupCity.distanceTo(availableTask.deliveryCity)>200) {
+				action = new Pickup(availableTask);
+			}else {
+				System.out.println("REFUSING " +availableTask.toString());
+				action = new Move(availableTask.pickupCity.randomNeighbor(rdm));
+			}
 		}
 
 		if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {

@@ -57,7 +57,6 @@ public class ReactiveLoic implements ReactiveBehavior {
 		// Reads the discount factor from the agents.xml file.
 		// If the property is not present it defaults to 0.95
 		Double discount = agent.readProperty("discount-factor", Double.class, 0.95);
-		Double iterations = agent.readProperty("it", Double.class, 100.0);
 
 		this.numActions = 0;
 		this.myAgent = agent;
@@ -72,18 +71,21 @@ public class ReactiveLoic implements ReactiveBehavior {
 		for (City cit : cities) {
 			for (City t : cities) {
 				State st = new State(cit, t);
-				vecVal.put(st, 1.0);
+				vecVal.put(st, 100.0);
 				vecAct.put(st, null);
 				tempStates.add(st);
 			}
 			State st = new State(cit, null);
-			vecVal.put(st, 1.0);
+			vecVal.put(st, 100.0);
 			vecAct.put(st, null);
 			tempStates.add(st);
 		}
 
 		int it = 0;
+		boolean changed = true;
 		do {
+			
+			changed = false;
 			it++;
 
 			for (State s : tempStates) {
@@ -120,22 +122,31 @@ public class ReactiveLoic implements ReactiveBehavior {
 						reward += td.probability(s.task, t2) * vecVal.get(new State(s.task, t2));
 					}
 					reward *= discount;
-					reward += td.reward(s.current, s.task) - (s.task.distanceTo(s.current) * vehicle.costPerKm());
+					reward += td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm();
 
 					if (maxV < reward) {
 						maxV = reward;
 						bestAc = s.task;
 					}
 				}
-				if (bestAc == null) {
-					System.out.println("error" + s.toString());
+				
+				/*
+				 * Check if the value changed
+				 */
+				if(Math.abs(vecVal.get(s)-maxV) > 0.01) {
+					changed = true;
 				}
+				
+				/*
+				 * Update values
+				 */
 				vecVal.put(s, maxV);
 				vecAct.put(s, bestAc);
 
 			}
+			
 			System.out.println("Training it :" + it);
-		} while (it < iterations);
+		} while (changed);
 
 	}
 
@@ -148,17 +159,23 @@ public class ReactiveLoic implements ReactiveBehavior {
 		if (availableTask == null) {
 			st = new State(vehicle.getCurrentCity(), null);
 			action = new Move(vecAct.get(st));
+			System.out.println("NO TASK");
 		} else {
 			st = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
 			City next = vecAct.get(st);
+			if(!next.equals(availableTask.deliveryCity)) {
+				System.out.println("REFUSING TASK "+ availableTask.toString());
+			}else {
+				System.out.println("ACCEPTING TASK "+ availableTask.toString());
+			}
 			action = next.equals(availableTask.deliveryCity) ? new Pickup(availableTask) : new Move(next);
 		}
 
-		if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {
+		/*if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {
 			System.out.println("REACTIVE LOIC: \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
 					+ " \taverage: " + (myAgent.getTotalProfit() / numActions) + "\tavg/km: "
 					+ (myAgent.getTotalProfit() / vehicle.getDistance()));
-		}
+		}*/
 		numActions++;
 
 		return action;
