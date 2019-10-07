@@ -16,7 +16,7 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveLoic implements ReactiveBehavior {
+public class ReactiveOld implements ReactiveBehavior {
 
 	private int numActions;
 	private Agent myAgent;
@@ -62,11 +62,11 @@ public class ReactiveLoic implements ReactiveBehavior {
 		this.numActions = 0;
 		this.myAgent = agent;
 
-		vecVal = new HashMap<ReactiveLoic.State, Double>();
-		vecAct = new HashMap<ReactiveLoic.State, Topology.City>();
+		vecVal = new HashMap<ReactiveOld.State, Double>();
+		vecAct = new HashMap<ReactiveOld.State, Topology.City>();
 
 		List<City> cities = topology.cities();
-		List<State> tempStates = new ArrayList<ReactiveLoic.State>();
+		List<State> tempStates = new ArrayList<ReactiveOld.State>();
 		Vehicle vehicle = agent.vehicles().get(0);
 
 		for (City cit : cities) {
@@ -99,11 +99,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 						continue;
 					}
 					double reward = 0;
-					for (City t2 : cities) {
-						reward += td.probability(m, t2) * vecVal.get(new State(m, t2));
-					}
-					reward *= discount;
-					reward -= m.distanceTo(s.current) * vehicle.costPerKm();
+					reward = m.distanceTo(s.current)*vehicle.costPerKm();
 
 					if (maxV < reward) {
 						maxV = reward;
@@ -116,11 +112,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 				 */
 				if (s.task != null) {
 					double reward = 0;
-					for (City t2 : cities) {
-						reward += td.probability(s.task, t2) * vecVal.get(new State(s.task, t2));
-					}
-					reward *= discount;
-					reward += td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm();
+					reward = td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm();
 
 					if (maxV < reward) {
 						maxV = reward;
@@ -155,7 +147,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 		}
 
 		if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {
-			System.out.println("REACTIVE LOIC: \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
+			System.out.println("REACTIVE OLD: \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
 					+ " \taverage: " + (myAgent.getTotalProfit() / numActions) + "\tavg/km: "
 					+ (myAgent.getTotalProfit() / vehicle.getDistance()));
 		}
