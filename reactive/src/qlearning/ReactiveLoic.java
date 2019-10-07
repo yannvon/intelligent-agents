@@ -163,19 +163,19 @@ public class ReactiveLoic implements ReactiveBehavior {
 		} else {
 			st = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
 			City next = vecAct.get(st);
-			if(!next.equals(availableTask.deliveryCity)) {
+			/*if(!next.equals(availableTask.deliveryCity)) {
 				System.out.println("REFUSING TASK "+ availableTask.toString());
 			}else {
 				System.out.println("ACCEPTING TASK "+ availableTask.toString());
-			}
+			}*/
 			action = next.equals(availableTask.deliveryCity) ? new Pickup(availableTask) : new Move(next);
 		}
 
-		/*if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {
+		if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {
 			System.out.println("REACTIVE LOIC: \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
 					+ " \taverage: " + (myAgent.getTotalProfit() / numActions) + "\tavg/km: "
 					+ (myAgent.getTotalProfit() / vehicle.getDistance()));
-		}*/
+		}
 		numActions++;
 
 		return action;
