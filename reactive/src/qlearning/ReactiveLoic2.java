@@ -16,7 +16,7 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveLoic implements ReactiveBehavior {
+public class ReactiveLoic2 implements ReactiveBehavior {
 
 	private int numActions;
 	private Agent myAgent;
@@ -57,16 +57,15 @@ public class ReactiveLoic implements ReactiveBehavior {
 		// Reads the discount factor from the agents.xml file.
 		// If the property is not present it defaults to 0.95
 		Double discount = agent.readProperty("discount-factor", Double.class, 0.95);
-		Double iterations = agent.readProperty("it", Double.class, 100.0);
 
 		this.numActions = 0;
 		this.myAgent = agent;
 
-		vecVal = new HashMap<ReactiveLoic.State, Double>();
-		vecAct = new HashMap<ReactiveLoic.State, Topology.City>();
+		vecVal = new HashMap<ReactiveLoic2.State, Double>();
+		vecAct = new HashMap<ReactiveLoic2.State, Topology.City>();
 
 		List<City> cities = topology.cities();
-		List<State> tempStates = new ArrayList<ReactiveLoic.State>();
+		List<State> tempStates = new ArrayList<ReactiveLoic2.State>();
 		Vehicle vehicle = agent.vehicles().get(0);
 
 		for (City cit : cities) {
@@ -83,7 +82,10 @@ public class ReactiveLoic implements ReactiveBehavior {
 		}
 
 		int it = 0;
+		boolean changed = true;
 		do {
+			
+			changed = false;
 			it++;
 
 			for (State s : tempStates) {
@@ -120,7 +122,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 						reward += td.probability(s.task, t2) * vecVal.get(new State(s.task, t2));
 					}
 					reward *= discount;
-					reward += td.reward(s.current, s.task) - (s.task.distanceTo(s.current) * vehicle.costPerKm());
+					reward += td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm();
 
 					if (maxV < reward) {
 						maxV = reward;
@@ -130,12 +132,15 @@ public class ReactiveLoic implements ReactiveBehavior {
 				if (bestAc == null) {
 					System.out.println("error" + s.toString());
 				}
+				if(Math.abs(vecVal.get(s)-maxV) > 0.01) {
+					changed = true;
+				}
 				vecVal.put(s, maxV);
 				vecAct.put(s, bestAc);
 
 			}
 			System.out.println("Training it :" + it);
-		} while (it < iterations);
+		} while (changed);
 
 	}
 
