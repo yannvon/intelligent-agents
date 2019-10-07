@@ -45,8 +45,8 @@ public class ReactiveTemplate implements ReactiveBehavior {
 			action = new Pickup(availableTask);
 		}
 		
-		if (numActions >= 1) {
-			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
+		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
+			System.out.println("RANDOM: \tACTION "+numActions+" \t PROFIT "+myAgent.getTotalProfit()+" \taverage: "+(myAgent.getTotalProfit() / numActions));
 		}
 		numActions++;
 		

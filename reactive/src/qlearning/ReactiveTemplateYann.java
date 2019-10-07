@@ -1,13 +1,15 @@
-package template;
+package qlearning;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
-import logist.simulation.Vehicle;
 import logist.agent.Agent;
 import logist.behavior.ReactiveBehavior;
 import logist.plan.Action;
 import logist.plan.Action.Move;
 import logist.plan.Action.Pickup;
+import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.topology.Topology;
@@ -71,14 +73,14 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		this.myAgent = agent;
 
 		int numberOfCities = topology.cities().size();
-		this.Best = new HashMap<>();
-		this.V = new HashMap<>();
+		this.Best = new HashMap();
+		this.V = new HashMap();
 
-		ArrayList<ArrayList<State>> states = new ArrayList<>(numberOfCities);
+		ArrayList<ArrayList<State>> states = new ArrayList(numberOfCities);
 
 		// Initialize data structures
 		for(City currentCity: topology.cities()) {
-			ArrayList<State> statesOfCity = new ArrayList<>();
+			ArrayList<State> statesOfCity = new ArrayList();
 
 			for(City taskDestination : topology.cities()) {
 				State newState = new State(currentCity, taskDestination);
@@ -199,9 +201,9 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 			}
 		}
 		
-		if (numActions >= 1) {
-			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+
-					" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
+		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
+			System.out.println("REACTIVE YANN: \tACTION "+numActions+" \tPROFIT: "+myAgent.getTotalProfit()+
+					" \taverage: "+(myAgent.getTotalProfit() / numActions));
 		}
 		numActions++;
 		return action;

@@ -161,8 +161,8 @@ public class ReactiveLoic implements ReactiveBehavior {
 		
 		
 		
-		if (numActions >= 1 && numActions%10 == 0) {
-			System.out.println("REACTIVE AGENT: The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / numActions)+")");
+		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
+			System.out.println("REACTIVE LOIC: \tACTION "+numActions+" \tPROFIT: "+myAgent.getTotalProfit()+" \taverage: "+(myAgent.getTotalProfit() / numActions));
 		}
 		numActions++;
 		
