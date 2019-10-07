@@ -15,6 +15,11 @@
 		<set discount-factor=".50"/>
 		<set it="1000.0"/>
 	</agent>
+	<agent name="reactive-yann">
+		<set class-path="bin/"/>
+		<set class-name="template.ReactiveTemplateYann"/>
+		<set discount-factor=".85"/>
+	</agent>
 	<agent name="reactive-loic-exp">
 		<set class-path="bin/"/>
 		<set class-name="qlearning.ReactiveLoic"/>

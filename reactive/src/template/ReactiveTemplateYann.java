@@ -14,16 +14,22 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 public class ReactiveTemplateYann implements ReactiveBehavior {
+
 	public static double THRESHOLD = 0.001;
 
-	public class State {
+	/**
+	 * Private helper class representing a state.
+	 */
+	private class State {
 		private City i;
 		private City t;
 
-		public State(City i, City t) {
+
+		State(City i, City t) {
 			this.i = i;
 			this.t = t;
 		}
+
 		@Override
 		public int hashCode(){
 			return Objects.hash(this.i, this.t);
@@ -36,6 +42,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 			}
 			return this.i.equals(((State) that).i) && (this.t == ((State) that).t || this.t.equals(((State) that).t));
 		}
+
 		@Override
 		public String toString() {
 			if (t == null)
@@ -45,14 +52,11 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		}
 	}
 
-	private Random random;
-	private double pPickup;
 	private int numActions;
 	private Agent myAgent;
 
 	private HashMap<State, Integer> Best;
 	private HashMap<State, Double> V;
-
 
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
@@ -63,11 +67,8 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		Double discount = agent.readProperty("discount-factor", Double.class,
 				0.95);
 
-		this.random = new Random();
-		this.pPickup = discount;
 		this.numActions = 0;
 		this.myAgent = agent;
-
 
 		int numberOfCities = topology.cities().size();
 		this.Best = new HashMap<>();
@@ -75,6 +76,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 
 		ArrayList<ArrayList<State>> states = new ArrayList<>(numberOfCities);
 
+		// Initialize data structures
 		for(City currentCity: topology.cities()) {
 			ArrayList<State> statesOfCity = new ArrayList<>();
 
@@ -90,24 +92,25 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 			Best.put(noTaskState, -1);
 			V.put(noTaskState, Double.MIN_VALUE);
 
-			// Fill arrays
 			states.add(statesOfCity);
 		}
 
 		/*
-		 * Define strategy of reactive agent, i.e. V(S) and Best(S)
+		 * Define strategy of reactive agent, i.e. determine V(S) and Best(S) through RLA algorithm
+		 *
+		 * NOTE: In the following the action "Accept task" is represented by -1. All other actions are characterized
+		 * 		 by the integer index of the neighbor in the adjacency list.
 		 */
 
-
-		// Action0: go to neighbor 0, Action1: go to neghbor 1,etc.., Action = -1 : accept task.
-
-
 		int costPerKm = agent.vehicles().get(0).costPerKm();
+
+		// Iterate until value doesn't change anymore
 		boolean change;
 		int iter = 0;
 		do {
 			change = false;
 
+			// Iterate through all states
 			for (ArrayList<State> statesOfCity: states) {
 				for (State s : statesOfCity) {
 
@@ -119,12 +122,13 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 					boolean taskAvailable = s.t != null;
 
 					double currentBestOption = Double.NEGATIVE_INFINITY;
-					int currentAction = Integer.MIN_VALUE;
+					int currentBestAction = Integer.MIN_VALUE;
 
-
-					// Check all actions except delivery
+					// Check all actions except "Accepting Task"
 					int action = 0;
 					for (City cityTo : cityFrom.neighbors()) {
+
+						// Can't stay in same city
 						if (cityFrom.equals(cityTo)) {
 							continue;
 						}
@@ -133,49 +137,39 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 						double cost = costPerKm * cityFrom.distanceTo(cityTo);
 						double reward = -cost;
 
-						double sum = 0;
-
-						// sum over all states action can lead to
-						for (State neighborState : states.get(indexOfCityTo)) {
-							sum += V.get(neighborState) * td.probability(cityFrom, cityTo);
-						}
-
-						double q = reward + discount * sum;
+						double q = getValueOfAction(states, indexOfCityTo, td, cityFrom, cityTo, reward, discount);
 
 						if (q > currentBestOption) {
 							currentBestOption = q;
-							currentAction = action;
+							currentBestAction = action;
 						}
 						action++;
 					}
 
+					// If there is a task available, compare it to the other options
 					if (taskAvailable) {
 						City cityTo = s.t;
 						double cost = costPerKm * cityFrom.distanceTo(cityTo);
-						double reward = -cost + td.reward(cityFrom, cityTo);
+						double reward = -cost + td.reward(cityFrom, cityTo); // Here the task reward is added
 
-						double sum = 0;
 						int indexOfCityTo = topology.cities().indexOf(cityTo);
 
-						// sum over all states action can lead to
-						for (State neighborState : states.get(indexOfCityTo)) {
-							sum += V.get(neighborState) * td.probability(cityFrom, cityTo);
-						}
-
-						double q = reward + discount * sum;
+						double q = getValueOfAction(states, indexOfCityTo, td, cityFrom, cityTo, reward, discount);
 
 						if (q > currentBestOption) {
-							currentAction = -1;
+							currentBestAction = -1;
 							currentBestOption = q;
 						}
 					}
 
+					// Verify if there has been enough change to justify another iteration
 					if (Math.abs(currentBestOption - V.get(s)) > THRESHOLD) {
 						change = true;
 					}
+
+					// Store the new values
 					V.put(s, currentBestOption);
-					Best.put(s, currentAction);
-					System.out.println("V Option: " + currentBestOption + " action: " + currentAction);
+					Best.put(s, currentBestAction);
 				}
 			}
 			System.out.println("Iteration: " + iter);
@@ -189,10 +183,13 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		Action action;
 		City currentCity = vehicle.getCurrentCity();
 
+		// If there is no available task, just pick best neighboring city.
 		if (availableTask == null) {
 			int a = Best.get(new State(currentCity, null));
 			action = new Move(currentCity.neighbors().get(a));
-		} else {
+		}
+		// Otherwise pickup task if it is the best option.
+		else {
 			int a = Best.get(new State(currentCity, availableTask.deliveryCity));
 
 			if (a == -1) {
@@ -203,10 +200,22 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		}
 		
 		if (numActions >= 1) {
-			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
+			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+
+					" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
 		}
 		numActions++;
-		
 		return action;
+	}
+
+	private double getValueOfAction(ArrayList<ArrayList<State>> states, int indexOfCityTo, TaskDistribution td,
+									City cityFrom, City cityTo, double reward, double discount){
+
+		// Sum over all neighboring states, multiply by discount and add reward.
+		double sum = 0;
+		for (State neighborState : states.get(indexOfCityTo)) {
+			sum += V.get(neighborState) * td.probability(cityFrom, cityTo);
+		}
+
+		return reward + discount * sum;
 	}
 }
