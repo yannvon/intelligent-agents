@@ -1,5 +1,6 @@
 package qlearning;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -86,13 +87,13 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 				State newState = new State(currentCity, taskDestination);
 				statesOfCity.add(newState);
 				Best.put(newState, 0);
-				V.put(newState, 0.0);
+				V.put(newState, 100.0);
 			}
 
 			State noTaskState = new State(currentCity, null);
 			statesOfCity.add(noTaskState);
 			Best.put(noTaskState, -1);
-			V.put(noTaskState, Double.MIN_VALUE);
+			V.put(noTaskState, 100.0);
 
 			states.add(statesOfCity);
 		}
@@ -116,6 +117,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 			for (ArrayList<State> statesOfCity: states) {
 				for (State s : statesOfCity) {
 
+					// We disregard the state where a task leads to same city.
 					if (s.i.equals(s.t)) {
 						continue;
 					}
@@ -135,11 +137,10 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 							continue;
 						}
 
-						int indexOfCityTo = topology.cities().indexOf(cityTo);
 						double cost = costPerKm * cityFrom.distanceTo(cityTo);
 						double reward = -cost;
 
-						double q = getValueOfAction(states, indexOfCityTo, td, cityFrom, cityTo, reward, discount);
+						double q = getValueOfAction(cityTo, td, topology.cities(), reward, discount);
 
 						if (q > currentBestOption) {
 							currentBestOption = q;
@@ -154,9 +155,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 						double cost = costPerKm * cityFrom.distanceTo(cityTo);
 						double reward = -cost + td.reward(cityFrom, cityTo); // Here the task reward is added
 
-						int indexOfCityTo = topology.cities().indexOf(cityTo);
-
-						double q = getValueOfAction(states, indexOfCityTo, td, cityFrom, cityTo, reward, discount);
+						double q = getValueOfAction(cityTo, td, topology.cities(), reward, discount);
 
 						if (q > currentBestOption) {
 							currentBestAction = -1;
@@ -209,14 +208,23 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		return action;
 	}
 
-	private double getValueOfAction(ArrayList<ArrayList<State>> states, int indexOfCityTo, TaskDistribution td,
-									City cityFrom, City cityTo, double reward, double discount){
+	private double getValueOfAction(City cityLocation, TaskDistribution td,
+									List<City> cities, double reward, double discount){
 
-		// Sum over all neighboring states, multiply by discount and add reward.
+		// Sum the probability of landing in given state * its value, over all possible states
+		// Multiply this value by discount and add the reward gained in current step.
 		double sum = 0;
-		for (State neighborState : states.get(indexOfCityTo)) {
-			sum += V.get(neighborState) * td.probability(cityFrom, cityTo);
+		double probaSum = 0;
+		for (City task : cities) {
+			// This state does not exist
+			if (task.equals(cityLocation)) {
+				continue;
+			}
+			sum += V.get(new State(cityLocation, task)) * td.probability(cityLocation, task);
+			probaSum += td.probability(cityLocation, task);
 		}
+		// Careful: Also add value of state where no task available !
+		sum += V.get(new State(cityLocation, null)) * (1 - probaSum);
 
 		return reward + discount * sum;
 	}
