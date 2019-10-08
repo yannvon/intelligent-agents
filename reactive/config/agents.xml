@@ -19,7 +19,7 @@
 		<set class-name="reactive.DummyAgent"/>
 		<set discount-factor="200"/>
 	</agent>
-	<agent name="reactive-normal">
+	<agent name="reactive-rla">
 		<set class-path="bin/"/>
 		<set class-name="reactive.ReactiveAgent"/>
 		<set discount-factor=".99"/>
