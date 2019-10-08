@@ -13,6 +13,7 @@
 		<set class-path="bin/"/>
 		<set class-name="qlearning.ReactiveLoic"/>
 		<set discount-factor=".90"/>
+	</agent>
 	<agent name="reactive-test">
 		<set class-path="bin/"/>
 		<set class-name="qlearning.ReactiveTest"/>
