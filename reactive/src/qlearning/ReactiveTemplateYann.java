@@ -225,7 +225,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 			probaSum += td.probability(cityLocation, task);
 		}
 		// Careful: Also add value of state where no task available !
-		sum += V.get(new State(cityLocation, null)) * (1 - probaSum);
+		sum += V.get(new State(cityLocation, null)) * td.probability(cityLocation, null);
 
 		return reward + discount * sum;
 	}
