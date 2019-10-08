@@ -9,11 +9,6 @@
 		<set class-name="template.ReactiveTemplate"/>
 		<set discount-factor=".85"/>
 	</agent>
-	<agent name="reactive-test">
-		<set class-path="bin/"/>
-		<set class-name="reactive.ReactiveTest"/>
-		<set discount-factor=".99"/>
-	</agent>
 	<agent name="reactive-dummy">
 		<set class-path="bin/"/>
 		<set class-name="reactive.DummyAgent"/>
