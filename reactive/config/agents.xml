@@ -14,6 +14,11 @@
 		<set class-name="reactive.ReactiveTest"/>
 		<set discount-factor=".99"/>
 	</agent>
+	<agent name="reactive-dummy">
+		<set class-path="bin/"/>
+		<set class-name="reactive.DummyAgent"/>
+		<set discount-factor="200"/>
+	</agent>
 	<agent name="reactive-normal">
 		<set class-path="bin/"/>
 		<set class-name="reactive.ReactiveAgent"/>
