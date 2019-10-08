@@ -18,24 +18,24 @@ import logist.topology.Topology.City;
 
 public class ReactiveTemplateYann implements ReactiveBehavior {
 
-	public static double THRESHOLD = 0.001;
+	public static double EPSILON = 0.001;
 
 	/**
 	 * Private helper class representing a state.
 	 */
 	private class State {
-		private City i;
+		private City l;
 		private City t;
 
 
-		State(City i, City t) {
-			this.i = i;
+		State(City l, City t) {
+			this.l = l;
 			this.t = t;
 		}
 
 		@Override
 		public int hashCode(){
-			return Objects.hash(this.i, this.t);
+			return Objects.hash(this.l, this.t);
 		}
 
 		@Override
@@ -43,15 +43,15 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 			if (!(that instanceof State)) {
 				return false;
 			}
-			return this.i.equals(((State) that).i) && (this.t == ((State) that).t || this.t.equals(((State) that).t));
+			return this.l.equals(((State) that).l) && (this.t == ((State) that).t || this.t.equals(((State) that).t));
 		}
 
 		@Override
 		public String toString() {
 			if (t == null)
-				return i.toString() + ", null";
+				return l.toString() + ", null";
 			else
-				return i.toString() + ", " + t.toString();
+				return l.toString() + ", " + t.toString();
 		}
 	}
 
@@ -74,37 +74,38 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		this.myAgent = agent;
 
 		int numberOfCities = topology.cities().size();
-		this.Best = new HashMap();
-		this.V = new HashMap();
+		this.Best = new HashMap<>();
+		this.V = new HashMap<>();
 
-		ArrayList<ArrayList<State>> states = new ArrayList(numberOfCities);
+		ArrayList<ArrayList<State>> states = new ArrayList<>(numberOfCities);
 
 		// Initialize data structures
 		for(City currentCity: topology.cities()) {
-			ArrayList<State> statesOfCity = new ArrayList();
+			ArrayList<State> statesOfCity = new ArrayList<>();
 
 			for(City taskDestination : topology.cities()) {
 				State newState = new State(currentCity, taskDestination);
 				statesOfCity.add(newState);
 				Best.put(newState, 0);
-				V.put(newState, 100.0);
+				V.put(newState, 0.0);
 			}
 
 			State noTaskState = new State(currentCity, null);
 			statesOfCity.add(noTaskState);
-			Best.put(noTaskState, -1);
-			V.put(noTaskState, 100.0);
+			Best.put(noTaskState, 0);
+			V.put(noTaskState, 0.0);
 
 			states.add(statesOfCity);
 		}
 
 		/*
-		 * Define strategy of reactive agent, i.e. determine V(S) and Best(S) through RLA algorithm
+		 * Define strategy of reactive agent, l.e. determine V(S) and Best(S) through RLA algorithm
 		 *
 		 * NOTE: In the following the action "Accept task" is represented by -1. All other actions are characterized
 		 * 		 by the integer index of the neighbor in the adjacency list.
 		 */
 
+		// As noted under 1.2.5, the cost per km stays constant for the reactive agent.
 		int costPerKm = agent.vehicles().get(0).costPerKm();
 
 		// Iterate until value doesn't change anymore
@@ -118,11 +119,11 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 				for (State s : statesOfCity) {
 
 					// We disregard the state where a task leads to same city.
-					if (s.i.equals(s.t)) {
+					if (s.l.equals(s.t)) {
 						continue;
 					}
 
-					City cityFrom = s.i;
+					City cityFrom = s.l;
 					boolean taskAvailable = s.t != null;
 
 					double currentBestOption = Double.NEGATIVE_INFINITY;
@@ -164,7 +165,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 					}
 
 					// Verify if there has been enough change to justify another iteration
-					if (Math.abs(currentBestOption - V.get(s)) > THRESHOLD) {
+					if (Math.abs(currentBestOption - V.get(s)) > EPSILON) {
 						change = true;
 					}
 
