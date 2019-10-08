@@ -215,14 +215,12 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		// Sum the probability of landing in given state * its value, over all possible states
 		// Multiply this value by discount and add the reward gained in current step.
 		double sum = 0;
-		double probaSum = 0;
 		for (City task : cities) {
 			// This state does not exist
 			if (task.equals(cityLocation)) {
 				continue;
 			}
 			sum += V.get(new State(cityLocation, task)) * td.probability(cityLocation, task);
-			probaSum += td.probability(cityLocation, task);
 		}
 		// Careful: Also add value of state where no task available !
 		sum += V.get(new State(cityLocation, null)) * td.probability(cityLocation, null);
