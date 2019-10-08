@@ -104,6 +104,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 					for (City t2 : cities) {
 						reward += td.probability(m, t2) * vecVal.get(new State(m, t2));
 					}
+					reward += td.probability(m, null) * vecVal.get(new State(m, null));
 					reward *= discount;
 					reward -= m.distanceTo(s.current) * vehicle.costPerKm();
 
@@ -121,6 +122,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 					for (City t2 : cities) {
 						reward += td.probability(s.task, t2) * vecVal.get(new State(s.task, t2));
 					}
+					reward +=  td.probability(s.task, null) * vecVal.get(new State(s.task, null));
 					reward *= discount;
 					reward += td.reward(s.current, s.task) - s.task.distanceTo(s.current) * vehicle.costPerKm();
 
@@ -171,7 +173,7 @@ public class ReactiveLoic implements ReactiveBehavior {
 		}
 
 		if (numActions >= 1 && (numActions < 10 || numActions % 10 == 0)) {
-			System.out.println("REACTIVE LOIC: \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
+			System.out.println(vehicle.name()+": \tACTION " + numActions + " \tPROFIT: " + myAgent.getTotalProfit()
 					+ " \taverage: " + (myAgent.getTotalProfit() / numActions) + "\tavg/km: "
 					+ (myAgent.getTotalProfit() / vehicle.getDistance()));
 		}
