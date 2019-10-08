@@ -33,7 +33,7 @@
 	
 		<company name="Company A">
 			<!-- the first vehicle (blue) -->
-			<vehicle name="RANDOM">
+			<vehicle name="vec 1">
 				<set color="#0000ff" />
 				<set home="Lausanne" />
 				<set speed="90" />
@@ -44,7 +44,7 @@
 		
 		<company name="Company B">
 			<!-- the second vehicle (red) -->
-			<vehicle name="YANN">
+			<vehicle name="vec 2">
 				<set color="#ff0000" />
 				<set home="Lausanne" />
 				<set speed="90" />
@@ -55,7 +55,7 @@
 				
 		<company name="Company C">
 			<!-- the third vehicle (green) -->
-			<vehicle name="OLD">
+			<vehicle name="vec 3">
 				<set color="#00ff00" />
 				<set home="Lausanne" />
 				<set speed="90" />
@@ -66,7 +66,7 @@
 		
 		<company name="Company D">
 			<!-- the fourth vehicle (yellow) -->
-			<vehicle name="TEST">
+			<vehicle name="vec 4">
 				<set color="#ffff00" />
 				<set home="Lausanne" />
 				<set speed="90" />
@@ -77,7 +77,7 @@
 		
 		<company name="Company E">
 			<!-- the fifth vehicle (magenta) -->
-			<vehicle name="LOIC">
+			<vehicle name="vec 5">
 				<set color="#ff00ff" />
 				<set home="Lausanne" />
 				<set speed="90" />
@@ -88,7 +88,7 @@
 		
 		<company name="Company F">
 			<!-- the sixth vehicle (cyan) -->
-			<vehicle name="Loïc">
+			<vehicle name="vec 6">
 				<set color="#000000" />
 				<set home="Lausanne" />
 				<set speed="90" />

@@ -46,7 +46,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 		}
 		
 		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
-			System.out.println("RANDOM:\t\tACTION " + numActions + " \t PROFIT " + myAgent.getTotalProfit()
+			System.out.println("random agent "+vehicle.name()+":\t\tACTION " + numActions + " \t PROFIT " + myAgent.getTotalProfit()
 					+ " \tavg/ac: " + (myAgent.getTotalProfit() / numActions) + "\tavg/km: "+(myAgent.getTotalProfit() / vehicle.getDistance()));
 		}
 		numActions++;

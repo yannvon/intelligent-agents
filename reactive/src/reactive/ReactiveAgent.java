@@ -1,4 +1,4 @@
-package qlearning;
+package reactive;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveTemplateYann implements ReactiveBehavior {
+public class ReactiveAgent implements ReactiveBehavior {
 
 	public static double EPSILON = 0.001;
 
@@ -202,7 +202,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		}
 		
 		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
-			System.out.println(vehicle.name()+":\tACTION "+numActions+" \tPROFIT: "+myAgent.getTotalProfit()+
+			System.out.println("trained agent "+vehicle.name()+":\tACTION "+numActions+" \tPROFIT: "+myAgent.getTotalProfit()+
 					" \taverage: "+(myAgent.getTotalProfit() / numActions)+"\tavg/km: "+(myAgent.getTotalProfit() / vehicle.getDistance()));
 		}
 		numActions++;
