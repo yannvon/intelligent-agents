@@ -1,4 +1,4 @@
-package qlearning;
+package reactive;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveTemplateYann implements ReactiveBehavior {
+public class ReactiveAgent implements ReactiveBehavior {
 
 	public static double EPSILON = 0.001;
 
@@ -74,14 +74,14 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		this.myAgent = agent;
 
 		int numberOfCities = topology.cities().size();
-		this.Best = new HashMap<>();
-		this.V = new HashMap<>();
+		this.Best = new HashMap<State, Integer>();
+		this.V = new HashMap<State, Double>();
 
-		ArrayList<ArrayList<State>> states = new ArrayList<>(numberOfCities);
+		ArrayList<ArrayList<State>> states = new ArrayList<ArrayList<State>>(numberOfCities);
 
 		// Initialize data structures
 		for(City currentCity: topology.cities()) {
-			ArrayList<State> statesOfCity = new ArrayList<>();
+			ArrayList<State> statesOfCity = new ArrayList<State>();
 
 			for(City taskDestination : topology.cities()) {
 				State newState = new State(currentCity, taskDestination);
@@ -202,7 +202,7 @@ public class ReactiveTemplateYann implements ReactiveBehavior {
 		}
 		
 		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
-			System.out.println("REACTIVE YANN: \tACTION "+numActions+" \tPROFIT: "+myAgent.getTotalProfit()+
+			System.out.println("trained agent "+vehicle.name()+":\tACTION "+numActions+" \tPROFIT: "+myAgent.getTotalProfit()+
 					" \taverage: "+(myAgent.getTotalProfit() / numActions)+"\tavg/km: "+(myAgent.getTotalProfit() / vehicle.getDistance()));
 		}
 		numActions++;

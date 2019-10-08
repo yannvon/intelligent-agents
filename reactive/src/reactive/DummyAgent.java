@@ -1,4 +1,4 @@
-package template;
+package reactive;
 
 import java.util.Random;
 
@@ -13,10 +13,10 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveTemplate implements ReactiveBehavior {
+public class DummyAgent implements ReactiveBehavior {
 
 	private Random random;
-	private double pPickup;
+	private double rAccept;
 	private int numActions;
 	private Agent myAgent;
 
@@ -29,7 +29,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 				0.95);
 
 		this.random = new Random();
-		this.pPickup = discount;
+		this.rAccept = discount;
 		this.numActions = 0;
 		this.myAgent = agent;
 	}
@@ -38,7 +38,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 	public Action act(Vehicle vehicle, Task availableTask) {
 		Action action;
 
-		if (availableTask == null || random.nextDouble() > pPickup) {
+		if (availableTask == null || availableTask.reward/availableTask.pickupCity.distanceTo(availableTask.deliveryCity) < rAccept ) {
 			City currentCity = vehicle.getCurrentCity();
 			action = new Move(currentCity.randomNeighbor(random));
 		} else {
@@ -46,7 +46,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 		}
 		
 		if (numActions >= 1 && (numActions<10 ||numActions%10 ==0)) {
-			System.out.println("random agent "+vehicle.name()+":\t\tACTION " + numActions + " \t PROFIT " + myAgent.getTotalProfit()
+			System.out.println("dummy agent "+vehicle.name()+":\t\tACTION " + numActions + " \t PROFIT " + myAgent.getTotalProfit()
 					+ " \tavg/ac: " + (myAgent.getTotalProfit() / numActions) + "\tavg/km: "+(myAgent.getTotalProfit() / vehicle.getDistance()));
 		}
 		numActions++;

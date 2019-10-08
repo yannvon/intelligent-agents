@@ -9,30 +9,15 @@
 		<set class-name="template.ReactiveTemplate"/>
 		<set discount-factor=".85"/>
 	</agent>
-	<agent name="reactive-loic">
+	<agent name="reactive-dummy">
 		<set class-path="bin/"/>
-		<set class-name="qlearning.ReactiveLoic"/>
-		<set discount-factor=".90"/>
+		<set class-name="reactive.DummyAgent"/>
+		<set discount-factor="200"/>
 	</agent>
-		<agent name="reactive-loic2">
+	<agent name="reactive-rla">
 		<set class-path="bin/"/>
-		<set class-name="qlearning.ReactiveLoic2"/>
-		<set discount-factor=".90"/>
-	</agent>
-	<agent name="reactive-test">
-		<set class-path="bin/"/>
-		<set class-name="qlearning.ReactiveTest"/>
-		<set discount-factor=".90"/>
-	</agent>
-	<agent name="reactive-yann">
-		<set class-path="bin/"/>
-		<set class-name="qlearning.ReactiveTemplateYann"/>
-		<set discount-factor=".85"/>
-	</agent><agent name="reactive-old">
-		<set class-path="bin/"/>
-		<set class-name="qlearning.ReactiveOld"/>
-		<set discount-factor=".50"/>
-		<set it="1000.0"/>
+		<set class-name="reactive.ReactiveAgent"/>
+		<set discount-factor=".99"/>
 	</agent>
 
 </agents>

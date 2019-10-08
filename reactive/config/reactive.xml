@@ -94,6 +94,26 @@
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>
+		<company name="Company G">
+			<!-- the first vehicle (grey) -->
+			<vehicle name="d7">
+				<set color="#404040" />
+				<set home="Paris" />
+				<set speed="220" />
+				<set capacity="30" />
+				<set cost-per-km="5" />
+			</vehicle>
+		</company>
+		<company name="Company H">
+			<!-- the first vehicle (black) -->
+			<vehicle name="d8">
+				<set color="#000000" />
+				<set home="Paris" />
+				<set speed="220" />
+				<set capacity="30" />
+				<set cost-per-km="5" />
+			</vehicle>
+		</company>
 		
 	</companies>
 	
