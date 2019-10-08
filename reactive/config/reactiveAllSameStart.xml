@@ -44,7 +44,7 @@
 			<!-- the second vehicle (red) -->
 			<vehicle name="Vehicle 2">
 				<set color="#ff0000" />
-				<set home="Lyon" />
+				<set home="Paris" />
 				<set speed="220" />
 				<set capacity="30" />
 				<set cost-per-km="5" />
@@ -55,7 +55,7 @@
 			<!-- the third vehicle (green) -->
 			<vehicle name="Vehicle 3">
 				<set color="#00ff00" />
-				<set home="Brest" />
+				<set home="Paris" />
 				<set speed="220" />
 				<set capacity="30" />
 				<set cost-per-km="5" />
@@ -66,7 +66,7 @@
 			<!-- the fourth vehicle (yellow) -->
 			<vehicle name="Vehicle 4">
 				<set color="#ffff00" />
-				<set home="Monaco" />
+				<set home="Paris" />
 				<set speed="220" />
 				<set capacity="30" />
 				<set cost-per-km="5" />
@@ -77,7 +77,7 @@
 			<!-- the fifth vehicle (magenta) -->
 			<vehicle name="Vehicle 5">
 				<set color="#ff00ff" />
-				<set home="Strasbourg" />
+				<set home="Paris" />
 				<set speed="220" />
 				<set capacity="80" />
 				<set cost-per-km="5" />
