@@ -64,7 +64,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		@Override
 		public String toString() {
-			return "Tostring() not implemented";
+			return "toString() not implemented";
 		}
 	}
 
@@ -106,8 +106,6 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		
 		// TODO
 		costPerKm = agent.vehicles().get(0).costPerKm();
-
-
 	}
 	
 	@Override
@@ -145,6 +143,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		queue.add(startState);
 
 		// BFS algorithm
+		int i = 0;
+
 		while(true) {
 			if (queue.isEmpty()) {
 				// This should never happen
@@ -162,8 +162,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			}
 
 			for(State suc : successors) {
-				queue.push(suc);
+				queue.addLast(suc);
 			}
+			i++;
 		}
 
 		// Construct Plan from finalState by walking successors
@@ -214,7 +215,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		// Option 1: Travel to neighbor city
 		for(City c : s.location.neighbors()) {
 			State suc = new State(c, s.carriedTasks, s.tasksToDeliver, s);
-			successors.push(suc);
+			successors.add(suc);
 		}
 
 		// Option 2: Pickup a task if available
@@ -229,7 +230,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 					State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
 					suc.pickup = t; // indicate that this state was reached through pickup of t
-					successors.push(suc);
+					successors.add(suc);
 				}
 			}
 		}
@@ -243,7 +244,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
 				suc.deliver = t; // indicate that this state was reached though delivery of t
-				successors.push(suc);
+				successors.add(suc);
 			}
 		}
 		return successors;
