@@ -15,6 +15,7 @@ import logist.topology.Topology.City;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Objects;
+import java.util.Scanner;
 
 /**
  * An optimal planner for one vehicle.
@@ -44,7 +45,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		}
 
 		public boolean isGoalState() {
-			return tasksToDeliver.isEmpty();
+			return tasksToDeliver.isEmpty() && carriedTasks.isEmpty();
 		}
 
 		@Override
@@ -64,7 +65,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		@Override
 		public String toString() {
-			return "toString() not implemented";
+			return "location: "+location.toString() +" carriedtask:" + carriedTasks.size()+ " todeliver: "+ tasksToDeliver.size();
 		}
 	}
 
@@ -98,7 +99,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		this.agent = agent;
 		
 		// initialize the planner
-		int capacity = agent.vehicles().get(0).capacity();
+		capacity = agent.vehicles().get(0).capacity();
 		String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
 		
 		// Throws IllegalArgumentException if algorithm is unknown
@@ -145,6 +146,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		// BFS algorithm
 		int i = 0;
 
+		int j = 0;
+		Scanner sc = new Scanner(System.in);
 		while(true) {
 			if (queue.isEmpty()) {
 				// This should never happen
@@ -159,12 +162,31 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			if (!visited.contains(s)){
 				visited.add(s);
 				successors = computeSuccessors(s);
+				System.out.println("\n\n");
+				System.out.println("IT :" + i);
+				System.out.println("STATE");
+				System.out.println(s.toString());
+				System.out.println("Sucessors" + successors.size());
+				for(State ns:successors) {
+					System.out.println(ns.toString());
+				}
+				
+
+				for(State suc : successors) {
+					queue.addLast(suc);
+				}
+				
+			}else {
+				j++;
+				if(j%1000 ==0) {
+					System.out.println("visited "+ j+ " times");
+				}
+				
 			}
 
-			for(State suc : successors) {
-				queue.addLast(suc);
-			}
 			i++;
+			//sc.nextLine();
+			
 		}
 
 		// Construct Plan from finalState by walking successors
@@ -176,7 +198,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		LinkedList<State> path = new LinkedList<>();
 
 		State s = goal;
-		while (s != null) {
+		while (s.parent != null) {
 			path.addFirst(s);
 			s = s.parent;
 		}
