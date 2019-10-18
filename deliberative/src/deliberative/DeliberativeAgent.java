@@ -162,14 +162,16 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			if (!visited.contains(s)){
 				visited.add(s);
 				successors = computeSuccessors(s);
-				System.out.println("\n\n");
+				
+				
+				/*System.out.println("\n\n");
 				System.out.println("IT :" + i);
 				System.out.println("STATE");
 				System.out.println(s.toString());
 				System.out.println("Sucessors" + successors.size());
 				for(State ns:successors) {
 					System.out.println(ns.toString());
-				}
+				}*/
 				
 
 				for(State suc : successors) {
