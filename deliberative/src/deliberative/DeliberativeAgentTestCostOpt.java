@@ -1,5 +1,10 @@
 package deliberative;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.Scanner;
+
 /* import table */
 
 import logist.agent.Agent;
@@ -12,16 +17,11 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Objects;
-import java.util.Scanner;
-
 /**
  * An optimal planner for one vehicle.
  */
 @SuppressWarnings("unused")
-public class DeliberativeAgent implements DeliberativeBehavior {
+public class DeliberativeAgentTestCostOpt implements DeliberativeBehavior {
 
 	/**
 	 * Private helper class representing a state.
@@ -36,7 +36,16 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		private Task pickup;
 		private Task deliver;
 		
+		private int cost=0;
+		
 
+	   public int cost() {
+		   if(parent == null) {
+			   return 0;
+		   }else {
+			   return parent.cost() + cost;
+		   }
+	   }
 
 		public State(City location, TaskSet carrying, TaskSet todo, State parent) {
 			this.location = location;
@@ -134,9 +143,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		// Initialize
 		LinkedList<State> queue = new LinkedList<>();
-		HashSet<State> visited = new HashSet<>();
+		HashMap<State,State> visited = new HashMap<>();
 		LinkedList<State> successors = new LinkedList<>();
-		State finalState;
+		State finalState=null;
 
 		// Create start state
 		TaskSet emptyTaskSet = tasks.clone();
@@ -147,21 +156,22 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		// BFS algorithm
 		int i = 0;
 
+		int nFin = 0;
 		int j = 0;
 		Scanner sc = new Scanner(System.in);
-		while(true) {
-			if (queue.isEmpty()) {
-				// This should never happen
-				System.err.println("No more enqueued states, but no goal state found");
-				return null;
-			}
+		while((i< 1_000_000 || finalState == null) && !queue.isEmpty()) {
 			State s = queue.pop();
 			if (s.isGoalState()) {
-				finalState = s;
-				break;
+				
+				if(finalState == null || finalState.cost()>s.cost()) {
+					finalState = s;
+					System.out.println(s.cost());
+					nFin ++;
+				}
+				//break;
 			}
-			if (!visited.contains(s)){
-				visited.add(s);
+			if (!visited.containsKey(s)){
+				visited.put(s,s);
 				successors = computeSuccessors(s);
 				
 				
@@ -180,6 +190,14 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				}
 				
 			}else {
+				State s2 = visited.get(s);
+				if(s2.cost()>s.cost()) {
+					successors = computeSuccessors(s);
+					for(State suc : successors) {
+						queue.addLast(suc);
+					}
+				}
+				
 				j++;
 				if(j%1000 ==0) {
 					System.out.println("visited "+ j+ " times");
@@ -191,6 +209,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			//sc.nextLine();
 			
 		}
+		System.out.println("Iteration = " + i + "\nfinalStates = " + nFin);
 
 		// Construct Plan from finalState by walking successors
 		return constructPlanFromGoal(vehicle.getCurrentCity(), finalState);
@@ -236,12 +255,20 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	private LinkedList<State> computeSuccessors(State s) {
 
 		LinkedList<State> successors = new LinkedList<>();
+		// Option 3: Deliver a task if available
+		for(Task t : s.carriedTasks) {
+			if (t.deliveryCity.equals(s.location)) {
+				TaskSet carriedTasks = s.carriedTasks.clone();
+				TaskSet tasksToDeliver = s.tasksToDeliver.clone();
+				carriedTasks.remove(t);
 
-		// Option 1: Travel to neighbor city
-		for(City c : s.location.neighbors()) {
-			State suc = new State(c, s.carriedTasks, s.tasksToDeliver, s);
-			successors.add(suc);
+				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
+				suc.deliver = t; // indicate that this state was reached though delivery of t
+				successors.add(suc);
+				return successors;
+			}
 		}
+	
 
 		// Option 2: Pickup a task if available
 		for(Task t : s.tasksToDeliver) {
@@ -260,17 +287,12 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			}
 		}
 
-		// Option 3: Deliver a task if available
-		for(Task t : s.carriedTasks) {
-			if (t.deliveryCity.equals(s.location)) {
-				TaskSet carriedTasks = s.carriedTasks.clone();
-				TaskSet tasksToDeliver = s.tasksToDeliver.clone();
-				carriedTasks.remove(t);
 
-				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
-				suc.deliver = t; // indicate that this state was reached though delivery of t
-				successors.add(suc);
-			}
+		// Option 1: Travel to neighbor city
+		for(City c : s.location.neighbors()) {
+			State suc = new State(c, s.carriedTasks, s.tasksToDeliver, s);
+			suc.cost = (int) ( c.distanceTo(s.location));
+			successors.add(suc);
 		}
 		return successors;
 	}

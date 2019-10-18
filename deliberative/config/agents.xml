@@ -16,4 +16,10 @@
 		<set algorithm="BFS"/>
 	</agent>
 	
+	<agent name="deliberative-agent-better">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgentTestCostOpt"/>
+		<set algorithm="BFS"/>
+	</agent>
+	
 </agents>
