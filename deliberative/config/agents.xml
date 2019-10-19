@@ -15,6 +15,11 @@
 		<set class-name="deliberative.DeliberativeAgent"/>
 		<set algorithm="BFS"/>
 	</agent>
+		<agent name="deliberative-agent-main">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgent"/>
+		<set algorithm="ASTAR"/>
+	</agent>
 	
 	<agent name="deliberative-agent-better">
 		<set class-path="bin/"/>

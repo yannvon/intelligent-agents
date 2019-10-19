@@ -1,5 +1,11 @@
 package deliberative;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.PriorityQueue;
+
 /* import table */
 
 import logist.agent.Agent;
@@ -12,11 +18,6 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Objects;
-import java.util.Scanner;
-
 /**
  * An optimal planner for one vehicle.
  */
@@ -24,10 +25,10 @@ import java.util.Scanner;
 public class DeliberativeAgent implements DeliberativeBehavior {
 
 	/**
-	 * Private helper class representing a state.
-	 * In large parts similar to the reactive agent.
+	 * Private helper class representing a state. In large parts similar to the
+	 * reactive agent.
 	 */
-	private class State {
+	private class State implements Comparable<State>{
 		private City location;
 		private TaskSet carriedTasks;
 		private TaskSet tasksToDeliver;
@@ -35,8 +36,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		private State parent;
 		private Task pickup;
 		private Task deliver;
-		
 
+		private double stepCost = 0;
 
 		public State(City location, TaskSet carrying, TaskSet todo, State parent) {
 			this.location = location;
@@ -49,8 +50,16 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			return tasksToDeliver.isEmpty() && carriedTasks.isEmpty();
 		}
 
+		public double cost() {
+			if (parent == null) {
+				return 0;
+			} else {
+				return parent.cost() + stepCost;
+			}
+		}
+
 		@Override
-		public int hashCode(){
+		public int hashCode() {
 			return Objects.hash(this.location, this.carriedTasks, this.tasksToDeliver);
 		}
 
@@ -60,65 +69,83 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				return false;
 			}
 			return this.location.equals(((State) that).location)
-					&& (this.tasksToDeliver == ((State) that).tasksToDeliver || this.tasksToDeliver.equals(((State) that).tasksToDeliver))
-					&& (this.carriedTasks == ((State) that).carriedTasks || this.carriedTasks.equals(((State) that).carriedTasks));
+					&& (this.tasksToDeliver == ((State) that).tasksToDeliver
+							|| this.tasksToDeliver.equals(((State) that).tasksToDeliver))
+					&& (this.carriedTasks == ((State) that).carriedTasks
+							|| this.carriedTasks.equals(((State) that).carriedTasks));
 		}
 
 		@Override
 		public String toString() {
-			return "location: "+location.toString() +" carriedtask:" + carriedTasks.size()+ " todeliver: "+ tasksToDeliver.size();
+			return "location: " + location.toString() + " carriedtask:" + carriedTasks.size() + " todeliver: "
+					+ tasksToDeliver.size();
+		}
+
+		@Override
+		public int compareTo(State o) {
+			return (int) ( this.cost() -o.cost() );
 		}
 	}
 
 	/*
-	Goal state: tasksToDeliver.isEmpty()
-
-	Transitions:
+	 * Goal state: tasksToDeliver.isEmpty()
+	 * 
+	 * Transitions:
 	 */
 
-	enum Algorithm { BFS, ASTAR }
-	enum Transition {PICKUP, DELIVER, MOVE}
-	
+	enum Algorithm {
+		BFS, ASTAR
+	}
+
+	enum Transition {
+		PICKUP, DELIVER, MOVE
+	}
+
 	/* Environment */
 	Topology topology;
 	TaskDistribution td;
-	
+
 	/* the properties of the agent */
 	Agent agent;
 	int capacity;
 	double costPerKm;
-	TaskSet carriedTasks;
-
+	private TaskSet carriedTasks;
 
 	/* the planning class */
 	Algorithm algorithm;
-	
+
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
 		this.topology = topology;
 		this.td = td;
 		this.agent = agent;
-		
+
 		// initialize the planner
 		capacity = agent.vehicles().get(0).capacity();
 		String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
-		
+
 		// Throws IllegalArgumentException if algorithm is unknown
 		algorithm = Algorithm.valueOf(algorithmName.toUpperCase());
-		
+
 		// TODO
 		costPerKm = agent.vehicles().get(0).costPerKm();
+		
+		carriedTasks = null;
 	}
-	
+
 	@Override
 	public Plan plan(Vehicle vehicle, TaskSet tasks) {
 		Plan plan;
+		if(carriedTasks == null) {
+			carriedTasks = tasks.clone();
+			carriedTasks.clear();
+		}
 
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
 		case ASTAR:
 			// ...
-			plan = naivePlan(vehicle, tasks);
+			plan = astarPlan(vehicle, tasks);
 			break;
 		case BFS:
 			// ...
@@ -126,70 +153,90 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			break;
 		default:
 			throw new AssertionError("Should not happen.");
-		}		
+		}
 		return plan;
 	}
+	
+	
+
+	private Plan astarPlan(Vehicle vehicle, TaskSet tasks) {
+		PriorityQueue<State> queue = new PriorityQueue<>();
+		HashMap<State,State> visited = new HashMap<>();
+		State finalState;
+		
+		State startState = new State(vehicle.getCurrentCity(), carriedTasks, tasks, null);
+		queue.add(startState);
+		
+		int i =0;
+		
+		while(true) {
+			if (queue.isEmpty()) {
+				// This should never happen
+				throw new Error("No more enqueued states, but no goal state found");
+			}
+			
+			State s = queue.poll();
+			
+			if (s.isGoalState()) {
+				finalState = s;
+				break;
+			}
+			
+			if (!visited.containsKey(s) || s.cost() < visited.get(s).cost() ) {
+				visited.put(s,s);
+				LinkedList<State> successors = computeSuccessors(s);
+				queue.addAll(successors);
+			}
+
+			i++;
+			
+		}
+		
+		return constructPlanFromGoal(vehicle.getCurrentCity(), finalState);
+	}
+
+	
+	
+	
 
 	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
 
 		// Initialize
 		LinkedList<State> queue = new LinkedList<>();
 		HashSet<State> visited = new HashSet<>();
-		LinkedList<State> successors = new LinkedList<>();
 		State finalState;
 
 		// Create start state
-		TaskSet emptyTaskSet = tasks.clone();
-		emptyTaskSet.clear();
-		State startState = new State(vehicle.getCurrentCity(), emptyTaskSet, tasks, null);
+		
+		State startState = new State(vehicle.getCurrentCity(), carriedTasks, tasks, null);
 		queue.add(startState);
 
 		// BFS algorithm
 		int i = 0;
-
-		int j = 0;
-		Scanner sc = new Scanner(System.in);
-		while(true) {
+		
+		while (true) {
+			
 			if (queue.isEmpty()) {
-				// This should never happen
-				System.err.println("No more enqueued states, but no goal state found");
-				return null;
+				throw new Error("No more enqueued states, but no goal state found");
 			}
+			
 			State s = queue.pop();
+			
 			if (s.isGoalState()) {
 				finalState = s;
 				break;
 			}
-			if (!visited.contains(s)){
+			
+			if (!visited.contains(s)) {
 				visited.add(s);
-				successors = computeSuccessors(s);
-				
-				
-				/*System.out.println("\n\n");
-				System.out.println("IT :" + i);
-				System.out.println("STATE");
-				System.out.println(s.toString());
-				System.out.println("Sucessors" + successors.size());
-				for(State ns:successors) {
-					System.out.println(ns.toString());
-				}*/
-				
+				LinkedList<State> successors = computeSuccessors(s);
 
-				for(State suc : successors) {
-					queue.addLast(suc);
-				}
-				
-			}else {
-				j++;
-				if(j%1000 ==0) {
-					System.out.println("visited "+ j+ " times");
-				}
-				
+				queue.addAll(successors);
+
 			}
 
 			i++;
-			//sc.nextLine();
-			
+
 		}
 
 		// Construct Plan from finalState by walking successors
@@ -210,13 +257,11 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		for (State state : path) {
 			// Check how state was attained
-			if (state.deliver != null){
+			if (state.deliver != null) {
 				p.appendDelivery(state.deliver);
-			}
-			else if (state.pickup != null){
+			} else if (state.pickup != null) {
 				p.appendPickup(state.pickup);
-			}
-			else {
+			} else {
 				p.appendMove(state.location);
 			}
 		}
@@ -238,13 +283,15 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		LinkedList<State> successors = new LinkedList<>();
 
 		// Option 1: Travel to neighbor city
-		for(City c : s.location.neighbors()) {
+		for (City c : s.location.neighbors()) {
 			State suc = new State(c, s.carriedTasks, s.tasksToDeliver, s);
+			suc.stepCost = c.distanceTo(s.location);
+			
 			successors.add(suc);
 		}
 
 		// Option 2: Pickup a task if available
-		for(Task t : s.tasksToDeliver) {
+		for (Task t : s.tasksToDeliver) {
 			if (t.pickupCity.equals(s.location)) {
 				// Check if can carry task
 				if (t.weight + s.carriedTasks.weightSum() < capacity) {
@@ -261,7 +308,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		}
 
 		// Option 3: Deliver a task if available
-		for(Task t : s.carriedTasks) {
+		for (Task t : s.carriedTasks) {
 			if (t.deliveryCity.equals(s.location)) {
 				TaskSet carriedTasks = s.carriedTasks.clone();
 				TaskSet tasksToDeliver = s.tasksToDeliver.clone();
@@ -274,37 +321,12 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		}
 		return successors;
 	}
-	
-	private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
-		City current = vehicle.getCurrentCity();
-		Plan plan = new Plan(current);
-
-		for (Task task : tasks) {
-			// move: current city => pickup location
-			for (City city : current.pathTo(task.pickupCity))
-				plan.appendMove(city);
-
-			plan.appendPickup(task);
-
-			// move: pickup location => delivery location
-			for (City city : task.path())
-				plan.appendMove(city);
-
-			plan.appendDelivery(task);
-
-			// set current city
-			current = task.deliveryCity;
-		}
-		return plan;
-	}
 
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
-		
+
 		if (!carriedTasks.isEmpty()) {
-			// This cannot happen for this simple agent, but typically
-			// you will need to consider the carriedTasks when the next
-			// plan is computed.
+			this.carriedTasks = carriedTasks.clone();
 		}
 	}
 }
