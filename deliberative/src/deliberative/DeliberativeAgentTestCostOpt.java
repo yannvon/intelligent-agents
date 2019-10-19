@@ -156,6 +156,7 @@ public class DeliberativeAgentTestCostOpt implements DeliberativeBehavior {
 		// BFS algorithm
 		int i = 0;
 
+		int lo = 0;
 		int nFin = 0;
 		int j = 0;
 		Scanner sc = new Scanner(System.in);
@@ -192,15 +193,21 @@ public class DeliberativeAgentTestCostOpt implements DeliberativeBehavior {
 			}else {
 				State s2 = visited.get(s);
 				if(s2.cost()>s.cost()) {
+					s2.parent = s.parent;
+					s2.cost = s.cost;
+					s2.pickup = s.pickup;
+					s2.deliver = s.deliver;
+					visited.put(s, s);
 					successors = computeSuccessors(s);
 					for(State suc : successors) {
 						queue.addLast(suc);
 					}
+					lo++;
 				}
 				
 				j++;
 				if(j%1000 ==0) {
-					System.out.println("visited "+ j+ " times");
+					System.out.println("visited "+ j+ " times, uses "+ lo);
 				}
 				
 			}
