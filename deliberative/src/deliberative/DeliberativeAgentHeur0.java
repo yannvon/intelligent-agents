@@ -22,7 +22,7 @@ import logist.topology.Topology.City;
  * An optimal planner for one vehicle.
  */
 @SuppressWarnings("unused")
-public class DeliberativeAgent implements DeliberativeBehavior {
+public class DeliberativeAgentHeur0 implements DeliberativeBehavior {
 
 	/**
 	 * Private helper class representing a state. In large parts similar to the
@@ -67,21 +67,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		
 		
 		public double heuristic() {
-			double max = 0.;
-			for(Task t : carriedTasks) {
-				double dist = location.distanceTo(t.deliveryCity);
-				if(max<dist) {
-					max = dist;
-				}
-			}
-			for(Task t : tasksToDeliver) {
-				double dist = location.distanceTo(t.pickupCity) + t.pathLength();
-				if(max<dist) {
-					max = dist;
-				}
-			}
-			
-			return max;
+			return 0;
 		}
 		
 
@@ -168,8 +154,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			startingCarriedTasks.clear();
 		}
 
-		// Compute the plan with the selected algorithm.
 		long start = System.currentTimeMillis();
+		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
 		case ASTAR:
 			// ...
@@ -182,9 +168,11 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		default:
 			throw new AssertionError("Should not happen.");
 		}
+
 		long end = System.currentTimeMillis();
 		
 		System.out.println("Time to compute plan: "+ ((end-start)/1000.)+"s");
+		
 		return plan;
 	}
 	

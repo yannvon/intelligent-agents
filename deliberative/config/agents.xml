@@ -20,6 +20,11 @@
 		<set class-name="deliberative.DeliberativeAgent"/>
 		<set algorithm="ASTAR"/>
 	</agent>
+		<agent name="deliberative-agent-heur0">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgentHeur0"/>
+		<set algorithm="ASTAR"/>
+	</agent>
 	
 	<agent name="deliberative-agent-better">
 		<set class-path="bin/"/>
