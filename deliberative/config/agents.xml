@@ -15,12 +15,12 @@
 		<set class-name="deliberative.DeliberativeAgent"/>
 		<set algorithm="BFS"/>
 	</agent>
-		<agent name="deliberative-agent-main">
+	<agent name="deliberative-agent-main">
 		<set class-path="bin/"/>
 		<set class-name="deliberative.DeliberativeAgent"/>
 		<set algorithm="ASTAR"/>
 	</agent>
-		<agent name="deliberative-agent-heur0">
+	<agent name="deliberative-agent-heur0">
 		<set class-path="bin/"/>
 		<set class-name="deliberative.DeliberativeAgentHeur0"/>
 		<set algorithm="ASTAR"/>

@@ -10,15 +10,15 @@
 	<topology import="config/topology/switzerland.xml" />
 	
 	<!-- load agents -->
-	<agents import="config/agents.xml" />
+	<agents import="config/agents.xml" ></agents>
 	
 	<!-- define task distribution -->
-	<tasks number="10" rngSeed="23456">
+	<tasks number="15" rngSeed="23456">
 		<!--
 			the probabilities, rewards and weight of tasks
 		-->
 		<probability distribution="uniform" min="0.0" max="1.0" />
-		<reward distribution="constant" policy="short-distances" min="100" max="99999" />
+		<reward distribution="constant" policy="short-distances" min="100" max="99999" ></reward>
 		<weight distribution="constant" value="3" />
 
 	</tasks>

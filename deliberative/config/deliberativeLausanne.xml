@@ -7,13 +7,13 @@
 	<settings import="config/settings_default.xml" />
 	
 	<!-- load the topology -->
-	<topology import="config/topology/LausanneDebug.xml" />
+	<topology import="config/topology/Lausanne.xml" />
 	
 	<!-- load agents -->
 	<agents import="config/agents.xml" />
 	
 	<!-- define task distribution -->
-	<tasks number="2" rngSeed="23456">
+	<tasks number="20" rngSeed="23456">
 		<!--
 			the probabilities, rewards and weight of tasks
 		-->
