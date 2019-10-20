@@ -29,17 +29,25 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	 * reactive agent.
 	 */
 	private class State implements Comparable<State>{
+		/*
+		 * State representation
+		 */
 		private City location;
 		private TaskSet carriedTasks;
 		private TaskSet tasksToDeliver;
 
+		/*
+		 * Transitions information
+		 */
 		private State parent;
 		private Task pickup;
 		private Task deliver;
-
-		private double stepCost = 0;
+		private double stepCost;
 		
-		private double heuristicCost = 0;
+		/*
+		 * heuristic stored
+		 */
+		private double heuristicCost;
 
 		public State(City location, TaskSet carrying, TaskSet todo, State parent) {
 			this(location,  carrying,  todo,  parent,0);
@@ -68,12 +76,14 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		
 		public double heuristic() {
 			double max = 0.;
+			
 			for(Task t : carriedTasks) {
 				double dist = location.distanceTo(t.deliveryCity);
 				if(max<dist) {
 					max = dist;
 				}
 			}
+			
 			for(Task t : tasksToDeliver) {
 				double dist = location.distanceTo(t.pickupCity) + t.pathLength();
 				if(max<dist) {
