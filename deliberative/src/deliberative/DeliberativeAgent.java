@@ -28,7 +28,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	 * Private helper class representing a state. In large parts similar to the
 	 * reactive agent.
 	 */
-	private class State implements Comparable<State>{
+	private class State implements Comparable<State> {
 		/*
 		 * State representation
 		 */
@@ -43,16 +43,17 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		private Task pickup;
 		private Task deliver;
 		private double stepCost;
-		
+
 		/*
 		 * heuristic stored
 		 */
 		private double heuristicCost;
 
 		public State(City location, TaskSet carrying, TaskSet todo, State parent) {
-			this(location,  carrying,  todo,  parent,0);
+			this(location, carrying, todo, parent, 0);
 		}
-		public State(City location, TaskSet carrying, TaskSet todo, State parent,double stepCost) {
+
+		public State(City location, TaskSet carrying, TaskSet todo, State parent, double stepCost) {
 			this.location = location;
 			this.carriedTasks = carrying;
 			this.tasksToDeliver = todo;
@@ -72,28 +73,26 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				return parent.cost() + stepCost;
 			}
 		}
-		
-		
+
 		public double heuristic() {
 			double max = 0.;
-			
-			for(Task t : carriedTasks) {
+
+			for (Task t : carriedTasks) {
 				double dist = location.distanceTo(t.deliveryCity);
-				if(max<dist) {
+				if (max < dist) {
 					max = dist;
 				}
 			}
-			
-			for(Task t : tasksToDeliver) {
+
+			for (Task t : tasksToDeliver) {
 				double dist = location.distanceTo(t.pickupCity) + t.pathLength();
-				if(max<dist) {
+				if (max < dist) {
 					max = dist;
 				}
 			}
-			
+
 			return max;
 		}
-		
 
 		@Override
 		public int hashCode() {
@@ -120,7 +119,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		@Override
 		public int compareTo(State o) {
-			return (int) ( this.heuristicCost -o.heuristicCost );
+			return (int) (this.heuristicCost - o.heuristicCost);
 		}
 	}
 
@@ -166,14 +165,14 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		// TODO
 		costPerKm = agent.vehicles().get(0).costPerKm();
-		
+
 		startingCarriedTasks = null;
 	}
 
 	@Override
 	public Plan plan(Vehicle vehicle, TaskSet tasks) {
 		Plan plan;
-		if(startingCarriedTasks == null) {
+		if (startingCarriedTasks == null) {
 			startingCarriedTasks = tasks.clone();
 			startingCarriedTasks.clear();
 		}
@@ -193,52 +192,45 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			throw new AssertionError("Should not happen.");
 		}
 		long end = System.currentTimeMillis();
-		
-		System.out.println("Time to compute plan: "+ ((end-start)/1000.)+"s");
+
+		System.out.println("Time to compute plan: " + ((end - start) / 1000.) + "s");
 		return plan;
 	}
-	
-	
 
 	private Plan astarPlan(Vehicle vehicle, TaskSet tasks) {
 		PriorityQueue<State> queue = new PriorityQueue<>();
-		HashMap<State,State> visited = new HashMap<>();
+		HashMap<State, State> visited = new HashMap<>();
 		State finalState;
-		
+
 		State startState = new State(vehicle.getCurrentCity(), startingCarriedTasks, tasks, null);
 		queue.add(startState);
-		
-		int i =0;
-		
-		while(true) {
+
+		int i = 0;
+
+		while (true) {
 			if (queue.isEmpty()) {
 				// This should never happen
 				throw new Error("No more enqueued states, but no goal state found");
 			}
-			
+
 			State s = queue.poll();
-			
+
 			if (s.isGoalState()) {
 				finalState = s;
 				break;
 			}
-			
-			if (!visited.containsKey(s) || s.cost() < visited.get(s).cost() ) {
-				visited.put(s,s);
+
+			if (!visited.containsKey(s) || s.cost() < visited.get(s).cost()) {
+				visited.put(s, s);
 				LinkedList<State> successors = computeSuccessors(s);
 				queue.addAll(successors);
 			}
-
-			i++;
 			
+			i++;
 		}
-		
+
 		return constructPlanFromGoal(vehicle.getCurrentCity(), finalState);
 	}
-
-	
-	
-	
 
 	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
 
@@ -248,36 +240,30 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		State finalState;
 
 		// Create start state
-		
 		State startState = new State(vehicle.getCurrentCity(), startingCarriedTasks, tasks, null);
 		queue.add(startState);
 
 		// BFS algorithm
 		int i = 0;
-		
 		while (true) {
-			
+
 			if (queue.isEmpty()) {
 				throw new Error("No more enqueued states, but no goal state found");
 			}
-			
+
 			State s = queue.pop();
-			
+
 			if (s.isGoalState()) {
 				finalState = s;
 				break;
 			}
-			
+
 			if (!visited.contains(s)) {
 				visited.add(s);
 				LinkedList<State> successors = computeSuccessors(s);
-
 				queue.addAll(successors);
-
 			}
-
 			i++;
-
 		}
 
 		// Construct Plan from finalState by walking successors
@@ -322,11 +308,25 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	private LinkedList<State> computeSuccessors(State s) {
 
 		LinkedList<State> successors = new LinkedList<>();
+		
+		// Option 3: Deliver a task if available
+		for (Task t : s.carriedTasks) {
+			if (t.deliveryCity.equals(s.location)) {
+				TaskSet carriedTasks = s.carriedTasks.clone();
+				TaskSet tasksToDeliver = s.tasksToDeliver.clone();
+				carriedTasks.remove(t);
+
+				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
+				suc.deliver = t; // indicate that this state was reached though delivery of t
+				successors.add(suc);
+				return successors;
+			}
+		}
 
 		// Option 1: Travel to neighbor city
 		for (City c : s.location.neighbors()) {
 			State suc = new State(c, s.carriedTasks, s.tasksToDeliver, s, c.distanceTo(s.location));
-			
+
 			successors.add(suc);
 		}
 
@@ -347,18 +347,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			}
 		}
 
-		// Option 3: Deliver a task if available
-		for (Task t : s.carriedTasks) {
-			if (t.deliveryCity.equals(s.location)) {
-				TaskSet carriedTasks = s.carriedTasks.clone();
-				TaskSet tasksToDeliver = s.tasksToDeliver.clone();
-				carriedTasks.remove(t);
 
-				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
-				suc.deliver = t; // indicate that this state was reached though delivery of t
-				successors.add(suc);
-			}
-		}
 		return successors;
 	}
 
@@ -369,5 +358,5 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			this.startingCarriedTasks = carriedTasks.clone();
 		}
 	}
-	
+
 }
