@@ -106,9 +106,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			}
 			return this.location.equals(((State) that).location)
 					&& (this.tasksToDeliver == ((State) that).tasksToDeliver
-							|| this.tasksToDeliver.equals(((State) that).tasksToDeliver))
+					|| this.tasksToDeliver.equals(((State) that).tasksToDeliver))
 					&& (this.carriedTasks == ((State) that).carriedTasks
-							|| this.carriedTasks.equals(((State) that).carriedTasks));
+					|| this.carriedTasks.equals(((State) that).carriedTasks));
 		}
 
 		@Override
@@ -125,7 +125,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 	/*
 	 * Goal state: tasksToDeliver.isEmpty()
-	 * 
+	 *
 	 * Transitions:
 	 */
 
@@ -180,16 +180,16 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		// Compute the plan with the selected algorithm.
 		long start = System.currentTimeMillis();
 		switch (algorithm) {
-		case ASTAR:
-			// ...
-			plan = astarPlan(vehicle, tasks);
-			break;
-		case BFS:
-			// ...
-			plan = bfsPlan(vehicle, tasks);
-			break;
-		default:
-			throw new AssertionError("Should not happen.");
+			case ASTAR:
+				// ...
+				plan = astarPlan(vehicle, tasks);
+				break;
+			case BFS:
+				// ...
+				plan = bfsPlan(vehicle, tasks);
+				break;
+			default:
+				throw new AssertionError("Should not happen.");
 		}
 		long end = System.currentTimeMillis();
 
@@ -225,7 +225,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				LinkedList<State> successors = computeSuccessors(s);
 				queue.addAll(successors);
 			}
-			
+
 			i++;
 		}
 
@@ -258,7 +258,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				}
 			}
 
-			if ((!visited.containsKey(s) || sCost < visited.get(s).cost() )   && sCost <finalCost) {
+			if ((!visited.containsKey(s) || sCost < visited.get(s).cost())   && sCost < finalCost) {
 				visited.put(s,s);
 				LinkedList<State> successors = computeSuccessors(s);
 				queue.addAll(successors);
@@ -313,7 +313,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 	private LinkedList<State> computeSuccessors(State s) {
 
 		LinkedList<State> successors = new LinkedList<>();
-		
+
 		//  Deliver a task if available. Return only one successor if it is the case
 		for (Task t : s.carriedTasks) {
 			if (t.deliveryCity.equals(s.location)) {
@@ -351,17 +351,11 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				}
 			}
 		}
-
-
 		return successors;
 	}
 
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
-
-		if (!carriedTasks.isEmpty()) {
-			this.startingCarriedTasks = carriedTasks.clone();
-		}
+		this.startingCarriedTasks = carriedTasks.clone();
 	}
-
 }
