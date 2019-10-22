@@ -1,13 +1,10 @@
 package deliberative;
 
+/* import table */
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.PriorityQueue;
-
-/* import table */
-
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
 import logist.plan.Plan;
@@ -25,8 +22,8 @@ import logist.topology.Topology.City;
 public class DeliberativeAgent implements DeliberativeBehavior {
 
 	/**
-	 * Private helper class representing a state. In large parts similar to the
-	 * reactive agent.
+	 * Private helper class representing a state.
+	 *
 	 */
 	private class State implements Comparable<State> {
 		/*
@@ -37,7 +34,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		private TaskSet tasksToDeliver;
 
 		/*
-		 * Transitions information
+		 * Transition information
 		 */
 		private State parent;
 		private Task pickup;
@@ -45,7 +42,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		private double stepCost;
 
 		/*
-		 * heuristic stored
+		 * Heuristic stored
 		 */
 		private double heuristicCost;
 
@@ -59,7 +56,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			this.tasksToDeliver = todo;
 			this.parent = parent;
 			this.stepCost = stepCost;
-			heuristicCost = cost() + heuristic();
+			this.heuristicCost = cost() + heuristic();
 		}
 
 		public boolean isGoalState() {
@@ -83,7 +80,6 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 					max = dist;
 				}
 			}
-
 			for (Task t : tasksToDeliver) {
 				double dist = location.distanceTo(t.pickupCity) + t.pathLength();
 				if (max < dist) {
@@ -123,12 +119,6 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		}
 	}
 
-	/*
-	 * Goal state: tasksToDeliver.isEmpty()
-	 *
-	 * Transitions:
-	 */
-
 	enum Algorithm {
 		BFS, ASTAR
 	}
@@ -163,9 +153,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		// Throws IllegalArgumentException if algorithm is unknown
 		algorithm = Algorithm.valueOf(algorithmName.toUpperCase());
 
-		// TODO
 		costPerKm = agent.vehicles().get(0).costPerKm();
-
 		startingCarriedTasks = null;
 	}
 
@@ -197,6 +185,13 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		return plan;
 	}
 
+	/**
+	 * Method that returns an optimal plan using the A* search algorithm.
+	 *
+	 * @param vehicle
+	 * @param tasks
+	 * @return an optimal plan
+	 */
 	private Plan astarPlan(Vehicle vehicle, TaskSet tasks) {
 		PriorityQueue<State> queue = new PriorityQueue<>();
 		HashMap<State, State> visited = new HashMap<>();
@@ -232,6 +227,13 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 		return constructPlanFromGoal(vehicle.getCurrentCity(), finalState);
 	}
 
+	/**
+	 * Method that computes an optimal plan using adapted BFS search.
+	 *
+	 * @param vehicle
+	 * @param tasks
+	 * @return an optimal plan
+	 */
 	private Plan bfsPlan(Vehicle vehicle, TaskSet tasks) {
 
 		// Initialize
@@ -251,6 +253,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			State s = queue.pop();
 			double sCost = s.cost();
 
+			// Keep the best goal state found so far
 			if (s.isGoalState()) {
 				if(sCost < finalCost) {
 					finalState = s;
@@ -258,7 +261,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				}
 			}
 
-			if ((!visited.containsKey(s) || sCost < visited.get(s).cost())   && sCost < finalCost) {
+			// If a visited state is rediscovered with better cost we add its successors again.
+			if ((!visited.containsKey(s) || sCost < visited.get(s).cost()) && sCost < finalCost) {
 				visited.put(s,s);
 				LinkedList<State> successors = computeSuccessors(s);
 				queue.addAll(successors);
@@ -271,9 +275,15 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		// Construct Plan from finalState by walking successors
 		return constructPlanFromGoal(vehicle.getCurrentCity(), finalState);
-
 	}
 
+	/**
+	 * Constructs a plan by iteratively traversing states starting from goal state.
+	 *
+	 * @param initialCity
+	 * @param goal
+	 * @return an optimal plan
+	 */
 	private Plan constructPlanFromGoal(City initialCity, State goal) {
 		LinkedList<State> path = new LinkedList<>();
 
@@ -297,7 +307,6 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			}
 			planSize++;
 		}
-		// FIXME
 		System.out.println("Total number of actions in plan: " + planSize);
 		System.out.println("Total number of km of path: " + p.totalDistance());
 
