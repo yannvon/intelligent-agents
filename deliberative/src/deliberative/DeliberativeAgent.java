@@ -236,8 +236,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		// Initialize
 		LinkedList<State> queue = new LinkedList<>();
-		HashSet<State> visited = new HashSet<>();
-		State finalState;
+		HashMap<State,State> visited = new HashMap<>();
+		State finalState=null;
+		double finalCost = Double.POSITIVE_INFINITY;
 
 		// Create start state
 		State startState = new State(vehicle.getCurrentCity(), startingCarriedTasks, tasks, null);
@@ -245,25 +246,27 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		// BFS algorithm
 		int i = 0;
-		while (true) {
-
-			if (queue.isEmpty()) {
-				throw new Error("No more enqueued states, but no goal state found");
-			}
+		while (!queue.isEmpty()) {
 
 			State s = queue.pop();
+			double sCost = s.cost();
 
 			if (s.isGoalState()) {
-				finalState = s;
-				break;
+				if(s.cost() < finalCost) {
+					finalState = s;
+					finalCost = s.cost();
+				}
 			}
 
-			if (!visited.contains(s)) {
-				visited.add(s);
+			if ((!visited.containsKey(s) || sCost < visited.get(s).cost() )   && sCost <finalCost) {
+				visited.put(s,s);
 				LinkedList<State> successors = computeSuccessors(s);
 				queue.addAll(successors);
 			}
 			i++;
+		}
+		if(finalState == null) {
+			throw new Error("No more enqueued states, but no goal state found");
 		}
 
 		// Construct Plan from finalState by walking successors
@@ -309,7 +312,7 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 		LinkedList<State> successors = new LinkedList<>();
 		
-		// Option 3: Deliver a task if available
+		//  Deliver a task if available. Return only one successor if it is the case
 		for (Task t : s.carriedTasks) {
 			if (t.deliveryCity.equals(s.location)) {
 				TaskSet carriedTasks = s.carriedTasks.clone();
