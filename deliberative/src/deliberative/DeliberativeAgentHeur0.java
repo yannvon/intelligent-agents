@@ -273,7 +273,7 @@ public class DeliberativeAgentHeur0 implements DeliberativeBehavior {
 		}
 
 		Plan p = new Plan(initialCity);
-
+		int planSize = 0;
 		for (State state : path) {
 			// Check how state was attained
 			if (state.deliver != null) {
@@ -283,9 +283,10 @@ public class DeliberativeAgentHeur0 implements DeliberativeBehavior {
 			} else {
 				p.appendMove(state.location);
 			}
+			planSize++;
 		}
 		// FIXME
-		System.out.println("Total number of distance Units of path: " + p.totalDistanceUnits());
+		System.out.println("Total number of action in path: " + planSize);
 		System.out.println("Total number of km of path: " + p.totalDistance());
 
 		return p;
