@@ -301,6 +301,22 @@ public class DeliberativeAgentHeur0 implements DeliberativeBehavior {
 	private LinkedList<State> computeSuccessors(State s) {
 
 		LinkedList<State> successors = new LinkedList<>();
+		
+		// Option 3: Deliver a task if available
+		for (Task t : s.carriedTasks) {
+			if (t.deliveryCity.equals(s.location)) {
+				TaskSet carriedTasks = s.carriedTasks.clone();
+				TaskSet tasksToDeliver = s.tasksToDeliver.clone();
+				carriedTasks.remove(t);
+
+				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
+				suc.deliver = t; // indicate that this state was reached though delivery of t
+				successors.add(suc);
+				return successors;
+			}
+		}
+		
+		
 
 		// Option 1: Travel to neighbor city
 		for (City c : s.location.neighbors()) {
@@ -326,18 +342,7 @@ public class DeliberativeAgentHeur0 implements DeliberativeBehavior {
 			}
 		}
 
-		// Option 3: Deliver a task if available
-		for (Task t : s.carriedTasks) {
-			if (t.deliveryCity.equals(s.location)) {
-				TaskSet carriedTasks = s.carriedTasks.clone();
-				TaskSet tasksToDeliver = s.tasksToDeliver.clone();
-				carriedTasks.remove(t);
 
-				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
-				suc.deliver = t; // indicate that this state was reached though delivery of t
-				successors.add(suc);
-			}
-		}
 		return successors;
 	}
 
