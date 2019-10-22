@@ -252,9 +252,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 			double sCost = s.cost();
 
 			if (s.isGoalState()) {
-				if(s.cost() < finalCost) {
+				if(sCost < finalCost) {
 					finalState = s;
-					finalCost = s.cost();
+					finalCost = sCost;
 				}
 			}
 
