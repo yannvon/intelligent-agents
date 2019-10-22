@@ -255,9 +255,9 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 
 			// Keep the best goal state found so far
 			if (s.isGoalState()) {
-				if(s.cost() < finalCost) {
+				if(sCost < finalCost) {
 					finalState = s;
-					finalCost = s.cost();
+					finalCost = sCost;
 				}
 			}
 
