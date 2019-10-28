@@ -98,7 +98,7 @@ public class CentralizedAgent implements CentralizedBehavior {
         do {
         	ActionEntry[][] neighbors = chooseNeighbors(a);
         	
-        	//j'ai oublié le nom de ce truc!!!! dommage on aura 0 my bad.
+        	//SIMULATED ANEALING!!!!!
         	
         	iteration ++;
         }while(iteration <1000);
