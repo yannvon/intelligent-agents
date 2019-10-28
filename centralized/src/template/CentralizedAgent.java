@@ -57,15 +57,61 @@ public class CentralizedAgent implements CentralizedBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
-        
-//		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-        Plan planVehicle1 = naivePlan(vehicles.get(0), tasks);
 
-        List<Plan> plans = new ArrayList<Plan>();
-        plans.add(planVehicle1);
-        while (plans.size() < vehicles.size()) {
-            plans.add(Plan.EMPTY);
+        
+        /*
+         * Initialization
+         */
+        ActionEntry[] actions = new ActionEntry[vehicles.size()];
+        for(int i = 0; i<vehicles.size();i++) {
+        	actions[i] = ActionEntry.header(i);
         }
+        
+        //assign all task to vehicles with biggest capacity
+        int maxCapacity = 0;
+        int vMaxCap = 0;
+        for(Vehicle v: vehicles) {
+        	if(v.capacity()>maxCapacity) {
+        		maxCapacity = v.capacity();
+        		vMaxCap = v.id();
+        	}
+        }
+        
+        ActionEntry a = actions[vMaxCap];
+        for(Task t : tasks) {
+        	if(vMaxCap<t.weight) {
+        		throw new IllegalStateException("No vehicles can carry task:\n "+ t.toString());
+        	}
+	    	ActionEntry newA = new ActionEntry(t,true); 
+	    	a.add(newA);
+	    	a= newA;
+	    	newA = new ActionEntry(t,false);
+	    	a = newA;
+        }
+        
+        /*
+         * MAIN LOOP
+         */
+        int iteration = 0;
+        ActionEntry[] best = actions;
+        double bestCost = computeCost(actions);
+        do {
+        	ActionEntry[][] neighbors = null;//chooseNeighbors(a,);
+        	
+        	iteration ++;
+        }while(iteration <1000);
+        System.out.println("Algo did "+iteration+" iterations");
+        
+        
+        /*
+         * Construct plan
+         */
+        
+        List<Plan> plans = new ArrayList<Plan>();
+        
+        
+        
+        
         
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
@@ -74,28 +120,84 @@ public class CentralizedAgent implements CentralizedBehavior {
         return plans;
     }
 
-    private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
-        City current = vehicle.getCurrentCity();
-        Plan plan = new Plan(current);
+    private double computeCost(ActionEntry[] actions) {
+		double sum =0;
+		for(ActionEntry a:actions) {
+			sum += a.cost();
+		}
+		return sum;
+	}
 
-        for (Task task : tasks) {
-            // move: current city => pickup location
-            for (City city : current.pathTo(task.pickupCity)) {
-                plan.appendMove(city);
-            }
-
-            plan.appendPickup(task);
-
-            // move: pickup location => delivery location
-            for (City city : task.path()) {
-                plan.appendMove(city);
-            }
-
-            plan.appendDelivery(task);
-
-            // set current city
-            current = task.deliveryCity;
-        }
-        return plan;
+	private static class ActionEntry {
+    	public ActionEntry next,prev;
+    	public int vehicleId;
+    	public boolean pickup;
+    	public int time;
+    	public Task task;
+    	
+    	public ActionEntry() {
+    	}
+    	public ActionEntry(Task t, boolean p) {
+    		this.task = t;
+    		this.pickup = p;
+    	}
+    	
+    	
+    	public static ActionEntry header(int vehicleId) {
+    		ActionEntry a = new ActionEntry();
+    		a.vehicleId = vehicleId;
+    		a.time = 0;
+    		return a;
+    	}
+    	
+    	public void add(ActionEntry a) {
+    		a.next = this.next;
+    		this.next = a;
+    		if(a.next != null) {
+    			a.next.prev = a;
+    		}
+    		
+    		a.prev = this;
+    		
+    		
+    		
+    		a.vehicleId = vehicleId;
+    		//updateTime(); //FIXME do that only at end?
+    	}
+    	
+    	public double cost() {
+    		return 0;
+    	}
+    	
+    	public void remove() {
+    		prev.next = next;
+    		next.prev = prev;
+    		//prev.updateTime(); //FIXME do that only at end?
+    	}
+    	
+		public void updateTime() {
+			if(next != null) {
+				next.time = time +1;
+				next.updateTime();
+			}
+			
+		}
+		
+		private ActionEntry clone(ActionEntry prev) {
+			ActionEntry a = new ActionEntry(task,pickup);
+			a.prev = prev;
+			a.time = time;
+			a.vehicleId = vehicleId;
+			a.next = next.clone(a);
+			
+			return a;
+		}
+		
+		public ActionEntry clone() {
+			
+			return clone(null);
+		}
+    	
     }
+    
 }
