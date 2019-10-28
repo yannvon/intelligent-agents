@@ -64,7 +64,7 @@ public class CentralizedAgent implements CentralizedBehavior {
          */
         ActionEntry[] actions = new ActionEntry[vehicles.size()];
         for(int i = 0; i<vehicles.size();i++) {
-        	actions[i] = ActionEntry.header(i);
+        	actions[i] = new ActionEntry(i);
         }
         
         //assign all task to vehicles with biggest capacity
@@ -94,9 +94,11 @@ public class CentralizedAgent implements CentralizedBehavior {
          */
         int iteration = 0;
         ActionEntry[] best = actions;
-        double bestCost = computeCost(actions);
+        double bestCost = computeCost(actions,vehicles);
         do {
-        	ActionEntry[][] neighbors = null;//chooseNeighbors(a,);
+        	ActionEntry[][] neighbors = chooseNeighbors(a);
+        	
+        	//j'ai oublié le nom de ce truc!!!! dommage on aura 0 my bad.
         	
         	iteration ++;
         }while(iteration <1000);
@@ -120,35 +122,39 @@ public class CentralizedAgent implements CentralizedBehavior {
         return plans;
     }
 
-    private double computeCost(ActionEntry[] actions) {
+    private ActionEntry[][] chooseNeighbors(ActionEntry a) {
+		//TODO
+		return null;
+	}
+
+	private double computeCost(ActionEntry[] actions,List<Vehicle> vehicles) {
 		double sum =0;
+		int i=0;
 		for(ActionEntry a:actions) {
-			sum += a.cost();
+			sum += a.cost(vehicles.get(i++).homeCity());
 		}
 		return sum;
 	}
 
-	private static class ActionEntry {
+	private class ActionEntry {
     	public ActionEntry next,prev;
     	public int vehicleId;
     	public boolean pickup;
     	public int time;
     	public Task task;
     	
-    	public ActionEntry() {
+    	//header
+    	public ActionEntry(int vehicleId) {
+    		this.vehicleId = vehicleId;
+    		this.time = 0;
     	}
+    	
+    	//action
     	public ActionEntry(Task t, boolean p) {
     		this.task = t;
     		this.pickup = p;
     	}
     	
-    	
-    	public static ActionEntry header(int vehicleId) {
-    		ActionEntry a = new ActionEntry();
-    		a.vehicleId = vehicleId;
-    		a.time = 0;
-    		return a;
-    	}
     	
     	public void add(ActionEntry a) {
     		a.next = this.next;
@@ -159,14 +165,16 @@ public class CentralizedAgent implements CentralizedBehavior {
     		
     		a.prev = this;
     		
-    		
-    		
     		a.vehicleId = vehicleId;
     		//updateTime(); //FIXME do that only at end?
     	}
     	
-    	public double cost() {
-    		return 0;
+    	public double cost(City lastPos) {
+    		if(task == null) {
+    			return next == null? 0:next.cost(lastPos);
+    		}
+    		City nextCity = pickup? task.pickupCity:task.deliveryCity;
+    		return lastPos.distanceTo(nextCity) + (next==null?0:next.cost(nextCity));
     	}
     	
     	public void remove() {
