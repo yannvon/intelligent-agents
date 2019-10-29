@@ -27,8 +27,8 @@ import logist.topology.Topology.City;
 @SuppressWarnings("unused")
 public class CentralizedMain implements CentralizedBehavior {
 
-	private static final double STARTING_TEMPERATURE = 1_000_000.;
-	private static final double LAMBDA = 0.995;
+	private static final double STARTING_TEMPERATURE = 100_000_000.;
+	private static final double LAMBDA = 0.9996;
 	private static final double SECURE_FACTOR = 0.75;
 
 	private Topology topology;
@@ -146,6 +146,9 @@ public class CentralizedMain implements CentralizedBehavior {
 			} else {
 				// compute probability to change
 				double p = Math.exp((currentCost - costN) / temperature);
+				if(p<0.999 && p>0.001) {
+					System.out.println(p);
+				}
 				if (p > random.nextDouble()) {
 					currentCost = costN;
 					currentSolution = selectedN;
@@ -383,7 +386,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			}
 			i++;
 		}
-		return max;
+		return sum;
 	}
 
 	/**
