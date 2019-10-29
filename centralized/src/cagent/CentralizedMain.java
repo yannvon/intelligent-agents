@@ -1,10 +1,11 @@
-package template;
+package cagent;
 
 import java.io.File;
 //the list of imports
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 
 import logist.LogistSettings;
 import logist.agent.Agent;
@@ -24,10 +25,10 @@ import logist.topology.Topology.City;
  *
  */
 @SuppressWarnings("unused")
-public class CentralizedAgent implements CentralizedBehavior {
+public class CentralizedMain implements CentralizedBehavior {
 
-	private static final double STARTING_TEMPERATURE = 10_000.;
-	private static final double LAMBDA = 0.95;
+	private static final double STARTING_TEMPERATURE = 1_000_000.;
+	private static final double LAMBDA = 0.995;
 	private static final double SECURE_FACTOR = 0.75;
 
 	private Topology topology;
@@ -36,6 +37,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 	private long timeout_setup;
 	private long timeout_plan;
 	private Random random;
+	Scanner scan;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -58,6 +60,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 		this.distribution = distribution;
 		this.agent = agent;
 		this.random = new Random(2019);
+		this.scan = new Scanner(System.in);
 	}
 
 	@Override
@@ -84,13 +87,14 @@ public class CentralizedAgent implements CentralizedBehavior {
 
 		ActionEntry a = currentSolution[vMaxCap];
 		for (Task t : tasks) {
-			if (vMaxCap < t.weight) {
+			if (maxCapacity < t.weight) {
 				throw new IllegalStateException("No vehicles can carry task:\n " + t.toString());
 			}
 			ActionEntry newA = new ActionEntry(t, true);
 			a.add(newA);
 			a = newA;
 			newA = new ActionEntry(t, false);
+			a.add(newA);
 			a = newA;
 		}
 
@@ -146,11 +150,12 @@ public class CentralizedAgent implements CentralizedBehavior {
 			temperature *= LAMBDA; // FIXME a possibility would be to update the temperature depending on the time
 									// left before timeout
 			iteration++;
-			
 			if(iteration%100 ==0) {
 				System.out.println("it: " + iteration +" time " + (currentTime - time_start) +" temp" +temperature);
 				System.out.println("Best Cost: "+bestCost+ " current cost:" + currentCost);
 			}
+			
+			//scan.nextInt();
 
 		} while (currentTime - time_start < SECURE_FACTOR * timeout_plan);// end the loop once we approach the end of
 																			// timeout
@@ -180,7 +185,10 @@ public class CentralizedAgent implements CentralizedBehavior {
 				}else {
 					plan.appendDelivery(next.task);
 				}
+				next= next.next;
+				current = nextCity;
 			}
+			System.out.println(plan);
 			plans.add(plan);
 			
 		}
@@ -262,7 +270,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 			if(valid) {
 				neighbors.add(a);
 			}
-
+			
 		}
 		
 		/*
@@ -271,14 +279,16 @@ public class CentralizedAgent implements CentralizedBehavior {
 		int lenght = 1;
 		ActionEntry c = solution[randomVid].next;
 		while(c.next != null) {
+			c = c.next;
 			lenght ++;
 		}
-		
 		//For all position
 		for(int iP =1; iP<lenght-1;iP++) {
 			int iD = iP +1;
-			boolean valid =true;
-			while(valid) {
+			boolean valid = true;		
+
+			while(valid && iD<=lenght) {
+				
 				ActionEntry[] a = copy(solution);
 				ActionEntry pick =a[randomVid].next;
 				ActionEntry deli = pick.next;
@@ -288,11 +298,12 @@ public class CentralizedAgent implements CentralizedBehavior {
 				
 				//if the order is the same as solution
 				if(iP == pick.time && iD == deli.time) {
+					iD++;
 					continue;
 				}
 				
 				//change delivery order
-				if(iD == deli.time) {
+				if(iD != deli.time) {
 					ActionEntry next = a[randomVid];
 					deli.remove();
 					for(int i = 0; i<iD-1; i++) {
@@ -319,7 +330,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 				if(valid) {
 					neighbors.add(a);
 				}
-				
+				iD ++;
 				
 				
 			}
@@ -385,7 +396,7 @@ public class CentralizedAgent implements CentralizedBehavior {
 			a.prev = this;
 
 			a.vehicleId = vehicleId;
-			// updateTime(); //FIXME do that only at end?
+			
 		}
 
 		public double cost(City lastPos) {
@@ -402,7 +413,6 @@ public class CentralizedAgent implements CentralizedBehavior {
 			if (next != null) {
 				next.prev = prev;
 			}
-			// prev.updateTime(); //FIXME do that only at end?
 		}
 
 		/**
@@ -434,7 +444,9 @@ public class CentralizedAgent implements CentralizedBehavior {
 			a.prev = prev;
 			a.time = time;
 			a.vehicleId = vehicleId;
-			a.next = next.clone(a);
+			if(next!=null) {
+				a.next = next.clone(a);
+			}
 			a.load = load;
 
 			return a;
@@ -443,6 +455,19 @@ public class CentralizedAgent implements CentralizedBehavior {
 		@Override
 		public ActionEntry clone() {
 			return clone(null);
+		}
+		
+		public String toString() {
+			String s = "->";
+			if(pickup) {
+				s = s+"P("+task.id+")";
+			}else if(task != null) {
+				s = s+"D("+task.id+")";
+			}
+			if(next!=null) {
+				s+= next.toString();
+			}
+			return s;
 		}
 
 	}
