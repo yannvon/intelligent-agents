@@ -28,7 +28,7 @@ import logist.topology.Topology.City;
 public class CentralizedMain implements CentralizedBehavior {
 
 	private static final double STARTING_TEMPERATURE = 100_000_000.;
-	private static final double LAMBDA = 0.9996;
+	private static final double LAMBDA = 0.996;
 	private static final double SECURE_FACTOR = 0.75;
 
 	private Topology topology;
@@ -146,9 +146,9 @@ public class CentralizedMain implements CentralizedBehavior {
 			} else {
 				// compute probability to change
 				double p = Math.exp((currentCost - costN) / temperature);
-				if(p<0.999 && p>0.001) {
+				/*if(p<0.999 && p>0.001) {
 					System.out.println(p);
-				}
+				}*/
 				if (p > random.nextDouble()) {
 					currentCost = costN;
 					currentSolution = selectedN;
@@ -166,7 +166,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			temperature *= LAMBDA; // FIXME a possibility would be to update the temperature depending on the time
 									// left before timeout
 			iteration++;
-			if(iteration%2000 ==0) {
+			if(iteration%500 ==0) {
 				System.out.println("it: " + iteration +" time " + (currentTime - time_start) +" temp" +temperature);
 				System.out.println("Best Cost: "+bestCost+ " current cost:" + currentCost);
 			}
@@ -177,6 +177,11 @@ public class CentralizedMain implements CentralizedBehavior {
 
 		System.out.println("\nAlgo did " + iteration + " iterations");
 		System.out.println("The final temperature was " + temperature);
+		System.out.println("Final Cost: "+bestCost);
+		System.out.println("Plan:");
+		for(Vehicle v:vehicles) {
+			System.out.println(best[v.id()]);
+		}
 
 		
 		/*
@@ -203,7 +208,6 @@ public class CentralizedMain implements CentralizedBehavior {
 				next= next.next;
 				current = nextCity;
 			}
-			System.out.println(plan);
 			plans.add(plan);
 			
 		}
