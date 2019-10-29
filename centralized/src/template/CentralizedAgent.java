@@ -158,12 +158,32 @@ public class CentralizedAgent implements CentralizedBehavior {
 		System.out.println("\nAlgo did " + iteration + " iterations");
 		System.out.println("The final temperature was " + temperature);
 
+		
 		/*
 		 * Construct plan
 		 */
 
 		List<Plan> plans = new ArrayList<Plan>();
-		
+		for(int vId = 0; vId<best.length;vId++) {
+			City current = vehicles.get(vId).getCurrentCity();
+	        Plan plan = new Plan(current);
+	        
+			ActionEntry next = best[vId].next;
+			while(next!= null) {
+				City nextCity = next.pickup? next.task.pickupCity:next.task.deliveryCity;
+				for (City city : current.pathTo(nextCity)) {
+	                plan.appendMove(city);
+	            }
+				
+				if(next.pickup) {
+					plan.appendPickup(next.task);
+				}else {
+					plan.appendDelivery(next.task);
+				}
+			}
+			plans.add(plan);
+			
+		}
 		
 		
 
