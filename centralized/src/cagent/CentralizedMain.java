@@ -109,9 +109,22 @@ public class CentralizedMain implements CentralizedBehavior {
 		double currentTime = 0;
 		do {
 
+			/*System.out.println("current");
+			System.out.println(currentSolution[0]);
+			System.out.println(currentSolution[1]);
+			System.out.println("Neigbors");*/
+			
 			List<ActionEntry[]> neighbors = chooseNeighbors(currentSolution, vehicles);
-			if(neighbors.size()==0) {
-				continue; //should not happen except if task is to big for vehicle
+			
+			/*for(ActionEntry[] ac:neighbors) {
+				System.out.println(ac[0]);
+				System.out.println(ac[1]);
+				System.out.println();
+			}*/
+			
+			if(neighbors.isEmpty()) {
+				currentTime = System.currentTimeMillis();
+				continue; //should not happen except if task are to big for vehicles
 			}
 
 			ActionEntry[] selectedN = selectRandomBestNeighbor(neighbors,vehicles);
@@ -150,11 +163,10 @@ public class CentralizedMain implements CentralizedBehavior {
 			temperature *= LAMBDA; // FIXME a possibility would be to update the temperature depending on the time
 									// left before timeout
 			iteration++;
-			if(iteration%100 ==0) {
+			if(iteration%2000 ==0) {
 				System.out.println("it: " + iteration +" time " + (currentTime - time_start) +" temp" +temperature);
 				System.out.println("Best Cost: "+bestCost+ " current cost:" + currentCost);
 			}
-			
 			//scan.nextInt();
 
 		} while (currentTime - time_start < SECURE_FACTOR * timeout_plan);// end the loop once we approach the end of
@@ -204,6 +216,14 @@ public class CentralizedMain implements CentralizedBehavior {
 
 	private ActionEntry[] selectRandomBestNeighbor(List<ActionEntry[]> neighbors, List<Vehicle> vehicles) {
 		// FIXME PIMP ME
+		if(random.nextDouble()>0.5) {
+			int i = random.nextInt(vehicles.size()-1);
+			return neighbors.get(i);
+		}
+		int i = random.nextInt(neighbors.size());
+		return neighbors.get(i);
+		
+		/*
 		ActionEntry[] best = null;
 		double bestCost = Double.POSITIVE_INFINITY;
 		for(ActionEntry[] a: neighbors) {
@@ -214,7 +234,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			}
 		}
 
-		return best;
+		return best;*/
 	}
 
 	/**
@@ -284,7 +304,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		}
 		//For all position
 		for(int iP =1; iP<lenght-1;iP++) {
-			int iD = iP +1;
+			int iD = iP +2; //FIXME WTF
 			boolean valid = true;		
 
 			while(valid && iD<=lenght) {
@@ -354,11 +374,16 @@ public class CentralizedMain implements CentralizedBehavior {
 	private double computeCost(ActionEntry[] actions, List<Vehicle> vehicles) {
 		double sum = 0;
 		int i = 0;
+		double max = 0;
 		for (ActionEntry a : actions) {
-			sum += a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
+			double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
+			sum += cost;
+			if(max<cost) {
+				max = cost;
+			}
 			i++;
 		}
-		return sum;
+		return max;
 	}
 
 	/**
