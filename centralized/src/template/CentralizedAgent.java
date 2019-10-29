@@ -106,8 +106,11 @@ public class CentralizedAgent implements CentralizedBehavior {
 		do {
 
 			List<ActionEntry[]> neighbors = chooseNeighbors(currentSolution, vehicles);
+			if(neighbors.size()==0) {
+				continue; //should not happen except if task is to big for vehicle
+			}
 
-			ActionEntry[] selectedN = selectRandomBestNeighbor(neighbors);
+			ActionEntry[] selectedN = selectRandomBestNeighbor(neighbors,vehicles);
 
 			/*
 			 * SIMULATED ANEALING
@@ -160,6 +163,9 @@ public class CentralizedAgent implements CentralizedBehavior {
 		 */
 
 		List<Plan> plans = new ArrayList<Plan>();
+		
+		
+		
 
 		long time_end = System.currentTimeMillis();
 		long duration = time_end - time_start;
@@ -168,10 +174,19 @@ public class CentralizedAgent implements CentralizedBehavior {
 		return plans;
 	}
 
-	private ActionEntry[] selectRandomBestNeighbor(List<ActionEntry[]> neighbors) {
-		// TODO Auto-generated method stub
+	private ActionEntry[] selectRandomBestNeighbor(List<ActionEntry[]> neighbors, List<Vehicle> vehicles) {
+		// FIXME PIMP ME
+		ActionEntry[] best = null;
+		double bestCost = Double.POSITIVE_INFINITY;
+		for(ActionEntry[] a: neighbors) {
+			double cost = computeCost(a, vehicles);
+			if(cost<bestCost) {
+				bestCost = cost;
+				best = a;
+			}
+		}
 
-		return null;
+		return best;
 	}
 
 	/**
