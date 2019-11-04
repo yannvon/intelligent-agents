@@ -146,7 +146,7 @@ public class CentralizedMain implements CentralizedBehavior {
 				// compute probability to change
 				double p = Math.exp((currentCost - costN) / temperature);
 				
-				  if(p<0.9 && p>0.1) { System.out.println(p+ " T "+ temperature); }
+				  //if(p<0.9 && p>0.1) { System.out.println(p+ " T "+ temperature); }
 				
 				if (p > random.nextDouble()) {
 					currentCost = costN;
@@ -168,9 +168,10 @@ public class CentralizedMain implements CentralizedBehavior {
 			// STARTING_TEMPERATURE*(1.-(currentTime-time_start)*(currentTime-time_start)/(timeout_plan*timeout_plan));
 
 			iteration++;
-			if (iteration % 500 == 0) {
-				System.out.println("it: " + iteration + " time " + (currentTime - time_start) + " temp" + temperature);
-				System.out.println("Best Cost: " + bestCost + " current cost:" + currentCost);
+			if (iteration % 2000 == 0) {
+				System.out.println("it: " + String.format("%d",iteration) + "    time: " + String.format("%5.0f",currentTime - time_start) + "     temp: " + String.format("%5.0f", temperature));
+				System.out.println("Best Cost: " + String.format("%6.0f",bestCost) + "    current cost:" + String.format("%6.0f",currentCost));
+				System.out.println();
 			}
 			// scan.nextInt();
 
@@ -180,6 +181,9 @@ public class CentralizedMain implements CentralizedBehavior {
 		System.out.println("\nAlgo did " + iteration + " iterations");
 		System.out.println("The final temperature was " + temperature);
 		System.out.println("Final Cost: " + bestCost);
+		System.out.println("Max Cost: " + computeMax(best, vehicles));
+		System.out.println("Sum Cost: " + computeSum(best, vehicles));
+
 		System.out.println("Plan:");
 		for (Vehicle v : vehicles) {
 			System.out.println(best[v.id()]);
@@ -392,7 +396,30 @@ public class CentralizedMain implements CentralizedBehavior {
 			}
 			i++;
 		}
+		return max + sum;
+	}
+	private double computeSum(ActionEntry[] actions, List<Vehicle> vehicles) {
+		double sum = 0;
+		int i = 0;
+		for (ActionEntry a : actions) {
+			double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
+			sum += cost;
+			i++;
+		}
 		return sum;
+	}
+	
+	private double computeMax(ActionEntry[] actions, List<Vehicle> vehicles) {
+		int i = 0;
+		double max = 0;
+		for (ActionEntry a : actions) {
+			double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
+			if (max < cost) {
+				max = cost;
+			}
+			i++;
+		}
+		return max;
 	}
 
 	/**
