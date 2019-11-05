@@ -30,7 +30,7 @@ public class CentralizedMain implements CentralizedBehavior {
     private static final double FINAL_TEMPERATURE = 100.;
     private static final double LAMBDA = FINAL_TEMPERATURE / STARTING_TEMPERATURE;
     private static final double SECURE_FACTOR = 0.9;
-    private static final double PROBA_CHANGE_VEHICLE = 0.3;
+    private static final double PROBA_CHANGE_VEHICLE = 0.2;
     private static final int TEMP_DECREASE_FACTOR = 4;
 
     private Topology topology;
