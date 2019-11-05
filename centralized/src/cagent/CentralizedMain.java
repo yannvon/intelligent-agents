@@ -33,8 +33,8 @@ public class CentralizedMain implements CentralizedBehavior {
 	// private static final double LAMBDA = 0.00001;
 	private static final double SECURE_FACTOR = 0.9;
 
-	private static final double PROBA_RANDOM = 0.9;
-	private static final double PROBA_CHANGE_VEHICLE = 0.3;
+	private static final double PROBA_RANDOM = 0.8;
+	private static final double PROBA_CHANGE_VEHICLE = 0.4;
 
 	// not used
 	private static final double PROBA_BEST = 1 - PROBA_RANDOM;
@@ -80,7 +80,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		int iteration = 0;
 		double temperature = STARTING_TEMPERATURE;
 		ActionEntry[] best = currentSolution;
-		double bestCost = computeSumCost(currentSolution, vehicles);
+		double bestCost = computeCost(currentSolution, vehicles);
 		double currentCost = bestCost;
 		double currentTime = 0;
 		double sumP = 0.;
@@ -104,7 +104,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			/*
 			 * SIMULATED ANEALING
 			 */
-			double costN = computeSumCost(selectedN, vehicles);
+			double costN = computeCost(selectedN, vehicles);
 
 			// if the cost is better change automatically
 			if (costN < currentCost) {
@@ -138,6 +138,15 @@ public class CentralizedMain implements CentralizedBehavior {
 					* Math.pow(LAMBDA, (currentTime - time_start) / (timeout_plan * SECURE_FACTOR));
 
 			iteration++;
+			if(iteration%5_000==0) {
+				currentCost = bestCost;
+				currentSolution = best;
+			}
+			
+			
+			/*
+			 * Print info
+			 */
 			if (iteration % 2000 == 0) {
 				System.out.println("it: " + String.format("%d", iteration) + "    time: "
 						+ String.format("%5.0f", currentTime - time_start) + "     temp: "
@@ -150,6 +159,8 @@ public class CentralizedMain implements CentralizedBehavior {
 				countP = 0;
 				sumP = 0;
 			}
+			
+			
 
 		} while (currentTime - time_start < SECURE_FACTOR * timeout_plan);// end the loop once we approach the end of
 																			// timeout
@@ -480,7 +491,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		ActionEntry[] best = null;
 		double bestCost = Double.POSITIVE_INFINITY;
 		for (ActionEntry[] a : neighbors) {
-			double cost = computeMaxSumCost(a, vehicles);
+			double cost = computeCost(a, vehicles);
 			if (cost < bestCost) {
 				bestCost = cost;
 				best = a;
@@ -496,7 +507,7 @@ public class CentralizedMain implements CentralizedBehavior {
 	 * @param vehicles
 	 * @return
 	 */
-	private double computeMaxSumCost(ActionEntry[] actions, List<Vehicle> vehicles) {
+	private double computeCost(ActionEntry[] actions, List<Vehicle> vehicles) {
 		double sum = 0;
 		int i = 0;
 		double max = 0;
@@ -508,7 +519,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			}
 			i++;
 		}
-		return max + sum;
+		return  sum;
 	}
 
 	/**
