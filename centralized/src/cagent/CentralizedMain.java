@@ -79,10 +79,11 @@ public class CentralizedMain implements CentralizedBehavior {
 		ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
 		int iteration = 0;
 		double temperature = STARTING_TEMPERATURE;
+		double lastTemp = temperature;
 		ActionEntry[] best = currentSolution;
 		double bestCost = computeCost(currentSolution, vehicles);
 		double currentCost = bestCost;
-		double currentTime = 0;
+		double currentTime = 0.;
 		double sumP = 0.;
 		int countP = 0;
 
@@ -138,12 +139,12 @@ public class CentralizedMain implements CentralizedBehavior {
 					* Math.pow(LAMBDA, (currentTime - time_start) / (timeout_plan * SECURE_FACTOR));
 
 			iteration++;
-			if(iteration%5_000==0) {
+			if (lastTemp / 4 > temperature) {
+				lastTemp = temperature;
 				currentCost = bestCost;
 				currentSolution = best;
 			}
-			
-			
+
 			/*
 			 * Print info
 			 */
@@ -159,8 +160,6 @@ public class CentralizedMain implements CentralizedBehavior {
 				countP = 0;
 				sumP = 0;
 			}
-			
-			
 
 		} while (currentTime - time_start < SECURE_FACTOR * timeout_plan);// end the loop once we approach the end of
 																			// timeout
@@ -226,7 +225,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		for (int i = 0; i < vehicles.size(); i++) {
 			currentSolution[i] = new ActionEntry(i);
 		}
-	
+
 		// assign all task to vehicles with biggest capacity
 		int maxCapacity = 0;
 		int vMaxCap = 0;
@@ -236,7 +235,7 @@ public class CentralizedMain implements CentralizedBehavior {
 				vMaxCap = v.id();
 			}
 		}
-	
+
 		ActionEntry a = currentSolution[vMaxCap];
 		for (Task t : tasks) {
 			if (maxCapacity < t.weight) {
@@ -249,6 +248,11 @@ public class CentralizedMain implements CentralizedBehavior {
 			a.add(newA);
 			a = newA;
 		}
+		
+		for (int i = 0; i < vehicles.size(); i++) {
+			currentSolution[i].updateTimeAndLoad(Integer.MAX_VALUE);
+		}
+		
 		return currentSolution;
 	}
 
@@ -260,16 +264,16 @@ public class CentralizedMain implements CentralizedBehavior {
 	 * @return a list of valid neighbors of the solution
 	 */
 	private List<ActionEntry[]> computeNeighbors(ActionEntry[] solution, List<Vehicle> vehicles) {
-	
+
 		List<ActionEntry[]> neighbors = new ArrayList<>();
-	
+
 		// select random vehicle with a task
 		// FIXME what happen if no task are available
 		int randomVid = random.nextInt(solution.length);
 		while (solution[randomVid].next == null) {
 			randomVid = random.nextInt(solution.length);
 		}
-	
+
 		/*
 		 * Change a task from one vehicle to another
 		 */
@@ -282,28 +286,38 @@ public class CentralizedMain implements CentralizedBehavior {
 			if (valid) {
 				neighbors.add(a);
 			}
-	
+
 		}
-	
+
 		/*
 		 * Changing task order
 		 */
-		int lenght = 1;
+		// compute length
 		ActionEntry c = solution[randomVid].next;
 		while (c.next != null) {
 			c = c.next;
-			lenght++;
 		}
+		int lenght = c.time;
+
+		// pick random task
+		int tId = random.nextInt(lenght) + 1;
+		c = solution[randomVid].next;
+		while (c.time != tId) {
+			c = c.next;
+		}
+
+		Task t = c.task;
+
 		// For all position
-		for (int iP = 1; iP < lenght - 1; iP++) {
-			int iD = iP + 2; // FIXME WTF
+		for (int iP = 1; iP < lenght; iP++) {
+			int iD = iP + 1;
 			boolean valid = true;
 			boolean sameFound = true;
-	
+
 			while ((valid || sameFound) && iD <= lenght) {
-	
+
 				ActionEntry[] a = ActionEntry.copy(solution);
-				valid = changeTaskOrder(a, vehicles, randomVid, iP, iD);
+				valid = changeTaskOrder(a, vehicles, randomVid, t, iP, iD);
 				if (valid) {
 					neighbors.add(a);
 				} else {
@@ -311,11 +325,11 @@ public class CentralizedMain implements CentralizedBehavior {
 					sameFound = false;
 				}
 				iD++;
-	
+
 			}
-	
+
 		}
-	
+
 		return neighbors;
 	}
 
@@ -346,19 +360,27 @@ public class CentralizedMain implements CentralizedBehavior {
 			}
 		}
 
-		int lenght = 1;
+		// compute length
 		ActionEntry c = solution[randomVid].next;
 		while (c.next != null) {
 			c = c.next;
-			lenght++;
 		}
+		int lenght = c.time;
+
+		// pick random task
+		int tId = random.nextInt(lenght) + 1;
+		c = solution[randomVid].next;
+		while (c.time != tId) {
+			c = c.next;
+		}
+		Task t = c.task;
 
 		int j = 0;
 		while (j++ < 10000) {
-			int iP = random.nextInt(lenght - 2) + 1;
-			int iD = random.nextInt(lenght + 1 - iP - 2) + iP + 2;
+			int iP = random.nextInt(lenght-1) +1 ;
+			int iD = random.nextInt(lenght - iP ) + iP +1;
 			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeTaskOrder(a, vehicles, randomVid, iP, iD);
+			boolean valid = changeTaskOrder(a, vehicles, randomVid, t, iP, iD);
 			if (valid) {
 				return a;
 			}
@@ -398,45 +420,44 @@ public class CentralizedMain implements CentralizedBehavior {
 	 * @param a
 	 * @param vehicles
 	 * @param randomVid
+	 * @param t
 	 * @param iP
 	 * @param iD
 	 * @return true if the change is valid
 	 */
-	private boolean changeTaskOrder(ActionEntry[] a, List<Vehicle> vehicles, int randomVid, int iP, int iD) {
+
+	private boolean changeTaskOrder(ActionEntry[] a, List<Vehicle> vehicles, int randomVid, Task task, int iP, int iD) {
+
 		ActionEntry pick = a[randomVid].next;
+		while (pick.task != task) {
+			pick = pick.next;
+		}
 		ActionEntry deli = pick.next;
 		while (deli.task != pick.task) {
 			deli = deli.next;
 		}
-	
+
 		// if the order is the same as solution
 		if (iP == pick.time && iD == deli.time) {
 			iD++;
 			return false;
 		}
-	
-		// change delivery order
-		if (iD != deli.time) {
-			ActionEntry next = a[randomVid];
-			deli.remove();
-			for (int i = 0; i < iD - 1; i++) {
-				next = next.next;
-			}
-			next.add(deli);
-	
+		pick.remove();
+		deli.remove();
+		a[randomVid].updateTimeAndLoad(vehicles.get(randomVid).capacity());
+
+		ActionEntry next = a[randomVid];
+		while (next.time != iP - 1) {
+			next = next.next;
 		}
-	
-		// change pick order
-		if (iP != pick.time) {
-			ActionEntry next = pick.next;
-			for (int j = 0; j < iP - 1; j++) {
-				next = next.next;
-			}
-			pick.remove();
-			next.add(pick);
-	
+		next.add(pick);
+		pick.time = next.time;
+		next = pick;
+		while (next.time != iD - 2) {
+			next = next.next;
 		}
-	
+		next.add(deli);
+
 		// if valid add to neighbors
 		return a[randomVid].updateTimeAndLoad(vehicles.get(randomVid).capacity());
 	}
@@ -519,7 +540,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			}
 			i++;
 		}
-		return  sum;
+		return sum;
 	}
 
 	/**
