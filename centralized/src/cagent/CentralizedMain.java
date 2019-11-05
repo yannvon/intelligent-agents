@@ -81,33 +81,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		/*
 		 * Initialization
 		 */
-		ActionEntry[] currentSolution = new ActionEntry[vehicles.size()];
-		for (int i = 0; i < vehicles.size(); i++) {
-			currentSolution[i] = new ActionEntry(i);
-		}
-
-		// assign all task to vehicles with biggest capacity
-		int maxCapacity = 0;
-		int vMaxCap = 0;
-		for (Vehicle v : vehicles) {
-			if (v.capacity() > maxCapacity) {
-				maxCapacity = v.capacity();
-				vMaxCap = v.id();
-			}
-		}
-
-		ActionEntry a = currentSolution[vMaxCap];
-		for (Task t : tasks) {
-			if (maxCapacity < t.weight) {
-				throw new IllegalStateException("No vehicles can carry task:\n " + t.toString());
-			}
-			ActionEntry newA = new ActionEntry(t, true);
-			a.add(newA);
-			a = newA;
-			newA = new ActionEntry(t, false);
-			a.add(newA);
-			a = newA;
-		}
+		ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
 
 		/*
 		 * MAIN LOOP
@@ -118,26 +92,19 @@ public class CentralizedMain implements CentralizedBehavior {
 		double bestCost = computeSum(currentSolution, vehicles);
 		double currentCost = bestCost;
 		double currentTime = 0;
+		double sumP = 0.;
+		int countP =0;
 		do {
 
-			/*
-			 * System.out.println("current"); System.out.println(currentSolution[0]);
-			 * System.out.println(currentSolution[1]); System.out.println("Neigbors");
-			 */
+			List<ActionEntry[]> neighbors = computeNeighbors(currentSolution, vehicles);
 
-			List<ActionEntry[]> neighbors = chooseNeighbors(currentSolution, vehicles);
-
-			/*
-			 * for(ActionEntry[] ac:neighbors) { System.out.println(ac[0]);
-			 * System.out.println(ac[1]); System.out.println(); }
-			 */
 
 			if (neighbors.isEmpty()) {
 				currentTime = System.currentTimeMillis();
-				continue; // should not happen except if task are to big for vehicles
+				continue;
 			}
 
-			ActionEntry[] selectedN = selectRandomBestNeighbor(neighbors, vehicles);
+			ActionEntry[] selectedN = selectOneNeighbor(neighbors, vehicles,temperature);
 
 			/*
 			 * SIMULATED ANEALING
@@ -156,8 +123,8 @@ public class CentralizedMain implements CentralizedBehavior {
 			} else {
 				// compute probability to change
 				double p = Math.exp((currentCost - costN) / temperature);
-				
-				  //if(p<0.9 && p>0.1) { System.out.println(p+ " T "+ temperature); }
+				sumP += p;
+				if(p<0.9 && p>0.1) { countP++; }
 				
 				if (p > random.nextDouble()) {
 					currentCost = costN;
@@ -169,22 +136,18 @@ public class CentralizedMain implements CentralizedBehavior {
 			 * UPDATE TEMPERATURE, ITERATION and current time
 			 */
 
-			// FIXME don't know if measuring time is long or note, might remove condition
-			// if (iteration % 100 == 0) {
 			currentTime = System.currentTimeMillis();
-			// }
-			//temperature *= LAMBDA; // FIXME a possibility would be to update the temperature depending on the time
-			// left before timeout
 			temperature = STARTING_TEMPERATURE * Math.pow(LAMBDA, (currentTime-time_start)/(timeout_plan*SECURE_FACTOR));
-			// STARTING_TEMPERATURE*(1.-(currentTime-time_start)*(currentTime-time_start)/(timeout_plan*timeout_plan));
 
 			iteration++;
 			if (iteration % 2000 == 0) {
 				System.out.println("it: " + String.format("%d",iteration) + "    time: " + String.format("%5.0f",currentTime - time_start) + "     temp: " + String.format("%5.0f", temperature));
 				System.out.println("Best Cost: " + String.format("%6.0f",bestCost) + "    current cost:" + String.format("%6.0f",currentCost));
+				System.out.println("AVG p = "+ String.format("%1.3f",sumP/2000) +"    counter p (0.1,0.9) = " + String.format("%d",countP));
 				System.out.println();
+				countP = 0;
+				sumP = 0;
 			}
-			// scan.nextInt();
 
 		} while (currentTime - time_start < SECURE_FACTOR * timeout_plan);// end the loop once we approach the end of
 																			// timeout
@@ -234,12 +197,53 @@ public class CentralizedMain implements CentralizedBehavior {
 
 		return plans;
 	}
+	
+	
+	private ActionEntry[] initialSolution(List<Vehicle> vehicles, TaskSet tasks) {
+		ActionEntry[] currentSolution = new ActionEntry[vehicles.size()];
+		for (int i = 0; i < vehicles.size(); i++) {
+			currentSolution[i] = new ActionEntry(i);
+		}
 
-	private ActionEntry[] selectRandomBestNeighbor(List<ActionEntry[]> neighbors, List<Vehicle> vehicles) {
+		// assign all task to vehicles with biggest capacity
+		int maxCapacity = 0;
+		int vMaxCap = 0;
+		for (Vehicle v : vehicles) {
+			if (v.capacity() > maxCapacity) {
+				maxCapacity = v.capacity();
+				vMaxCap = v.id();
+			}
+		}
+
+		ActionEntry a = currentSolution[vMaxCap];
+		for (Task t : tasks) {
+			if (maxCapacity < t.weight) {
+				throw new IllegalStateException("No vehicles can carry task:\n " + t.toString());
+			}
+			ActionEntry newA = new ActionEntry(t, true);
+			a.add(newA);
+			a = newA;
+			newA = new ActionEntry(t, false);
+			a.add(newA);
+			a = newA;
+		}
+		return currentSolution;
+	}
+
+	/**
+	 * Select one neighbors amongst all the neighbors
+	 * @param neighbors
+	 * @param vehicles
+	 * @param temperature 
+	 * @return the selected neighbor
+	 */
+	private ActionEntry[] selectOneNeighbor(List<ActionEntry[]> neighbors, List<Vehicle> vehicles, double temperature) {
 		// FIXME PIMP ME
 
+		double proba = (temperature-FINAL_TEMPERATURE)/(STARTING_TEMPERATURE-FINAL_TEMPERATURE);
+		
 		//70% of the time choose a random
-		if (random.nextDouble() < PROBA_RANDOM) {
+		if (random.nextDouble() < proba) {
 			
 			//30% of the time the random neighbors is change the vehicle of the task
 			if (vehicles.size() >1 && random.nextDouble() < PROBA_CHANGE_VEHICLE) {
@@ -275,7 +279,7 @@ public class CentralizedMain implements CentralizedBehavior {
 	 * @param vehicles
 	 * @return a list of valid neighbors of the solution
 	 */
-	private List<ActionEntry[]> chooseNeighbors(ActionEntry[] solution, List<Vehicle> vehicles) {
+	private List<ActionEntry[]> computeNeighbors(ActionEntry[] solution, List<Vehicle> vehicles) {
 
 		List<ActionEntry[]> neighbors = new ArrayList<>();
 
