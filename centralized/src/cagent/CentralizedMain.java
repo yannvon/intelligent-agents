@@ -22,562 +22,554 @@ import logist.topology.Topology.City;
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
  * handles them sequentially.
- *
  */
 @SuppressWarnings("unused")
 public class CentralizedMain implements CentralizedBehavior {
 
-	private static final double STARTING_TEMPERATURE = 100_000.;
-	private static final double FINAL_TEMPERATURE = 100.;
-	private static final double LAMBDA = FINAL_TEMPERATURE / STARTING_TEMPERATURE;
-	// private static final double LAMBDA = 0.00001;
-	private static final double SECURE_FACTOR = 0.9;
+    private static final double STARTING_TEMPERATURE = 100_000.;
+    private static final double FINAL_TEMPERATURE = 100.;
+    private static final double LAMBDA = FINAL_TEMPERATURE / STARTING_TEMPERATURE;
+    private static final double SECURE_FACTOR = 0.9;
+    private static final double PROBA_CHANGE_VEHICLE = 0.3;
+    private static final int TEMP_DECREASE_FACTOR = 4;
 
-	private static final double PROBA_RANDOM = 0.8;
-	private static final double PROBA_CHANGE_VEHICLE = 0.4;
+    private Topology topology;
+    private TaskDistribution distribution;
+    private Agent agent;
+    private long timeout_setup;
+    private long timeout_plan;
+    private Random random;
 
-	// not used
-	private static final double PROBA_BEST = 1 - PROBA_RANDOM;
+    @Override
+    public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
-	private Topology topology;
-	private TaskDistribution distribution;
-	private Agent agent;
-	private long timeout_setup;
-	private long timeout_plan;
-	private Random random;
+        // this code is used to get the timeouts
+        LogistSettings ls = null;
+        try {
+            ls = Parsers.parseSettings("config" + File.separator + "settings_default.xml");
+        } catch (Exception exc) {
+            System.out.println("There was a problem loading the configuration file.");
+        }
 
-	@Override
-	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
+        // the setup method cannot last more than timeout_setup milliseconds
+        timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
+        // the plan method cannot execute more than timeout_plan milliseconds
+        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
+        System.out.println("Plan has " + timeout_plan + "ms to finish");
 
-		// this code is used to get the timeouts
-		LogistSettings ls = null;
-		try {
-			ls = Parsers.parseSettings("config" + File.separator + "settings_default.xml");
-		} catch (Exception exc) {
-			System.out.println("There was a problem loading the configuration file.");
-		}
+        this.topology = topology;
+        this.distribution = distribution;
+        this.agent = agent;
+        this.random = new Random(2019);
+    }
 
-		// the setup method cannot last more than timeout_setup milliseconds
-		timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
-		// the plan method cannot execute more than timeout_plan milliseconds
-		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-		System.out.println("Plan has " + timeout_plan + "ms to finish");
+    @Override
+    public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+        long time_start = System.currentTimeMillis();
 
-		this.topology = topology;
-		this.distribution = distribution;
-		this.agent = agent;
-		this.random = new Random(2019);
-	}
+        // Return immediately if no tasks available
+        if (tasks.isEmpty()) {
+            List<Plan> plans = new ArrayList<>();
+            for (int vId = 0; vId < vehicles.size(); vId++) {
+                plans.add(Plan.EMPTY);
+            }
+            return plans;
+        }
 
-	@Override
-	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-		long time_start = System.currentTimeMillis();
 
-		/*
-		 * Initialization
-		 */
-		ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
-		int iteration = 0;
-		double temperature = STARTING_TEMPERATURE;
-		double lastTemp = temperature;
-		ActionEntry[] best = currentSolution;
-		double bestCost = computeCost(currentSolution, vehicles);
-		double currentCost = bestCost;
-		double currentTime = 0.;
-		double sumP = 0.;
-		int countP = 0;
+        /*
+         * Initialization
+         */
+        ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
+        int iteration = 0;
+        double temperature = STARTING_TEMPERATURE;
+        double lastTemp = temperature;
+        ActionEntry[] best = currentSolution;
+        double bestCost = computeCost(currentSolution, vehicles);
+        double currentCost = bestCost;
+        double currentTime = 0.;
+        double sumP = 0.;
+        int countP = 0;
 
-		do {
-			ActionEntry[] selectedN;
+        /*
+         * Stochastic Local Search algorithm for COP
+         */
 
-			// Linearly decreasing temperature
-            double temp_linear = STARTING_TEMPERATURE - (STARTING_TEMPERATURE- FINAL_TEMPERATURE) * (currentTime-time_start)/(timeout_plan*SECURE_FACTOR);
-            double proba_linear = (temp_linear-FINAL_TEMPERATURE)/(STARTING_TEMPERATURE-FINAL_TEMPERATURE);
+        do {
+            ActionEntry[] selectedN;
+
+            // Linearly decreasing temperature
+            double temp_linear = STARTING_TEMPERATURE - (STARTING_TEMPERATURE - FINAL_TEMPERATURE) * (currentTime - time_start) / (timeout_plan * SECURE_FACTOR);
+            double proba_linear = (temp_linear - FINAL_TEMPERATURE) / (STARTING_TEMPERATURE - FINAL_TEMPERATURE);
 
             if (random.nextDouble() < proba_linear) {
+                // OPTION 1: Compute (almost) random neighbor
                 selectedN = computeRandomNeighbor(currentSolution, vehicles);
-			} else {
-				List<ActionEntry[]> neighbors = computeNeighbors(currentSolution, vehicles);
-				if (neighbors.isEmpty()) {
-					currentTime = System.currentTimeMillis();
-					continue;
-				}
-				selectedN = selecBestNeighbor(neighbors, vehicles);
-			}
+            } else {
+                // OPTION 2: Get best neighbor of neighborSet for a random task & vehicle.
+                List<ActionEntry[]> neighbors = computeNeighbors(currentSolution, vehicles);
+                if (neighbors.isEmpty()) {
+                    currentTime = System.currentTimeMillis();
+                    continue;
+                }
+                selectedN = selecBestNeighbor(neighbors, vehicles);
+            }
 
-			/*
-			 * SIMULATED ANEALING
-			 */
-			double costN = computeCost(selectedN, vehicles);
+            /*
+             * Simulated Annealing component
+             */
+            double costN = computeCost(selectedN, vehicles);
 
-			// if the cost is better change automatically
-			if (costN < currentCost) {
-				currentCost = costN;
-				currentSolution = selectedN;
-				// if this is the best cost found yet, saves it
-				if (costN < bestCost) {
-					bestCost = costN;
-					best = selectedN;
-				}
-			} else {
-				// compute probability to change
-				double p = Math.exp((currentCost - costN) / temperature);
-				sumP += p;
-				if (p < 0.9 && p > 0.1) {
-					countP++;
-				}
+            // OPTION 1: If the cost is better change automatically
+            if (costN < currentCost) {
+                currentCost = costN;
+                currentSolution = selectedN;
+                // If this is the best cost found yet, save it
+                if (costN < bestCost) {
+                    bestCost = costN;
+                    best = selectedN;
+                }
+            } else {
+                // OPTION 2: With exp decreasing probability change anyways
+                double p = Math.exp((currentCost - costN) / temperature);
+                sumP += p;
+                if (p < 0.9 && p > 0.1) {
+                    countP++;
+                }
 
-				if (p > random.nextDouble()) {
-					currentCost = costN;
-					currentSolution = selectedN;
-				}
-			}
+                if (p > random.nextDouble()) {
+                    currentCost = costN;
+                    currentSolution = selectedN;
+                }
+            }
 
-			/*
-			 * UPDATE TEMPERATURE, ITERATION and current time
-			 */
+            /*
+             * End of step updates
+             */
+            currentTime = System.currentTimeMillis();
+            temperature = STARTING_TEMPERATURE
+                    * Math.pow(LAMBDA, (currentTime - time_start) / (timeout_plan * SECURE_FACTOR));
+            iteration++;
 
-			currentTime = System.currentTimeMillis();
-			temperature = STARTING_TEMPERATURE
-					* Math.pow(LAMBDA, (currentTime - time_start) / (timeout_plan * SECURE_FACTOR));
+            /*
+             * Additional mechanism: Every time temperature decreases by factor "tempDecreaseFactor", restart at
+             * current best solution.
+             */
+            if (lastTemp / TEMP_DECREASE_FACTOR > temperature) {
+                lastTemp = temperature;
+                currentCost = bestCost;
+                currentSolution = best;
+            }
 
-			iteration++;
-			if (lastTemp / 4 > temperature) {
-				lastTemp = temperature;
-				currentCost = bestCost;
-				currentSolution = best;
-			}
+            /*
+             * Print useful info while running planning
+             */
+            if (iteration % 2000 == 0) {
+                System.out.println("it: " + String.format("%d", iteration) + "    time: "
+                        + String.format("%5.0f", currentTime - time_start) + "     temp: "
+                        + String.format("%5.0f", temperature));
+                System.out.println("Best Cost: " + String.format("%6.0f", bestCost) + "    current cost:"
+                        + String.format("%6.0f", currentCost));
+                System.out.println("AVG p = " + String.format("%1.3f", sumP / 2000) + "    counter p (0.1,0.9) = "
+                        + String.format("%d", countP));
+                System.out.println();
+                countP = 0;
+                sumP = 0;
+            }
 
-			/*
-			 * Print info
-			 */
-			if (iteration % 2000 == 0) {
-				System.out.println("it: " + String.format("%d", iteration) + "    time: "
-						+ String.format("%5.0f", currentTime - time_start) + "     temp: "
-						+ String.format("%5.0f", temperature));
-				System.out.println("Best Cost: " + String.format("%6.0f", bestCost) + "    current cost:"
-						+ String.format("%6.0f", currentCost));
-				System.out.println("AVG p = " + String.format("%1.3f", sumP / 2000) + "    counter p (0.1,0.9) = "
-						+ String.format("%d", countP));
-				System.out.println();
-				countP = 0;
-				sumP = 0;
-			}
+            // end the loop once we approach the end of timeout
+        } while (currentTime - time_start < SECURE_FACTOR * timeout_plan);
 
-		} while (currentTime - time_start < SECURE_FACTOR * timeout_plan);// end the loop once we approach the end of
-																			// timeout
+        /*
+         * Print final result
+         */
+        System.out.println("\nAlgo did " + iteration + " iterations");
+        System.out.println("The final temperature was " + temperature);
+        System.out.println("Final Cost: " + bestCost);
+        System.out.println("Max Cost: " + computeMaxCost(best, vehicles));
+        System.out.println("Sum Cost: " + computeSumCost(best, vehicles));
 
-		/*
-		 * Print final result
-		 */
-		System.out.println("\nAlgo did " + iteration + " iterations");
-		System.out.println("The final temperature was " + temperature);
-		System.out.println("Final Cost: " + bestCost);
-		System.out.println("Max Cost: " + computeMaxCost(best, vehicles));
-		System.out.println("Sum Cost: " + computeSumCost(best, vehicles));
+        System.out.println("Plan:");
+        for (Vehicle v : vehicles) {
+            System.out.println(best[v.id()]);
+        }
 
-		System.out.println("Plan:");
-		for (Vehicle v : vehicles) {
-			System.out.println(best[v.id()]);
-		}
+        /*
+         * Construct plan
+         */
+        List<Plan> plans = new ArrayList<Plan>();
+        for (int vId = 0; vId < best.length; vId++) {
+            City current = vehicles.get(vId).getCurrentCity();
+            Plan plan = new Plan(current);
 
-		/*
-		 * Construct plan
-		 */
+            ActionEntry next = best[vId].next;
+            while (next != null) {
+                City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
+                for (City city : current.pathTo(nextCity)) {
+                    plan.appendMove(city);
+                }
 
-		List<Plan> plans = new ArrayList<Plan>();
-		for (int vId = 0; vId < best.length; vId++) {
-			City current = vehicles.get(vId).getCurrentCity();
-			Plan plan = new Plan(current);
+                if (next.pickup) {
+                    plan.appendPickup(next.task);
+                } else {
+                    plan.appendDelivery(next.task);
+                }
+                next = next.next;
+                current = nextCity;
+            }
+            plans.add(plan);
 
-			ActionEntry next = best[vId].next;
-			while (next != null) {
-				City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
-				for (City city : current.pathTo(nextCity)) {
-					plan.appendMove(city);
-				}
+        }
 
-				if (next.pickup) {
-					plan.appendPickup(next.task);
-				} else {
-					plan.appendDelivery(next.task);
-				}
-				next = next.next;
-				current = nextCity;
-			}
-			plans.add(plan);
+        long time_end = System.currentTimeMillis();
+        long duration = time_end - time_start;
+        System.out.println("The plan was generated in " + duration + " milliseconds.");
 
-		}
+        return plans;
+    }
 
-		long time_end = System.currentTimeMillis();
-		long duration = time_end - time_start;
-		System.out.println("The plan was generated in " + duration + " milliseconds.");
+    /**
+     * Create an initial solution
+     *
+     * @param vehicles list of vehicles
+     * @param tasks    set of tasks
+     * @return ActionEntry table
+     */
+    private ActionEntry[] initialSolution(List<Vehicle> vehicles, TaskSet tasks) {
+        ActionEntry[] currentSolution = new ActionEntry[vehicles.size()];
+        for (int i = 0; i < vehicles.size(); i++) {
+            currentSolution[i] = new ActionEntry(i);
+        }
 
-		return plans;
-	}
+        // assign all task to vehicles with biggest capacity
+        int maxCapacity = 0;
+        int vMaxCap = 0;
+        for (Vehicle v : vehicles) {
+            if (v.capacity() > maxCapacity) {
+                maxCapacity = v.capacity();
+                vMaxCap = v.id();
+            }
+        }
 
-	/**
-	 * Create an initial solution
-	 * 
-	 * @param vehicles
-	 * @param tasks
-	 * @return initial solution
-	 */
-	private ActionEntry[] initialSolution(List<Vehicle> vehicles, TaskSet tasks) {
-		ActionEntry[] currentSolution = new ActionEntry[vehicles.size()];
-		for (int i = 0; i < vehicles.size(); i++) {
-			currentSolution[i] = new ActionEntry(i);
-		}
+        ActionEntry a = currentSolution[vMaxCap];
+        for (Task t : tasks) {
+            if (maxCapacity < t.weight) {
+                throw new IllegalStateException("No vehicles can carry task:\n " + t.toString());
+            }
+            ActionEntry newA = new ActionEntry(t, true);
+            a.add(newA);
+            a = newA;
+            newA = new ActionEntry(t, false);
+            a.add(newA);
+            a = newA;
+        }
 
-		// assign all task to vehicles with biggest capacity
-		int maxCapacity = 0;
-		int vMaxCap = 0;
-		for (Vehicle v : vehicles) {
-			if (v.capacity() > maxCapacity) {
-				maxCapacity = v.capacity();
-				vMaxCap = v.id();
-			}
-		}
+        for (int i = 0; i < vehicles.size(); i++) {
+            currentSolution[i].updateTimeAndLoad(Integer.MAX_VALUE);
+        }
 
-		ActionEntry a = currentSolution[vMaxCap];
-		for (Task t : tasks) {
-			if (maxCapacity < t.weight) {
-				throw new IllegalStateException("No vehicles can carry task:\n " + t.toString());
-			}
-			ActionEntry newA = new ActionEntry(t, true);
-			a.add(newA);
-			a = newA;
-			newA = new ActionEntry(t, false);
-			a.add(newA);
-			a = newA;
-		}
-		
-		for (int i = 0; i < vehicles.size(); i++) {
-			currentSolution[i].updateTimeAndLoad(Integer.MAX_VALUE);
-		}
-		
-		return currentSolution;
-	}
+        return currentSolution;
+    }
 
-	/**
-	 * Choose multiple neighbors of a solution
-	 * 
-	 * @param solution
-	 * @param vehicles
-	 * @return a list of valid neighbors of the solution
-	 */
-	private List<ActionEntry[]> computeNeighbors(ActionEntry[] solution, List<Vehicle> vehicles) {
+    /**
+     * Choose multiple neighbors of a solution
+     *
+     * @return a list of valid neighbors of the solution
+     */
+    private List<ActionEntry[]> computeNeighbors(ActionEntry[] solution, List<Vehicle> vehicles) {
 
-		List<ActionEntry[]> neighbors = new ArrayList<>();
+        List<ActionEntry[]> neighbors = new ArrayList<>();
 
-		// select random vehicle with a task
-		// FIXME what happen if no task are available
-		int randomVid = random.nextInt(solution.length);
-		while (solution[randomVid].next == null) {
-			randomVid = random.nextInt(solution.length);
-		}
+        // select random vehicle with a task
+        int randomVid = random.nextInt(solution.length);
+        while (solution[randomVid].next == null) {
+            randomVid = random.nextInt(solution.length);
+        }
 
-		/*
-		 * Change a task from one vehicle to another
-		 */
-		for (int vId = 0; vId < vehicles.size(); vId++) {
-			if (vId == randomVid) {
-				continue;
-			}
-			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeVTask(a, vehicles, randomVid, vId);
-			if (valid) {
-				neighbors.add(a);
-			}
+        /*
+         * Change a task from one vehicle to another
+         */
+        for (int vId = 0; vId < vehicles.size(); vId++) {
+            if (vId == randomVid) {
+                continue;
+            }
+            ActionEntry[] a = ActionEntry.copy(solution);
+            boolean valid = changeVTask(a, vehicles, randomVid, vId);
+            if (valid) {
+                neighbors.add(a);
+            }
 
-		}
+        }
 
-		/*
-		 * Changing task order
-		 */
-		// compute length
-		ActionEntry c = solution[randomVid].next;
-		while (c.next != null) {
-			c = c.next;
-		}
-		int lenght = c.time;
+        /*
+         * Changing task order
+         */
+        // compute length
+        ActionEntry c = solution[randomVid].next;
+        while (c.next != null) {
+            c = c.next;
+        }
+        int lenght = c.time;
 
-		// pick random task
-		int tId = random.nextInt(lenght) + 1;
-		c = solution[randomVid].next;
-		while (c.time != tId) {
-			c = c.next;
-		}
+        // pick random task
+        int tId = random.nextInt(lenght) + 1;
+        c = solution[randomVid].next;
+        while (c.time != tId) {
+            c = c.next;
+        }
 
-		Task t = c.task;
+        Task t = c.task;
 
-		// For all position
-		for (int iP = 1; iP < lenght; iP++) {
-			int iD = iP + 1;
-			boolean valid = true;
-			boolean sameFound = true;
+        // For all positions
+        for (int iP = 1; iP < lenght; iP++) {
+            int iD = iP + 1;
+            boolean valid = true;
+            boolean sameFound = true;
 
-			while ((valid || sameFound) && iD <= lenght) {
+            while ((valid || sameFound) && iD <= lenght) {
 
-				ActionEntry[] a = ActionEntry.copy(solution);
-				valid = changeTaskOrder(a, vehicles, randomVid, t, iP, iD);
-				if (valid) {
-					neighbors.add(a);
-				} else {
-					valid = sameFound;
-					sameFound = false;
-				}
-				iD++;
+                ActionEntry[] a = ActionEntry.copy(solution);
+                valid = changeTaskOrder(a, vehicles, randomVid, t, iP, iD);
+                if (valid) {
+                    neighbors.add(a);
+                } else {
+                    valid = sameFound;
+                    sameFound = false;
+                }
+                iD++;
+            }
+        }
+        return neighbors;
+    }
 
-			}
+    /**
+     * @param currentSolution
+     * @param vehicles
+     * @return
+     */
+    private ActionEntry[] computeRandomNeighbor(ActionEntry[] currentSolution, List<Vehicle> vehicles) {
+        if (random.nextDouble() < PROBA_CHANGE_VEHICLE) {
+            return computeRandomChangeV(currentSolution, vehicles);
+        }
+        return computeRandomChangeT(currentSolution, vehicles);
+    }
 
-		}
+    /**
+     * @param solution
+     * @param vehicles
+     * @return
+     */
+    private ActionEntry[] computeRandomChangeT(ActionEntry[] solution, List<Vehicle> vehicles) {
+        int randomVid = random.nextInt(solution.length);
+        int i = 0;
+        while (solution[randomVid].next == null || solution[randomVid].next.next.next == null) {
+            randomVid = random.nextInt(solution.length);
+            if (++i > 10000) {
+                return solution;
+            }
+        }
 
-		return neighbors;
-	}
+        // compute length
+        ActionEntry c = solution[randomVid].next;
+        while (c.next != null) {
+            c = c.next;
+        }
+        int lenght = c.time;
 
-	/**
-	 * @param currentSolution
-	 * @param vehicles
-	 * @return
-	 */
-	private ActionEntry[] computeRandomNeighbor(ActionEntry[] currentSolution, List<Vehicle> vehicles) {
-		if (random.nextDouble() < PROBA_CHANGE_VEHICLE) {
-			return computeRandomChangeV(currentSolution, vehicles);
-		}
-		return computeRandomChangeT(currentSolution, vehicles);
-	}
+        // pick random task
+        int tId = random.nextInt(lenght) + 1;
+        c = solution[randomVid].next;
+        while (c.time != tId) {
+            c = c.next;
+        }
+        Task t = c.task;
 
-	/**
-	 * @param solution
-	 * @param vehicles
-	 * @return
-	 */
-	private ActionEntry[] computeRandomChangeT(ActionEntry[] solution, List<Vehicle> vehicles) {
-		int randomVid = random.nextInt(solution.length);
-		int i = 0;
-		while (solution[randomVid].next == null || solution[randomVid].next.next.next == null) {
-			randomVid = random.nextInt(solution.length);
-			if (++i > 10000) {
-				return solution;
-			}
-		}
+        int j = 0;
+        while (j++ < 10000) {
+            int iP = random.nextInt(lenght - 1) + 1;
+            int iD = random.nextInt(lenght - iP) + iP + 1;
+            ActionEntry[] a = ActionEntry.copy(solution);
+            boolean valid = changeTaskOrder(a, vehicles, randomVid, t, iP, iD);
+            if (valid) {
+                return a;
+            }
+        }
+        return solution;
+    }
 
-		// compute length
-		ActionEntry c = solution[randomVid].next;
-		while (c.next != null) {
-			c = c.next;
-		}
-		int lenght = c.time;
+    /**
+     * @param solution
+     * @param vehicles
+     * @return
+     */
+    private ActionEntry[] computeRandomChangeV(ActionEntry[] solution, List<Vehicle> vehicles) {
+        int randomVid = random.nextInt(solution.length);
+        while (solution[randomVid].next == null) {
+            randomVid = random.nextInt(solution.length);
+        }
+        int i = 0;
+        while (i++ < 1000) {
+            int vId = random.nextInt(vehicles.size());
+            if (vId == randomVid) {
+                continue;
+            }
+            ActionEntry[] a = ActionEntry.copy(solution);
+            boolean valid = changeVTask(a, vehicles, randomVid, vId);
+            if (valid) {
+                return a;
+            }
+        }
+        // no neighbors where valid
+        return solution;
+    }
 
-		// pick random task
-		int tId = random.nextInt(lenght) + 1;
-		c = solution[randomVid].next;
-		while (c.time != tId) {
-			c = c.next;
-		}
-		Task t = c.task;
+    /**
+     * Change the order of tasks inside a vehicle
+     *
+     * @return true if the change is valid
+     */
+    private boolean changeTaskOrder(ActionEntry[] a, List<Vehicle> vehicles, int randomVid, Task task, int iP, int iD) {
 
-		int j = 0;
-		while (j++ < 10000) {
-			int iP = random.nextInt(lenght-1) +1 ;
-			int iD = random.nextInt(lenght - iP ) + iP +1;
-			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeTaskOrder(a, vehicles, randomVid, t, iP, iD);
-			if (valid) {
-				return a;
-			}
-		}
+        ActionEntry pick = a[randomVid].next;
+        while (pick.task != task) {
+            pick = pick.next;
+        }
+        ActionEntry deli = pick.next;
+        while (deli.task != pick.task) {
+            deli = deli.next;
+        }
 
-		return solution;
-	}
+        // if the order is the same as solution
+        if (iP == pick.time && iD == deli.time) {
+            iD++;
+            return false;
+        }
+        pick.remove();
+        deli.remove();
+        a[randomVid].updateTimeAndLoad(vehicles.get(randomVid).capacity());
 
-	/**
-	 * @param currentSolution
-	 * @param vehicles
-	 */
-	private ActionEntry[] computeRandomChangeV(ActionEntry[] solution, List<Vehicle> vehicles) {
-		int randomVid = random.nextInt(solution.length);
-		while (solution[randomVid].next == null) {
-			randomVid = random.nextInt(solution.length);
-		}
-		int i = 0;
-		while (i++ < 1000) {
-			int vId = random.nextInt(vehicles.size());
-			if (vId == randomVid) {
-				continue;
-			}
-			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeVTask(a, vehicles, randomVid, vId);
-			if (valid) {
-				return a;
-			}
-		}
-		// no neighbors where valid
-		return solution;
-	}
+        ActionEntry next = a[randomVid];
+        while (next.time != iP - 1) {
+            next = next.next;
+        }
+        next.add(pick);
+        pick.time = next.time;
+        next = pick;
+        while (next.time != iD - 2) {
+            next = next.next;
+        }
+        next.add(deli);
 
-	/**
-	 * Change the order of tasks inside a vehicle
-	 * 
-	 * @param a
-	 * @param vehicles
-	 * @param randomVid
-	 * @param t
-	 * @param iP
-	 * @param iD
-	 * @return true if the change is valid
-	 */
+        // if valid add to neighbors
+        return a[randomVid].updateTimeAndLoad(vehicles.get(randomVid).capacity());
+    }
 
-	private boolean changeTaskOrder(ActionEntry[] a, List<Vehicle> vehicles, int randomVid, Task task, int iP, int iD) {
+    /**
+     * move a task from one vehicle to another
+     *
+     * @param a
+     * @param vehicles
+     * @param from
+     * @param to
+     * @return true if the solution is valid
+     */
+    private boolean changeVTask(ActionEntry[] a, List<Vehicle> vehicles, int from, int to) {
+        ActionEntry toMoveP = a[from].next;
+        ActionEntry toMoveD = toMoveP.next;
 
-		ActionEntry pick = a[randomVid].next;
-		while (pick.task != task) {
-			pick = pick.next;
-		}
-		ActionEntry deli = pick.next;
-		while (deli.task != pick.task) {
-			deli = deli.next;
-		}
+        // Find the delivery of the task
+        while (toMoveP.task != toMoveD.task) {
+            // faster
+            toMoveD = toMoveD.next;
+        }
 
-		// if the order is the same as solution
-		if (iP == pick.time && iD == deli.time) {
-			iD++;
-			return false;
-		}
-		pick.remove();
-		deli.remove();
-		a[randomVid].updateTimeAndLoad(vehicles.get(randomVid).capacity());
+        // remove them from first vehicle
+        toMoveD.remove();
+        toMoveP.remove();
 
-		ActionEntry next = a[randomVid];
-		while (next.time != iP - 1) {
-			next = next.next;
-		}
-		next.add(pick);
-		pick.time = next.time;
-		next = pick;
-		while (next.time != iD - 2) {
-			next = next.next;
-		}
-		next.add(deli);
+        // add them to new vehicle
+        a[to].add(toMoveP);
+        toMoveP.add(toMoveD);
 
-		// if valid add to neighbors
-		return a[randomVid].updateTimeAndLoad(vehicles.get(randomVid).capacity());
-	}
+        // update time and load, if valid add to neighbors
+        boolean valid = a[to].updateTimeAndLoad(vehicles.get(to).capacity());
+        valid &= a[from].updateTimeAndLoad(vehicles.get(from).capacity());
+        return valid;
+    }
 
-	/**
-	 * move a task from one vehicle to another
-	 * 
-	 * @param a
-	 * @param vehicles
-	 * @param from
-	 * @param to
-	 * @return true if the solution is valid
-	 */
-	private boolean changeVTask(ActionEntry[] a, List<Vehicle> vehicles, int from, int to) {
-		ActionEntry toMoveP = a[from].next;
-		ActionEntry toMoveD = toMoveP.next;
+    /**
+     * Select one neighbors amongst all the neighbors
+     *
+     * @return the selected neighbor
+     */
+    private ActionEntry[] selecBestNeighbor(List<ActionEntry[]> neighbors, List<Vehicle> vehicles) {
 
-		// Find the delivery of the task
-		while (toMoveP.task != toMoveD.task) { // FIXME should be same pointer so no need for ".equals" => "==" is
-												// faster
-			toMoveD = toMoveD.next;
-		}
+        ActionEntry[] best = null;
+        double bestCost = Double.POSITIVE_INFINITY;
+        for (ActionEntry[] a : neighbors) {
+            double cost = computeCost(a, vehicles);
+            if (cost < bestCost) {
+                bestCost = cost;
+                best = a;
+            }
+        }
 
-		// remove them from first vehicle
-		toMoveD.remove();
-		toMoveP.remove();
+        return best;
 
-		// add them to new vehicle
-		a[to].add(toMoveP);
-		toMoveP.add(toMoveD);
+    }
 
-		// update time and load, if valid add to neighbors
-		boolean valid = a[to].updateTimeAndLoad(vehicles.get(to).capacity());
-		valid &= a[from].updateTimeAndLoad(vehicles.get(from).capacity());
-		return valid;
-	}
+    /**
+     * @param actions
+     * @param vehicles
+     * @return
+     */
+    private double computeCost(ActionEntry[] actions, List<Vehicle> vehicles) {
+        double sum = 0;
+        int i = 0;
+        double max = 0;
+        for (ActionEntry a : actions) {
+            double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
+            sum += cost;
+            if (max < cost) {
+                max = cost;
+            }
+            i++;
+        }
+        return sum;
+    }
 
-	/**
-	 * Select one neighbors amongst all the neighbors
-	 * 
-	 * @param neighbors
-	 * @param vehicles
-	 * @param temperature
-	 * @return the selected neighbor
-	 */
-	private ActionEntry[] selecBestNeighbor(List<ActionEntry[]> neighbors, List<Vehicle> vehicles) {
-		// FIXME PIMP ME
+    /**
+     * @param actions
+     * @param vehicles
+     * @return the sum of vehicles cost
+     */
+    private double computeSumCost(ActionEntry[] actions, List<Vehicle> vehicles) {
+        double sum = 0;
+        int i = 0;
+        for (ActionEntry a : actions) {
+            double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
+            sum += cost;
+            i++;
+        }
+        return sum;
+    }
 
-		// 70% of the time choose a random
 
-		// 30% of the time we choose the best neighbor
-		ActionEntry[] best = null;
-		double bestCost = Double.POSITIVE_INFINITY;
-		for (ActionEntry[] a : neighbors) {
-			double cost = computeCost(a, vehicles);
-			if (cost < bestCost) {
-				bestCost = cost;
-				best = a;
-			}
-		}
-
-		return best;
-
-	}
-
-	/**
-	 * @param actions
-	 * @param vehicles
-	 * @return
-	 */
-	private double computeCost(ActionEntry[] actions, List<Vehicle> vehicles) {
-		double sum = 0;
-		int i = 0;
-		double max = 0;
-		for (ActionEntry a : actions) {
-			double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
-			sum += cost;
-			if (max < cost) {
-				max = cost;
-			}
-			i++;
-		}
-		return sum;
-	}
-
-	/**
-	 * @param actions
-	 * @param vehicles
-	 * @return the sum of vehicles cost
-	 */
-	private double computeSumCost(ActionEntry[] actions, List<Vehicle> vehicles) {
-		double sum = 0;
-		int i = 0;
-		for (ActionEntry a : actions) {
-			double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
-			sum += cost;
-			i++;
-		}
-		return sum;
-	}
-
-	/**
-	 * @param actions
-	 * @param vehicles
-	 * @return the maximum vehicleCost
-	 */
-	private double computeMaxCost(ActionEntry[] actions, List<Vehicle> vehicles) {
-		int i = 0;
-		double max = 0;
-		for (ActionEntry a : actions) {
-			double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
-			if (max < cost) {
-				max = cost;
-			}
-			i++;
-		}
-		return max;
-	}
-
+    /**
+     * @param actions
+     * @param vehicles
+     * @return the maximum vehicleCost
+     */
+    private double computeMaxCost(ActionEntry[] actions, List<Vehicle> vehicles) {
+        int i = 0;
+        double max = 0;
+        for (ActionEntry a : actions) {
+            double cost = a.cost(vehicles.get(i).homeCity()) * vehicles.get(i).costPerKm();
+            if (max < cost) {
+                max = cost;
+            }
+            i++;
+        }
+        return max;
+    }
 }
