@@ -28,12 +28,12 @@ import logist.topology.Topology.City;
 public class CentralizedMain implements CentralizedBehavior {
 
 	private static final double STARTING_TEMPERATURE = 100_000.;
-	private static final double FINAL_TEMPERATURE = 3.;
+	private static final double FINAL_TEMPERATURE = 100.;
 	private static final double LAMBDA = FINAL_TEMPERATURE/STARTING_TEMPERATURE;
 	//private static final double LAMBDA = 0.00001;
 	private static final double SECURE_FACTOR = 0.9;
 	
-	private static final double PROBA_RANDOM = 0.4;
+	private static final double PROBA_RANDOM = 0.8;
 	private static final double PROBA_CHANGE_VEHICLE = 0.3;
 	
 	//not used
@@ -115,7 +115,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		int iteration = 0;
 		double temperature = STARTING_TEMPERATURE;
 		ActionEntry[] best = currentSolution;
-		double bestCost = computeCostSumMax(currentSolution, vehicles);
+		double bestCost = computeSum(currentSolution, vehicles);
 		double currentCost = bestCost;
 		double currentTime = 0;
 		do {
@@ -142,7 +142,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			/*
 			 * SIMULATED ANEALING
 			 */
-			double costN = computeCostSumMax(selectedN, vehicles);
+			double costN = computeSum(selectedN, vehicles);
 
 			// if the cost is better change automatically
 			if (costN < currentCost) {
@@ -295,7 +295,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			if (vId == randomVid) {
 				continue;
 			}
-			ActionEntry[] a = copy(solution);
+			ActionEntry[] a = ActionEntry.copy(solution);
 			ActionEntry toMoveP = a[randomVid].next;
 			ActionEntry toMoveD = toMoveP.next;
 
@@ -338,7 +338,7 @@ public class CentralizedMain implements CentralizedBehavior {
 
 			while (valid && iD <= lenght) {
 
-				ActionEntry[] a = copy(solution);
+				ActionEntry[] a = ActionEntry.copy(solution);
 				ActionEntry pick = a[randomVid].next;
 				ActionEntry deli = pick.next;
 				while (deli.task != pick.task) {
@@ -387,14 +387,6 @@ public class CentralizedMain implements CentralizedBehavior {
 		return neighbors;
 	}
 
-	private ActionEntry[] copy(ActionEntry[] actions) {
-		ActionEntry[] copy = new ActionEntry[actions.length];
-		for (int i = 0; i < actions.length; i++) {
-			copy[i] = actions[i].clone();
-		}
-		return copy;
-	}
-
 	private double computeCostSumMax(ActionEntry[] actions, List<Vehicle> vehicles) {
 		double sum = 0;
 		int i = 0;
@@ -431,117 +423,6 @@ public class CentralizedMain implements CentralizedBehavior {
 			i++;
 		}
 		return max;
-	}
-
-	/**
-	 * Class describing an action
-	 *
-	 */
-	private static class ActionEntry {
-		public ActionEntry next, prev;
-		public int vehicleId; // FIXME necessary?
-		public boolean pickup;
-		public int time;
-		public Task task;
-		public int load;
-
-		// header
-		public ActionEntry(int vehicleId) {
-			this.vehicleId = vehicleId;
-			this.time = 0;
-			this.load = 0;
-		}
-
-		// action
-		public ActionEntry(Task t, boolean p) {
-			this.task = t;
-			this.pickup = p;
-		}
-
-		public void add(ActionEntry a) {
-			a.next = this.next;
-			this.next = a;
-			if (a.next != null) {
-				a.next.prev = a;
-			}
-
-			a.prev = this;
-
-			a.vehicleId = vehicleId;
-
-		}
-
-		public double cost(City lastPos) {
-			if (task == null) {
-				return next == null ? 0 : next.cost(lastPos);
-			}
-			City nextCity = pickup ? task.pickupCity : task.deliveryCity;
-			return lastPos.distanceTo(nextCity) + (next == null ? 0 : next.cost(nextCity));
-		}
-
-		public void remove() {
-			// never remove header
-			prev.next = next;
-			if (next != null) {
-				next.prev = prev;
-			}
-		}
-
-		/**
-		 * Update time of each action and the load of vehicles after the action
-		 * 
-		 * @param maxLoad
-		 *            the maximum load of the vehicle
-		 * @return true if the schedule is valid, false otherwise
-		 */
-		public boolean updateTimeAndLoad(int maxLoad) {
-			if (load > maxLoad) {
-				return false;
-			}
-			if (next != null) {
-				next.time = time + 1;
-
-				if (next.pickup) {
-					next.load = load + next.task.weight;
-				} else {
-					next.load = load - next.task.weight;
-				}
-				return next.updateTimeAndLoad(maxLoad);
-			}
-			return load == 0;
-		}
-
-		private ActionEntry clone(ActionEntry prev) {
-			ActionEntry a = new ActionEntry(task, pickup);
-			a.prev = prev;
-			a.time = time;
-			a.vehicleId = vehicleId;
-			if (next != null) {
-				a.next = next.clone(a);
-			}
-			a.load = load;
-
-			return a;
-		}
-
-		@Override
-		public ActionEntry clone() {
-			return clone(null);
-		}
-
-		public String toString() {
-			String s = "->";
-			if (pickup) {
-				s = s + "P(" + task.id + ")";
-			} else if (task != null) {
-				s = s + "D(" + task.id + ")";
-			}
-			if (next != null) {
-				s += next.toString();
-			}
-			return s;
-		}
-
 	}
 
 }
