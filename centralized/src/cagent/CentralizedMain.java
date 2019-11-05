@@ -90,9 +90,12 @@ public class CentralizedMain implements CentralizedBehavior {
 		do {
 			ActionEntry[] selectedN;
 
-			if (random.nextDouble() < PROBA_RANDOM) {
+			// Linearly decreasing temperature
+            double temp_linear = STARTING_TEMPERATURE - (STARTING_TEMPERATURE- FINAL_TEMPERATURE) * (currentTime-time_start)/(timeout_plan*SECURE_FACTOR);
+            double proba_linear = (temp_linear-FINAL_TEMPERATURE)/(STARTING_TEMPERATURE-FINAL_TEMPERATURE);
 
-				selectedN = computeRandomNeighbor(currentSolution, vehicles);
+            if (random.nextDouble() < proba_linear) {
+                selectedN = computeRandomNeighbor(currentSolution, vehicles);
 			} else {
 				List<ActionEntry[]> neighbors = computeNeighbors(currentSolution, vehicles);
 				if (neighbors.isEmpty()) {
