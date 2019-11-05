@@ -28,8 +28,19 @@ import logist.topology.Topology.City;
 public class CentralizedMain implements CentralizedBehavior {
 
 	private static final double STARTING_TEMPERATURE = 100_000.;
-	private static final double LAMBDA = 0.00001;
+	private static final double FINAL_TEMPERATURE = 3.;
+	private static final double LAMBDA = FINAL_TEMPERATURE/STARTING_TEMPERATURE;
+	//private static final double LAMBDA = 0.00001;
 	private static final double SECURE_FACTOR = 0.9;
+	
+	private static final double PROBA_RANDOM = 0.4;
+	private static final double PROBA_CHANGE_VEHICLE = 0.3;
+	
+	//not used
+	private static final double PROBA_BEST = 1-PROBA_RANDOM;
+
+	
+	
 
 	private Topology topology;
 	private TaskDistribution distribution;
@@ -104,7 +115,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		int iteration = 0;
 		double temperature = STARTING_TEMPERATURE;
 		ActionEntry[] best = currentSolution;
-		double bestCost = computeCost(currentSolution, vehicles);
+		double bestCost = computeCostSumMax(currentSolution, vehicles);
 		double currentCost = bestCost;
 		double currentTime = 0;
 		do {
@@ -131,7 +142,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			/*
 			 * SIMULATED ANEALING
 			 */
-			double costN = computeCost(selectedN, vehicles);
+			double costN = computeCostSumMax(selectedN, vehicles);
 
 			// if the cost is better change automatically
 			if (costN < currentCost) {
@@ -164,7 +175,7 @@ public class CentralizedMain implements CentralizedBehavior {
 			// }
 			//temperature *= LAMBDA; // FIXME a possibility would be to update the temperature depending on the time
 			// left before timeout
-			temperature = STARTING_TEMPERATURE * Math.pow(LAMBDA, (currentTime-time_start)/timeout_plan);
+			temperature = STARTING_TEMPERATURE * Math.pow(LAMBDA, (currentTime-time_start)/(timeout_plan*SECURE_FACTOR));
 			// STARTING_TEMPERATURE*(1.-(currentTime-time_start)*(currentTime-time_start)/(timeout_plan*timeout_plan));
 
 			iteration++;
@@ -228,10 +239,10 @@ public class CentralizedMain implements CentralizedBehavior {
 		// FIXME PIMP ME
 
 		//70% of the time choose a random
-		if (random.nextDouble() < 0.7) {
+		if (random.nextDouble() < PROBA_RANDOM) {
 			
 			//30% of the time the random neighbors is change the vehicle of the task
-			if (random.nextDouble() < 0.3) {
+			if (vehicles.size() >1 && random.nextDouble() < PROBA_CHANGE_VEHICLE) {
 				int i = random.nextInt(vehicles.size() - 1);
 				return neighbors.get(i);
 			}
@@ -246,7 +257,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		ActionEntry[] best = null;
 		double bestCost = Double.POSITIVE_INFINITY;
 		for (ActionEntry[] a : neighbors) {
-			double cost = computeCost(a, vehicles);
+			double cost = computeCostSumMax(a, vehicles);
 			if (cost < bestCost) {
 				bestCost = cost;
 				best = a;
@@ -384,7 +395,7 @@ public class CentralizedMain implements CentralizedBehavior {
 		return copy;
 	}
 
-	private double computeCost(ActionEntry[] actions, List<Vehicle> vehicles) {
+	private double computeCostSumMax(ActionEntry[] actions, List<Vehicle> vehicles) {
 		double sum = 0;
 		int i = 0;
 		double max = 0;
