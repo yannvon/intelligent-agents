@@ -74,6 +74,7 @@ public class AuctionTemplate implements AuctionBehavior {
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		
 //		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
+		long start = System.currentTimeMillis();
 
 		Plan planVehicle1 = naivePlan(vehicle, tasks);
 
@@ -82,6 +83,16 @@ public class AuctionTemplate implements AuctionBehavior {
 		while (plans.size() < vehicles.size())
 			plans.add(Plan.EMPTY);
 
+		long end = System.currentTimeMillis();
+		
+		double finalReward = (planVehicle1.totalDistance() * vehicle.costPerKm()) +tasks.rewardSum() ;
+		
+
+		System.out.println();
+		System.out.println("Template:");
+		System.out.println("Time to compute plan: " + String.format("%3.1f",(end - start) / 1000.)+ "s");
+		System.out.println("Reward: " + String.format("%6.0f",finalReward ));
+		
 		return plans;
 	}
 
