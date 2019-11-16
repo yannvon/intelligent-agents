@@ -4,7 +4,6 @@ package auction;
 
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
-import logist.plan.Action;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -13,12 +12,10 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
- * A very simple auction agent that assigns all tasks to its first vehicle and
+ * A very simple auction agent that assigns all tasks to its first vehicles and
  * handles them sequentially.
  */
 @SuppressWarnings("unused")
@@ -36,13 +33,12 @@ public class AuctionNoReorder implements AuctionBehavior {
 
 	 */
 
-
     private Topology topology;
     private TaskDistribution distribution;
     private Agent agent;
     private Random random;
-    private Vehicle vehicle;
-    private City currentCity;
+    private List<Vehicle> vehicles;
+    private int maxVehicleCapacity;
 
     private ActionEntry[] currentSolution;
     private double currentCost;
@@ -57,10 +53,13 @@ public class AuctionNoReorder implements AuctionBehavior {
         this.topology = topology;
         this.distribution = distribution;
         this.agent = agent;
-        this.vehicle = agent.vehicles().get(0);
-        this.currentCity = vehicle.homeCity();
+        this.vehicles = agent.vehicles();
+        this.maxVehicleCapacity = Integer.MIN_VALUE;
+        for (Vehicle v: vehicles) {
+            this.maxVehicleCapacity =  (v.capacity() > this.maxVehicleCapacity) ? v.capacity() : this.maxVehicleCapacity;
+        }
 
-        long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
+        long seed = -9019554669489983951L * this.hashCode() * agent.id();
         this.random = new Random(seed);
 
         // Init Action entries
@@ -74,6 +73,10 @@ public class AuctionNoReorder implements AuctionBehavior {
     public void auctionResult(Task previous, int winner, Long[] bids) {
         if (winner == agent.id()) {
 
+            if (potentialSolution == null || currentCost < 0) {
+                throw new Error("Unexpected behavior, no bid was made, yet bid was won");
+            }
+
             currentSolution = potentialSolution;
             currentCost = potentialCost;
 
@@ -85,7 +88,7 @@ public class AuctionNoReorder implements AuctionBehavior {
     @Override
     public Long askPrice(Task task) {
 
-        if (vehicle.capacity() < task.weight)
+        if (this.maxVehicleCapacity < task.weight)
             return null;
 
         /*
@@ -94,7 +97,8 @@ public class AuctionNoReorder implements AuctionBehavior {
          * By going over all vehicles and all possible slots
          */
         double costWithNewTask = addingTaskCost(task);
-        double marginalCost = currentCost - costWithNewTask;
+        double marginalCost = costWithNewTask - currentCost;
+        System.out.println("Marginal cost of adding task is " + marginalCost);
 
 
         // Final bid
@@ -110,7 +114,6 @@ public class AuctionNoReorder implements AuctionBehavior {
 
 //		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
 
-        Plan planVehicle1 = naivePlan(vehicle, tasks);
 
         List<Plan> plans = new ArrayList<Plan>();
         for (int vId = 0; vId < agent.vehicles().size(); vId++) {
@@ -146,39 +149,16 @@ public class AuctionNoReorder implements AuctionBehavior {
     }
 
 
-    private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
-        City current = vehicle.getCurrentCity();
-        Plan plan = new Plan(current);
-
-        for (Task task : tasks) {
-            // move: current city => pickup location
-            for (City city : current.pathTo(task.pickupCity))
-                plan.appendMove(city);
-
-            plan.appendPickup(task);
-
-            // move: pickup location => delivery location
-            for (City city : task.path())
-                plan.appendMove(city);
-
-            plan.appendDelivery(task);
-
-            // set current city
-            current = task.deliveryCity;
-        }
-        return plan;
-    }
-
     private double addingTaskCost(Task t) {
 
         double lowestTotalCostFound = Double.MAX_VALUE;
         ActionEntry[] bestPlan = null;
 
         // Go over all vehicles
-        for (int i = 0; i < agent.vehicles().size(); i++) {
+        for (int vId = 0; vId < agent.vehicles().size(); vId++) {
 
             // Compute number of actions
-            ActionEntry c = currentSolution[i];
+            ActionEntry c = currentSolution[vId];
             while (c.next != null) {
                 c = c.next;
             }
@@ -195,8 +175,8 @@ public class AuctionNoReorder implements AuctionBehavior {
 
                 while ((valid || sameFound) && iDelivery <= nAction + 1) { //FIXME not <= nAction + 1
 
-                    ActionEntry[] a = ActionEntry.copy(currentSolution);    //FIXME only copy vehicle
-                    valid = addTask(a, agent.vehicles(), i, t, iPickup, iDelivery); // FIXME can be done more efficiently
+                    ActionEntry[] a = ActionEntry.copy(currentSolution);    //FIXME only copy vehicles
+                    valid = addTask(a[vId], agent.vehicles(), vId, t, iPickup, iDelivery); // FIXME can be done more efficiently
                     if (valid) {
 
                         // Compute cost
@@ -219,23 +199,53 @@ public class AuctionNoReorder implements AuctionBehavior {
         potentialSolution = bestPlan;
         potentialCost = lowestTotalCostFound;
 
+        System.out.println("Best Plan:");
+        for (int v = 0; v < vehicles.size(); v++) {
+            System.out.println(bestPlan[v]);
+        }
+        System.out.println("Lowest new cost: " + lowestTotalCostFound);
+
+
         return lowestTotalCostFound;
     }
 
     /**
-     * Add task to vehicle
+     * Add task to vehicles
      *
      * @return true if the change is valid
      */
-    private boolean addTask(ActionEntry[] a, List<Vehicle> vehicles, int vId, Task task, int iPickup, int iDelivery) {
+    private boolean addTask(ActionEntry a, List<Vehicle> vehicles, int vId, Task task, int iPickup, int iDelivery) {
 
         ActionEntry newPickup = new ActionEntry(task, true);
         ActionEntry newDelivery = new ActionEntry(task, false);
 
-        // TODO
+        ActionEntry current = a;
 
-        // if valid add to neighbors
-        return a[vId].updateTimeAndLoad(vehicles.get(vId).capacity());
+        // Find correct index for pickup
+        for(int p = iPickup; p > 0; p--) {
+            if (current == null) {
+                throw new Error("Pickup moment is not legal");
+            }
+            current = current.next;
+        }
+
+        // Add pickup entry
+        current.add(newPickup);
+
+        // Find correct index for delivery
+        for(int d = iDelivery - iPickup; d > 0; d--) { // Need to be careful here
+            if (current == null) {
+                throw new Error("Delivery moment is not legal");
+            }
+            current = current.next;
+        }
+
+        // Add delivery entry
+        current.add(newDelivery);
+
+
+        // Update time and load FIXME check
+        return a.updateTimeAndLoad(vehicles.get(vId).capacity());
     }
 
     /**
