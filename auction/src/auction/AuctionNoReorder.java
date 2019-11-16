@@ -32,6 +32,7 @@ public class AuctionNoReorder implements AuctionBehavior {
 	2) Integrate probability of certain tasks, willing to take tasks at deficit ?
 
 	 */
+	public static final boolean VERBOSE = true;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -73,6 +74,10 @@ public class AuctionNoReorder implements AuctionBehavior {
     public void auctionResult(Task previous, int winner, Long[] bids) {
         if (winner == agent.id()) {
 
+            // Option 1: Auction was won
+            if (VERBOSE) {
+                System.out.println("Auction " + previous.id + " won");
+            }
             if (potentialSolution == null || currentCost < 0) {
                 throw new Error("Unexpected behavior, no bid was made, yet bid was won");
             }
@@ -81,12 +86,28 @@ public class AuctionNoReorder implements AuctionBehavior {
             currentCost = potentialCost;
 
             potentialSolution = null;
-            currentCost = -1;
+            potentialCost = -1;
+        } else {
+            // Option 2: Auction was lost
+            if (VERBOSE) {
+                System.out.println("Auction lost");
+            }
+        }
+        if (VERBOSE) {
+            for (int i = 0; i < bids.length; i++) {
+                System.out.print("Bid " + i + ": " + bids[i] + " ");
+            }
+            System.out.println();
+            System.out.flush();
         }
     }
 
     @Override
     public Long askPrice(Task task) {
+
+        if (VERBOSE) {
+            System.out.println("--- TASK " + task.id + "---");
+        }
 
         if (this.maxVehicleCapacity < task.weight)
             return null;
@@ -98,7 +119,12 @@ public class AuctionNoReorder implements AuctionBehavior {
          */
         double costWithNewTask = addingTaskCost(task);
         double marginalCost = costWithNewTask - currentCost;
-        System.out.println("Marginal cost of adding task is " + marginalCost);
+
+        if (VERBOSE) {
+            System.out.println("Current cost: " + currentCost);
+            System.out.println("Cost with potential Task:" + costWithNewTask);
+            System.out.println("Marginal cost of adding Task: " + marginalCost);
+        }
 
 
         // Final bid
@@ -112,12 +138,14 @@ public class AuctionNoReorder implements AuctionBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-//		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-
+        if (VERBOSE) {
+            System.out.println("--- PLANNING PHASE ---");
+            System.out.println("Agent " + agent.id() + " has tasks " + tasks);
+        }
 
         List<Plan> plans = new ArrayList<Plan>();
-        for (int vId = 0; vId < agent.vehicles().size(); vId++) {
-            Plan plan = planFromActionEntry(agent.vehicles().get(vId), currentSolution[vId]);
+        for (int vId = 0; vId < this.vehicles.size(); vId++) {
+            Plan plan = planFromActionEntry(this.vehicles.get(vId), currentSolution[vId], tasks);
             plans.add(plan);
         }
 
@@ -125,7 +153,7 @@ public class AuctionNoReorder implements AuctionBehavior {
     }
 
 
-    private Plan planFromActionEntry(Vehicle v, ActionEntry actionEntry) {
+    private Plan planFromActionEntry(Vehicle v, ActionEntry actionEntry, TaskSet tasks) {
         City current = v.getCurrentCity();
         Plan plan = new Plan(current);
 
@@ -136,10 +164,22 @@ public class AuctionNoReorder implements AuctionBehavior {
                 plan.appendMove(city);
             }
 
+            // Find real task
+            int taskId = next.task.id;
+            Task realTask = null;
+            for (Task t: tasks) {
+                if (t.id == taskId) {
+                    realTask = t;
+                }
+            }
+            if (realTask == null) {
+                throw new Error("Task " + taskId + " does not exist.");
+            }
+
             if (next.pickup) {
-                plan.appendPickup(next.task);
+                plan.appendPickup(realTask);
             } else {
-                plan.appendDelivery(next.task);
+                plan.appendDelivery(realTask);
             }
             next = next.next;
             current = nextCity;
@@ -168,7 +208,7 @@ public class AuctionNoReorder implements AuctionBehavior {
             // Compute cost for all possible task insert positions
 
             for (int iPickup = 0; iPickup <= nAction; iPickup++) {   //FIXME not <= ?
-                int iDelivery = 1;
+                int iDelivery = iPickup + 1;
 
                 boolean valid = true;
                 boolean sameFound = true;
@@ -199,12 +239,14 @@ public class AuctionNoReorder implements AuctionBehavior {
         potentialSolution = bestPlan;
         potentialCost = lowestTotalCostFound;
 
-        System.out.println("Best Plan:");
-        for (int v = 0; v < vehicles.size(); v++) {
-            System.out.println(bestPlan[v]);
+        // Debug output
+        if (VERBOSE) {
+            System.out.println("Best Potential Plan:");
+            for (int v = 0; v < vehicles.size(); v++) {
+                System.out.println(bestPlan[v]);
+            }
+            System.out.println("Lowest potential cost: " + lowestTotalCostFound);
         }
-        System.out.println("Lowest new cost: " + lowestTotalCostFound);
-
 
         return lowestTotalCostFound;
     }
@@ -218,6 +260,7 @@ public class AuctionNoReorder implements AuctionBehavior {
 
         ActionEntry newPickup = new ActionEntry(task, true);
         ActionEntry newDelivery = new ActionEntry(task, false);
+        // FIXME the task here does not have correct reward yet, so it will have to be fixed later
 
         ActionEntry current = a;
 

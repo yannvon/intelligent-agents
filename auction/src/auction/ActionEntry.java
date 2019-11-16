@@ -102,9 +102,9 @@ class ActionEntry {
 	public String toString() {
 		String s = "->";
 		if (pickup) {
-			s = s + "P(" + task.id + ")";
+			s = s + "P(" + task.id + " reward: " + task.reward + ")";
 		} else if (task != null) {
-			s = s + "D(" + task.id + ")";
+			s = s + "D(" + task.id + " reward: " + task.reward + ")";
 		}
 		if (next != null) {
 			s += next.toString();
