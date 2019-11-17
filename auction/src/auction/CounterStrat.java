@@ -181,7 +181,7 @@ public class CounterStrat implements AuctionBehavior {
 
 		double bid = (marginalCost + TAX) * ratio;
 
-		double opBid = marginalOpponentCost * ratio;
+		double opBid = marginalOpponentCost * opponentRatio;
 		maximizingReward = bid < opBid * SECURE_FACTOR;
 		if (maximizingReward) {
 			bid = opBid * SECURE_FACTOR;

@@ -103,7 +103,7 @@ public class CounterStrat2 implements AuctionBehavior {
 			double opMarginalCost = potentialOpponentCost-currentOpponentCost;
 			double simRatio = opBid/opMarginalCost;
 			
-			if(simRatio < 3.0) {
+			if(simRatio < 3.0 && simRatio>0) { //TO NOT HAVE TO BIG RATIO FOR SMALL MARGINAL COST
 				if(opponentRatio <0.1) {
 					opponentRatio =opBid/opMarginalCost; 
 				}else {
@@ -199,7 +199,7 @@ public class CounterStrat2 implements AuctionBehavior {
 
 		double bid = (marginalCost + TAX)*ratio;
 		
-		double opBid = marginalOpponentCost * ratio;
+		double opBid = marginalOpponentCost * opponentRatio;
 		maximizingReward = bid < opBid* secureFactor;
 		if(maximizingReward) {
 			bid = opBid * secureFactor;
