@@ -32,7 +32,7 @@ public class AuctionNoReorder implements AuctionBehavior {
 	2) Integrate probability of certain tasks, willing to take tasks at deficit ?
 
 	 */
-	public static final boolean VERBOSE = true;
+	public static final boolean VERBOSE = false;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -130,7 +130,7 @@ public class AuctionNoReorder implements AuctionBehavior {
         // Final bid
         // double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
         // double bid = ratio * marginalCost;
-        double bid = marginalCost;
+        double bid = marginalCost + 1000 * random.nextDouble();
 
         return (long) Math.round(bid);
     }
@@ -148,15 +148,9 @@ public class AuctionNoReorder implements AuctionBehavior {
             Plan plan = planFromActionEntry(this.vehicles.get(vId), currentSolution[vId], tasks);
             plans.add(plan);
         }
-        
-        double reward = tasks.rewardSum();
-        for(Plan p : plans) {
-        	reward -=(p.totalDistance() * vehicles.get(0).costPerKm())  ;
-        }
-        
-        System.out.println();
-        System.out.println("NoReorder:");
-        System.out.println("Reward: " + String.format("%6.0f",reward ));
+
+        // Display performance
+        AuctionHelper.displayPerformance("NoReorder", tasks, plans, vehicles);
 
         return plans;
     }

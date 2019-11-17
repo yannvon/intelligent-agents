@@ -36,7 +36,7 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 	- Integrate probability of certain tasks, willing to take tasks at deficit ?
 
 	 */
-	public static final boolean VERBOSE = true;
+	public static final boolean VERBOSE = false;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -153,15 +153,9 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         // Invoke the centralized planner to save costs
         List<Plan> plans = planCentralized(tasks);
 
-        if (VERBOSE) {
-            double totalCost = 0;
-            for (int i = 0; i < vehicles.size(); i++) {
-                double c = plans.get(i).totalDistance() * vehicles.get(i).costPerKm();
-                totalCost += c;
-                System.out.println("Vehicle " + i + " cost: " + c);
-            }
-            System.out.println("Total cost: " + totalCost);
-        }
+
+        // Display performance
+        AuctionHelper.displayPerformance("NoReorder with centralized planning", tasks, plans, vehicles);
 
         return plans;
     }

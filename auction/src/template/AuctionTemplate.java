@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import auction.AuctionHelper;
 import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;
@@ -84,15 +85,11 @@ public class AuctionTemplate implements AuctionBehavior {
 			plans.add(Plan.EMPTY);
 
 		long end = System.currentTimeMillis();
-		
-		double finalReward =tasks.rewardSum() -  (planVehicle1.totalDistance() * vehicle.costPerKm())  ;
-		
 
-		System.out.println();
-		System.out.println("Template:");
-		System.out.println("Time to compute plan: " + String.format("%3.1f",(end - start) / 1000.)+ "s");
-		System.out.println("Reward: " + String.format("%6.0f",finalReward ));
-		
+
+		// Display performance
+		AuctionHelper.displayPerformance("Template provided", tasks, plans, vehicles);
+
 		return plans;
 	}
 
