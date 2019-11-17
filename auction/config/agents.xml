@@ -24,4 +24,10 @@
 		<set class-name="auction.FirstStrategy"/>
 	</agent>
 	
+	<agent name="auction-counter">
+		<set class-path="bin/"/>
+		<set class-name="auction.CounterStrat"/>
+	</agent>
+	
+	
 </agents>

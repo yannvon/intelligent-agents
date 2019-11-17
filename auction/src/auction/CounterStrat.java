@@ -98,9 +98,7 @@ public class CounterStrat implements AuctionBehavior {
 		if (winner == agent.id()) {
 
 			// Option 1: Auction was won
-			if (VERBOSE) {
-				System.out.println("Auction " + previous.id + " won");
-			}
+			
 			if (potentialSolution == null || currentCost < 0) {
 				throw new Error("Unexpected behavior, no bid was made, yet bid was won");
 			}
@@ -114,9 +112,7 @@ public class CounterStrat implements AuctionBehavior {
 			ratio += 0.05;
 		} else {
 			// Option 2: Auction was lost
-			if (VERBOSE) {
-				System.out.println("Auction lost");
-			}
+			
 			if(!maximizingReward) {	
 				ratio -= 0.15;
 			}
@@ -142,6 +138,8 @@ public class CounterStrat implements AuctionBehavior {
 		}
 
 		if (VERBOSE) {
+			System.out.println();
+			System.out.println("BIDS "+previous.id+ " : ");
 			for (int i = 0; i < bids.length; i++) {
 				System.out.print("Bid " + i + ": " + bids[i] + " ");
 			}
@@ -154,7 +152,8 @@ public class CounterStrat implements AuctionBehavior {
 	public Long askPrice(Task task) {
 
 		if (VERBOSE) {
-			System.out.println("--- TASK " + task.id + "---");
+			System.out.println();
+			System.out.println("AGENT "+agent.id()+ "--- TASK " + task.id + "---");
 		}
 
 		if (this.maxVehicleCapacity < task.weight)
@@ -175,6 +174,10 @@ public class CounterStrat implements AuctionBehavior {
 			System.out.println("Current cost: " + currentCost);
 			System.out.println("Cost with potential Task:" + costWithNewTask);
 			System.out.println("Marginal cost of adding Task: " + marginalCost);
+			System.out.println();
+			System.out.println("sim op cost: " + currentOpponentCost);
+			System.out.println("sim op Cost with potential Task:" + opponentCost);
+			System.out.println("sim op Marginal cost: " + marginalOpponentCost);
 		}
 
 		double bid = (marginalCost + TAX)*ratio;
