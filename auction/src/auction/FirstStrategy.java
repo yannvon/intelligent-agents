@@ -30,16 +30,14 @@ import logist.topology.Topology.City;
  */
 @SuppressWarnings("unused")
 public class FirstStrategy implements AuctionBehavior {
-	
+
 	private static final boolean VERBOSE = true;
-	
-	
+
 	/* Environment */
 	TaskDistribution td;
 
 	private static final double STARTING_RATIO = 0.9;
 	private static final double ADDING_REWARD = 100;
-	
 
 	private Topology topology;
 	private TaskDistribution distribution;
@@ -48,17 +46,15 @@ public class FirstStrategy implements AuctionBehavior {
 	private Vehicle vehicle;
 	private int capacity;
 	private Set<Task> currentTasks;
-	
+
 	private double ratio;
-	
-	
+
 	private double nextCost;
-	
+
 	private double currentCost;
 
 	@Override
-	public void setup(Topology topology, TaskDistribution distribution,
-			Agent agent) {
+	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
 		this.topology = topology;
 		this.distribution = distribution;
@@ -74,43 +70,53 @@ public class FirstStrategy implements AuctionBehavior {
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
-		
+
 		if (winner == agent.id()) {
 			currentCost = nextCost;
 			currentTasks.add(previous);
-			System.out.println("FirstStrat Win" + previous);
 			ratio += 0.05;
-		}else {
+
+			if (VERBOSE) {
+				System.out.println("FirstStrat Win" + previous);
+				System.out.println("Ratio " + ratio);
+			}
+		} else {
 			ratio -= 0.15;
-			
+
 		}
-		if(ratio<1) {
+		if (ratio < 1) {
 			ratio = 1;
 		}
 	}
-	
+
 	@Override
 	public Long askPrice(Task task) {
 		System.out.println();
 		long start = System.currentTimeMillis();
-		
-		Set<Task> nextTasks =  new HashSet<>(currentTasks);
-		System.out.println(task);
-		nextTasks.forEach(x-> System.out.print(x.toString()+ " , ") );
+
+		Set<Task> nextTasks = new HashSet<>(currentTasks);
+
 		nextTasks.add(task);
+
 		Plan nextPlan = astarPlan(vehicle, nextTasks);
 		nextCost = (nextPlan.totalDistance() * vehicle.costPerKm());
 		long end = System.currentTimeMillis();
-		System.out.println("Time it = "+String.format("%3.1f",(end - start) / 1000.)+ "s");
-		System.out.println();
 
-		return (long) ((nextCost -currentCost + ADDING_REWARD) * ratio);
+		if (VERBOSE) {
+			System.out.println("--- TASK " + task.id + "---");
+			System.out.println("----FIRST STRAT----");
+			System.out.println("MarginalCost : " + String.format("%6.0f", nextCost - currentCost));
+			System.out.println("Time it = " + String.format("%3.1f", (end - start) / 1000.) + "s");
+			System.out.println();
+		}
+
+		return (long) ((nextCost - currentCost + ADDING_REWARD) * ratio);
 	}
 
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		long start = System.currentTimeMillis();
-		
+
 //		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
 
 		Plan planVehicle1 = astarPlan(vehicle, tasks);
@@ -120,22 +126,18 @@ public class FirstStrategy implements AuctionBehavior {
 		while (plans.size() < vehicles.size())
 			plans.add(Plan.EMPTY);
 
-		
 		long end = System.currentTimeMillis();
-		
-		double finalReward =  +tasks.rewardSum() -(planVehicle1.totalDistance() * vehicle.costPerKm()) ;
-		
+
+		double finalReward = +tasks.rewardSum() - (planVehicle1.totalDistance() * vehicle.costPerKm());
 
 		System.out.println();
 		System.out.println("Strat 1:");
-		System.out.println("Time to compute plan: " + String.format("%3.1f",(end - start) / 1000.)+ "s");
-		System.out.println("Reward: " + String.format("%6.0f",finalReward ));
-		
-		
+		System.out.println("Time to compute plan: " + String.format("%3.1f", (end - start) / 1000.) + "s");
+		System.out.println("Reward: " + String.format("%6.0f", finalReward));
+
 		return plans;
 	}
-	
-	
+
 	private Plan astarPlan(Vehicle vehicle, Set<Task> nextTasks) {
 		PriorityQueue<State> queue = new PriorityQueue<>();
 		HashMap<State, State> visited = new HashMap<>();
@@ -170,8 +172,7 @@ public class FirstStrategy implements AuctionBehavior {
 
 		return constructPlanFromGoal(vehicle.getCurrentCity(), finalState);
 	}
-	
-	
+
 	/**
 	 * Constructs a plan by iteratively traversing states starting from goal state.
 	 *
@@ -218,11 +219,11 @@ public class FirstStrategy implements AuctionBehavior {
 
 		LinkedList<State> successors = new LinkedList<>();
 
-		//  Deliver a task if available. Return only one successor if it is the case
+		// Deliver a task if available. Return only one successor if it is the case
 		for (Task t : s.carriedTasks) {
 			if (t.deliveryCity.equals(s.location)) {
-				Set<Task> carriedTasks =  new HashSet<>(s.carriedTasks);
-				Set<Task> tasksToDeliver =  new HashSet<>(s.tasksToDeliver);
+				Set<Task> carriedTasks = new HashSet<>(s.carriedTasks);
+				Set<Task> tasksToDeliver = new HashSet<>(s.tasksToDeliver);
 				carriedTasks.remove(t);
 
 				State suc = new State(s.location, carriedTasks, tasksToDeliver, s);
@@ -241,14 +242,14 @@ public class FirstStrategy implements AuctionBehavior {
 
 		// Option 2: Pickup a task if available{
 		int weightSum = 0;
-		for(Task ct:s.carriedTasks) {
+		for (Task ct : s.carriedTasks) {
 			weightSum += ct.weight;
 		}
 		for (Task t : s.tasksToDeliver) {
 			if (t.pickupCity.equals(s.location)) {
 				// Check if can carry task
 				if (t.weight + weightSum < capacity) {
-					Set<Task> carriedTasks =  new HashSet<>(s.carriedTasks);
+					Set<Task> carriedTasks = new HashSet<>(s.carriedTasks);
 					Set<Task> tasksToDeliver = new HashSet<>(s.tasksToDeliver);
 					carriedTasks.add(t);
 					tasksToDeliver.remove(t);
@@ -269,7 +270,7 @@ public class FirstStrategy implements AuctionBehavior {
 		private City location;
 		private Set<Task> carriedTasks;
 		private Set<Task> tasksToDeliver;
-	
+
 		/*
 		 * Transition information
 		 */
@@ -277,16 +278,16 @@ public class FirstStrategy implements AuctionBehavior {
 		private Task pickup;
 		private Task deliver;
 		private double stepCost;
-	
+
 		/*
 		 * Heuristic stored
 		 */
 		private double heuristicCost;
-	
+
 		public State(City location, Set<Task> carrying, Set<Task> nextTasks, State parent) {
 			this(location, carrying, nextTasks, parent, 0);
 		}
-	
+
 		public State(City location, Set<Task> carrying, Set<Task> todo, State parent, double stepCost) {
 			this.location = location;
 			this.carriedTasks = carrying;
@@ -295,11 +296,11 @@ public class FirstStrategy implements AuctionBehavior {
 			this.stepCost = stepCost;
 			this.heuristicCost = cost() + heuristic();
 		}
-	
+
 		public boolean isGoalState() {
 			return tasksToDeliver.isEmpty() && carriedTasks.isEmpty();
 		}
-	
+
 		public double cost() {
 			if (parent == null) {
 				return 0;
@@ -307,10 +308,10 @@ public class FirstStrategy implements AuctionBehavior {
 				return parent.cost() + stepCost;
 			}
 		}
-	
+
 		public double heuristic() {
 			double max = 0.;
-	
+
 			for (Task t : carriedTasks) {
 				double dist = location.distanceTo(t.deliveryCity);
 				if (max < dist) {
@@ -323,15 +324,15 @@ public class FirstStrategy implements AuctionBehavior {
 					max = dist;
 				}
 			}
-	
+
 			return max;
 		}
-	
+
 		@Override
 		public int hashCode() {
 			return Objects.hash(this.location, this.carriedTasks, this.tasksToDeliver);
 		}
-	
+
 		@Override
 		public boolean equals(Object that) {
 			if (!(that instanceof State)) {
@@ -339,17 +340,17 @@ public class FirstStrategy implements AuctionBehavior {
 			}
 			return this.location.equals(((State) that).location)
 					&& (this.tasksToDeliver == ((State) that).tasksToDeliver
-					|| this.tasksToDeliver.equals(((State) that).tasksToDeliver))
+							|| this.tasksToDeliver.equals(((State) that).tasksToDeliver))
 					&& (this.carriedTasks == ((State) that).carriedTasks
-					|| this.carriedTasks.equals(((State) that).carriedTasks));
+							|| this.carriedTasks.equals(((State) that).carriedTasks));
 		}
-	
+
 		@Override
 		public String toString() {
 			return "location: " + location.toString() + " carriedtask:" + carriedTasks.size() + " todeliver: "
 					+ tasksToDeliver.size();
 		}
-	
+
 		@Override
 		public int compareTo(State o) {
 			return (int) (this.heuristicCost - o.heuristicCost);
