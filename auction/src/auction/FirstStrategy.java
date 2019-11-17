@@ -1,4 +1,4 @@
-package myBidder;
+package auction;
 
 //the list of imports
 import java.util.ArrayList;
@@ -11,6 +11,8 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Set;
+
+import javax.print.DocFlavor.STRING;
 
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
@@ -28,108 +30,10 @@ import logist.topology.Topology.City;
  */
 @SuppressWarnings("unused")
 public class FirstStrategy implements AuctionBehavior {
-	private class State implements Comparable<State> {
-		/*
-		 * State representation
-		 */
-		private City location;
-		private Set<Task> carriedTasks;
-		private Set<Task> tasksToDeliver;
-
-		/*
-		 * Transition information
-		 */
-		private State parent;
-		private Task pickup;
-		private Task deliver;
-		private double stepCost;
-
-		/*
-		 * Heuristic stored
-		 */
-		private double heuristicCost;
-
-		public State(City location, Set<Task> carrying, Set<Task> nextTasks, State parent) {
-			this(location, carrying, nextTasks, parent, 0);
-		}
-
-		public State(City location, Set<Task> carrying, Set<Task> todo, State parent, double stepCost) {
-			this.location = location;
-			this.carriedTasks = carrying;
-			this.tasksToDeliver = todo;
-			this.parent = parent;
-			this.stepCost = stepCost;
-			this.heuristicCost = cost() + heuristic();
-		}
-
-		public boolean isGoalState() {
-			return tasksToDeliver.isEmpty() && carriedTasks.isEmpty();
-		}
-
-		public double cost() {
-			if (parent == null) {
-				return 0;
-			} else {
-				return parent.cost() + stepCost;
-			}
-		}
-
-		public double heuristic() {
-			double max = 0.;
-
-			for (Task t : carriedTasks) {
-				double dist = location.distanceTo(t.deliveryCity);
-				if (max < dist) {
-					max = dist;
-				}
-			}
-			for (Task t : tasksToDeliver) {
-				double dist = location.distanceTo(t.pickupCity) + t.pathLength();
-				if (max < dist) {
-					max = dist;
-				}
-			}
-
-			return max;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(this.location, this.carriedTasks, this.tasksToDeliver);
-		}
-
-		@Override
-		public boolean equals(Object that) {
-			if (!(that instanceof State)) {
-				return false;
-			}
-			return this.location.equals(((State) that).location)
-					&& (this.tasksToDeliver == ((State) that).tasksToDeliver
-					|| this.tasksToDeliver.equals(((State) that).tasksToDeliver))
-					&& (this.carriedTasks == ((State) that).carriedTasks
-					|| this.carriedTasks.equals(((State) that).carriedTasks));
-		}
-
-		@Override
-		public String toString() {
-			return "location: " + location.toString() + " carriedtask:" + carriedTasks.size() + " todeliver: "
-					+ tasksToDeliver.size();
-		}
-
-		@Override
-		public int compareTo(State o) {
-			return (int) (this.heuristicCost - o.heuristicCost);
-		}
-	}
-
-
-
-	
-
 	/* Environment */
 	TaskDistribution td;
 
-	
+	private static final double STARTING_RATIO = 0.9;
 	
 
 	private Topology topology;
@@ -157,7 +61,7 @@ public class FirstStrategy implements AuctionBehavior {
 		this.vehicle = agent.vehicles().get(0);
 		this.capacity = vehicle.capacity();
 		this.currentTasks = new HashSet<>();
-		this.ratio = 0.8;
+		this.ratio = STARTING_RATIO;
 
 		long seed = -9019554669489983951L * vehicle.homeCity().hashCode() * agent.id();
 		this.random = new Random(seed);
@@ -172,7 +76,7 @@ public class FirstStrategy implements AuctionBehavior {
 			ratio += 0.05;
 		}else {
 			ratio -= 0.05;
-			if(ratio<0.5) {
+			if(ratio<0.8) {
 				ratio = 1;
 			}
 		}
@@ -212,7 +116,7 @@ public class FirstStrategy implements AuctionBehavior {
 		
 		long end = System.currentTimeMillis();
 		
-		double finalReward = (planVehicle1.totalDistance() * vehicle.costPerKm()) +tasks.rewardSum() ;
+		double finalReward =  +tasks.rewardSum() -(planVehicle1.totalDistance() * vehicle.costPerKm()) ;
 		
 
 		System.out.println();
@@ -349,5 +253,99 @@ public class FirstStrategy implements AuctionBehavior {
 			}
 		}
 		return successors;
+	}
+
+	private class State implements Comparable<State> {
+		/*
+		 * State representation
+		 */
+		private City location;
+		private Set<Task> carriedTasks;
+		private Set<Task> tasksToDeliver;
+	
+		/*
+		 * Transition information
+		 */
+		private State parent;
+		private Task pickup;
+		private Task deliver;
+		private double stepCost;
+	
+		/*
+		 * Heuristic stored
+		 */
+		private double heuristicCost;
+	
+		public State(City location, Set<Task> carrying, Set<Task> nextTasks, State parent) {
+			this(location, carrying, nextTasks, parent, 0);
+		}
+	
+		public State(City location, Set<Task> carrying, Set<Task> todo, State parent, double stepCost) {
+			this.location = location;
+			this.carriedTasks = carrying;
+			this.tasksToDeliver = todo;
+			this.parent = parent;
+			this.stepCost = stepCost;
+			this.heuristicCost = cost() + heuristic();
+		}
+	
+		public boolean isGoalState() {
+			return tasksToDeliver.isEmpty() && carriedTasks.isEmpty();
+		}
+	
+		public double cost() {
+			if (parent == null) {
+				return 0;
+			} else {
+				return parent.cost() + stepCost;
+			}
+		}
+	
+		public double heuristic() {
+			double max = 0.;
+	
+			for (Task t : carriedTasks) {
+				double dist = location.distanceTo(t.deliveryCity);
+				if (max < dist) {
+					max = dist;
+				}
+			}
+			for (Task t : tasksToDeliver) {
+				double dist = location.distanceTo(t.pickupCity) + t.pathLength();
+				if (max < dist) {
+					max = dist;
+				}
+			}
+	
+			return max;
+		}
+	
+		@Override
+		public int hashCode() {
+			return Objects.hash(this.location, this.carriedTasks, this.tasksToDeliver);
+		}
+	
+		@Override
+		public boolean equals(Object that) {
+			if (!(that instanceof State)) {
+				return false;
+			}
+			return this.location.equals(((State) that).location)
+					&& (this.tasksToDeliver == ((State) that).tasksToDeliver
+					|| this.tasksToDeliver.equals(((State) that).tasksToDeliver))
+					&& (this.carriedTasks == ((State) that).carriedTasks
+					|| this.carriedTasks.equals(((State) that).carriedTasks));
+		}
+	
+		@Override
+		public String toString() {
+			return "location: " + location.toString() + " carriedtask:" + carriedTasks.size() + " todeliver: "
+					+ tasksToDeliver.size();
+		}
+	
+		@Override
+		public int compareTo(State o) {
+			return (int) (this.heuristicCost - o.heuristicCost);
+		}
 	}
 }

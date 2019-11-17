@@ -85,7 +85,7 @@ public class AuctionTemplate implements AuctionBehavior {
 
 		long end = System.currentTimeMillis();
 		
-		double finalReward = (planVehicle1.totalDistance() * vehicle.costPerKm()) +tasks.rewardSum() ;
+		double finalReward =tasks.rewardSum() -  (planVehicle1.totalDistance() * vehicle.costPerKm())  ;
 		
 
 		System.out.println();
