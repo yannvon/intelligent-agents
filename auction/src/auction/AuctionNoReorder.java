@@ -148,6 +148,15 @@ public class AuctionNoReorder implements AuctionBehavior {
             Plan plan = planFromActionEntry(this.vehicles.get(vId), currentSolution[vId], tasks);
             plans.add(plan);
         }
+        
+        double reward = tasks.rewardSum();
+        for(Plan p : plans) {
+        	reward -=(p.totalDistance() * vehicles.get(0).costPerKm())  ;
+        }
+        
+        System.out.println();
+        System.out.println("NoReorder:");
+        System.out.println("Reward: " + String.format("%6.0f",reward ));
 
         return plans;
     }
