@@ -33,7 +33,7 @@ public class CounterStrat2 implements AuctionBehavior {
 	public static final boolean VERBOSE = true;
 
 	private static final double STARTING_RATIO = 0.;
-	private static final double SECURE_FACTOR = 0.9;
+	private static final double STARTING_SECURE_FACTOR = 0.75;
 
 	private static final double TAX = 10;
 	
@@ -58,6 +58,7 @@ public class CounterStrat2 implements AuctionBehavior {
 	private ActionEntry[] potentialOpponentSolution;
 
 	private double ratio;
+	private double secureFactor;
 
 	private double opponentRatio;
 	
@@ -91,6 +92,7 @@ public class CounterStrat2 implements AuctionBehavior {
 
 		ratio = STARTING_RATIO;
 		opponentRatio = 0;
+		secureFactor = STARTING_SECURE_FACTOR;
 	}
 
 	@Override
@@ -110,17 +112,26 @@ public class CounterStrat2 implements AuctionBehavior {
 			potentialCost = -1;
 
 			ratio += 0.05;
+			if(maximizingReward) {
+				secureFactor *= 1.1;
+			}
 		} else {
 			// Option 2: Auction was lost
 			
 			if(!maximizingReward) {	
 				ratio -= 0.15;
+			}else {
+				secureFactor *= 0.9;
 			}
 			
 			if(bids.length == 2) {
 				long opBid = agent.id() == 0? bids[1]:bids[0];
 				double opMarginalCost = potentialOpponentCost-currentOpponentCost;
-				opponentRatio =opBid/opMarginalCost; 
+				if(opponentRatio ==0) {
+					opponentRatio =opBid/opMarginalCost; 
+				}else {
+					opponentRatio = opponentRatio * 0.5 + (opBid/(2*opMarginalCost));
+				}
 			}
 			
 			
@@ -183,9 +194,9 @@ public class CounterStrat2 implements AuctionBehavior {
 		double bid = (marginalCost + TAX)*ratio;
 		
 		double opBid = marginalOpponentCost * ratio;
-		maximizingReward = bid < opBid* SECURE_FACTOR;
+		maximizingReward = bid < opBid* secureFactor;
 		if(maximizingReward) {
-			bid = opBid * SECURE_FACTOR;
+			bid = opBid * secureFactor;
 		}
 
 		return (long) Math.round(bid);
@@ -210,7 +221,7 @@ public class CounterStrat2 implements AuctionBehavior {
 			reward -= (p.totalDistance() * vehicles.get(0).costPerKm());
 		}
 
-		 AuctionHelper.displayPerformance("Counter with centralized planning", tasks, plans, vehicles);
+		 AuctionHelper.displayPerformance("Counter2 with centralized planning", tasks, plans, vehicles);
 
 		return plans;
 	}
