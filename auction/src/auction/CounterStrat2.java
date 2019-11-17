@@ -19,7 +19,7 @@ import java.util.*;
  * handles them sequentially.
  */
 @SuppressWarnings("unused")
-public class CounterStrat implements AuctionBehavior {
+public class CounterStrat2 implements AuctionBehavior {
 
 	/*
 	 * Some ideas: 1) - Add some randomness -> hides intentions and other - When
@@ -33,7 +33,7 @@ public class CounterStrat implements AuctionBehavior {
 	public static final boolean VERBOSE = true;
 
 	private static final double STARTING_RATIO = 0.;
-	private static final double SECURE_FACTOR = 0.75;
+	private static final double SECURE_FACTOR = 0.9;
 
 	private static final double TAX = 10;
 	
