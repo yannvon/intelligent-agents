@@ -30,10 +30,15 @@ import logist.topology.Topology.City;
  */
 @SuppressWarnings("unused")
 public class FirstStrategy implements AuctionBehavior {
+	
+	private static final boolean VERBOSE = true;
+	
+	
 	/* Environment */
 	TaskDistribution td;
 
 	private static final double STARTING_RATIO = 0.9;
+	private static final double ADDING_REWARD = 100;
 	
 
 	private Topology topology;
@@ -69,16 +74,18 @@ public class FirstStrategy implements AuctionBehavior {
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
+		
 		if (winner == agent.id()) {
 			currentCost = nextCost;
 			currentTasks.add(previous);
 			System.out.println("FirstStrat Win" + previous);
 			ratio += 0.05;
 		}else {
-			ratio -= 0.05;
-			if(ratio<0.8) {
-				ratio = 1;
-			}
+			ratio -= 0.15;
+			
+		}
+		if(ratio<1) {
+			ratio = 1;
 		}
 	}
 	
@@ -97,7 +104,7 @@ public class FirstStrategy implements AuctionBehavior {
 		System.out.println("Time it = "+String.format("%3.1f",(end - start) / 1000.)+ "s");
 		System.out.println();
 
-		return (long) ((nextCost -currentCost + 100) * ratio);
+		return (long) ((nextCost -currentCost + ADDING_REWARD) * ratio);
 	}
 
 	@Override
