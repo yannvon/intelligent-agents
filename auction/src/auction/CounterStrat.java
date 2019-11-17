@@ -32,7 +32,7 @@ public class CounterStrat implements AuctionBehavior {
 	 */
 	public static final boolean VERBOSE = true;
 
-	private static final double STARTING_RATIO = 0.7;
+	private static final double STARTING_RATIO = 0.;
 	private static final double SECURE_FACTOR = 0.75;
 
 	private static final double TAX = 10;
@@ -130,8 +130,8 @@ public class CounterStrat implements AuctionBehavior {
 			
 			
 
-			currentOpponentSolution = potentialSolution;
-			currentOpponentCost = potentialCost;
+			currentOpponentSolution = potentialOpponentSolution;
+			currentOpponentCost = potentialOpponentCost;
 
 			potentialOpponentSolution = null;
 			potentialOpponentCost = -1;
