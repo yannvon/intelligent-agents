@@ -13,12 +13,15 @@
 		<set class-path="bin/"/>
 		<set class-name="auction.AuctionNoReorder"/>
 	</agent>
-	
+
+	<agent name="auction-cplanning">
+		<set class-path="bin/"/>
+		<set class-name="auction.AuctionCentralizedPlanning"/>
+	</agent>
+
 	<agent name="auction-decentralized">
 		<set class-path="bin/"/>
 		<set class-name="auction.FirstStrategy"/>
 	</agent>
-	
-	
 	
 </agents>
