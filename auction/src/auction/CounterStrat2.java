@@ -97,6 +97,21 @@ public class CounterStrat2 implements AuctionBehavior {
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
+		
+		if(bids.length == 2) {
+			long opBid = agent.id() == 0? bids[1]:bids[0];
+			double opMarginalCost = potentialOpponentCost-currentOpponentCost;
+			double simRatio = opBid/opMarginalCost;
+			
+			if(simRatio < 3.0) {
+				if(opponentRatio <0.1) {
+					opponentRatio =opBid/opMarginalCost; 
+				}else {
+					opponentRatio = (opponentRatio * 0.5) + (0.5*(opBid/opMarginalCost));
+				}
+			}
+		}
+		
 		if (winner == agent.id()) {
 
 			// Option 1: Auction was won
@@ -124,18 +139,6 @@ public class CounterStrat2 implements AuctionBehavior {
 				secureFactor *= 0.9;
 			}
 			
-			if(bids.length == 2) {
-				long opBid = agent.id() == 0? bids[1]:bids[0];
-				double opMarginalCost = potentialOpponentCost-currentOpponentCost;
-				if(opponentRatio ==0) {
-					opponentRatio =opBid/opMarginalCost; 
-				}else {
-					opponentRatio = opponentRatio * 0.5 + (opBid/(2*opMarginalCost));
-				}
-			}
-			
-			
-			
 
 			currentOpponentSolution = potentialOpponentSolution;
 			currentOpponentCost = potentialOpponentCost;
@@ -144,6 +147,7 @@ public class CounterStrat2 implements AuctionBehavior {
 			potentialOpponentCost = -1;
 
 		}
+		
 		if (ratio < 1.) {
 			ratio = 1.;
 		}
@@ -185,10 +189,12 @@ public class CounterStrat2 implements AuctionBehavior {
 			System.out.println("Current cost: " + currentCost);
 			System.out.println("Cost with potential Task:" + costWithNewTask);
 			System.out.println("Marginal cost of adding Task: " + marginalCost);
+			System.out.println("ratio: " + ratio);
 			System.out.println();
 			System.out.println("sim op cost: " + currentOpponentCost);
 			System.out.println("sim op Cost with potential Task:" + opponentCost);
 			System.out.println("sim op Marginal cost: " + marginalOpponentCost);
+			System.out.println("op sim ratio: " + opponentRatio);
 		}
 
 		double bid = (marginalCost + TAX)*ratio;
