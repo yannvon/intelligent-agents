@@ -211,62 +211,30 @@ public class CounterStrat2 implements AuctionBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-		if (VERBOSE) {
-			System.out.println("--- PLANNING PHASE ---");
-			System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-		}
-
-		List<Plan> plans = new ArrayList<Plan>();
-		for (int vId = 0; vId < this.vehicles.size(); vId++) {
-			Plan plan = planFromActionEntry(this.vehicles.get(vId), currentSolution[vId], tasks);
-			plans.add(plan);
-		}
-
-		double reward = tasks.rewardSum();
-		for (Plan p : plans) {
-			reward -= (p.totalDistance() * vehicles.get(0).costPerKm());
-		}
+		List<Plan> plans = planCentralized( tasks);
 
 		 AuctionHelper.displayPerformance("Counter2 with centralized planning", tasks, plans, vehicles);
 
 		return plans;
 	}
+	
 
-	private Plan planFromActionEntry(Vehicle v, ActionEntry actionEntry, TaskSet tasks) {
-		City current = v.getCurrentCity();
-		Plan plan = new Plan(current);
 
-		ActionEntry next = actionEntry.next;
-		while (next != null) {
-			City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
-			for (City city : current.pathTo(nextCity)) {
-				plan.appendMove(city);
-			}
+    private List<Plan> planCentralized(TaskSet tasks) {
 
-			// Find real task
-			int taskId = next.task.id;
-			Task realTask = null;
-			for (Task t : tasks) {
-				if (t.id == taskId) {
-					realTask = t;
-				}
-			}
-			if (realTask == null) {
-				throw new Error("Task " + taskId + " does not exist.");
-			}
+        // Create instance of centralized planner
+        CentralizedPlanning centralizedPlanning = new CentralizedPlanning();
 
-			if (next.pickup) {
-				plan.appendPickup(realTask);
-			} else {
-				plan.appendDelivery(realTask);
-			}
-			next = next.next;
-			current = nextCity;
-		}
+        // Setup
+        centralizedPlanning.setup(this.distribution, this.agent);
 
-		return plan;
-	}
+        // Plan
+        List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
 
+        return  plans;
+
+    }
+    
 	private double addingTaskCost(Task t) {
 		return addingTaskCost(t, false);
 	}

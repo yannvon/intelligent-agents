@@ -255,7 +255,7 @@ public class CounterStrat implements AuctionBehavior {
 
 	private double addingTaskCost(Task t, boolean opponent) {
 
-		double lowestTotalCostFound = Double.MAX_VALUE;
+		double lowestTotalCostFound = Double.POSITIVE_INFINITY;
 		ActionEntry[] bestPlan = null;
 		ActionEntry[] current = opponent ? currentOpponentSolution : currentSolution;
 

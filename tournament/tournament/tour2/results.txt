@@ -1,0 +1,25 @@
+### auction.xml ###
+      Agents       | Win - Draw - Lose  |      Counter1      |      Counter2      |    Centralized     |      Template     
+     Counter1      |     5 - 0 - 1      |         -          | WIN (6500 : 1763)  | WIN (10642 : 2596) | WIN (25285 : 1240)
+     Counter2      |     4 - 0 - 2      | WIN (10714 : 534)  |         -          | LOSE (2092 : 3189) | WIN (16617 : 657) 
+   Centralized     |     3 - 0 - 3      | LOSE (1478 : 8782) | LOSE (3225 : 4128) |         -          |  WIN (8009 : 614) 
+     Template      |     0 - 0 - 6      | LOSE (2137 : 7921) | LOSE (1314 : 6781) | LOSE (791 : 7616)  |         -         
+
+First company results
+  # wins   : 6
+  # draws  : 0
+  # losses : 6
+
+
+### auction2.xml ###
+      Agents       | Win - Draw - Lose  |    Centralized     |      Counter2      |      Counter1      |      Template     
+   Centralized     |     5 - 0 - 1      |         -          | LOSE (1243 : 3756) | WIN (1961 : 1064)  |  WIN (6538 : 337) 
+     Counter2      |     4 - 0 - 2      | LOSE (-435 : 2561) |         -          | LOSE (767 : 1206)  |  WIN (2676 : 470) 
+     Counter1      |     3 - 0 - 3      | LOSE (152 : 2820)  | LOSE (-328 : 821)  |         -          |  WIN (2988 : 868) 
+     Template      |     0 - 0 - 6      | LOSE (380 : 5647)  | LOSE (355 : 2176)  | LOSE (653 : 1410)  |         -         
+
+First company results
+  # wins   : 4
+  # draws  : 0
+  # losses : 8
+
