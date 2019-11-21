@@ -1,0 +1,11 @@
+### auction.xml ###
+      Agents       | Win - Draw - Lose  |      Counter2      |    Centralized     | CentralizedReorder
+     Counter2      |     4 - 0 - 0      |         -          | WIN (4267 : 2078)  | WIN (11989 : 4325)
+   Centralized     |     1 - 0 - 3      | LOSE (3225 : 4128) |         -          | WIN (7395 : 1881) 
+CentralizedReorder |     1 - 0 - 3      | LOSE (3225 : 4128) | WIN (6121 : 2121)  |         -         
+
+First company results
+  # wins   : 4
+  # draws  : 0
+  # losses : 2
+

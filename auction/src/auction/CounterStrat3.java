@@ -19,7 +19,7 @@ import java.util.*;
  * handles them sequentially.
  */
 @SuppressWarnings("unused")
-public class CounterStrat2 implements AuctionBehavior {
+public class CounterStrat3 implements AuctionBehavior {
 
 	/*
 	 * Some ideas: 1) - Add some randomness -> hides intentions and other - When

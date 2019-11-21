@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<history configuration="config/auction4.xml">
+	<agents>
+		<agent name="Counter3">
+			<vehicle name="Vehicle 1"/>
+			<vehicle name="Vehicle 2"/>
+		</agent>
+		<agent name="Counter2">
+			<vehicle name="Vehicle 3"/>
+			<vehicle name="Vehicle 4"/>
+		</agent>
+	</agents>
+	<rounds>
+		<round id="1">
+			<tasks>
+				<task id="0" pickup="Cardiff" delivery="Sheffield" weight="3" reward="69479">
+					<bid agent="Counter3" bid="0"/>
+					<bid agent="Counter2" bid="0"/>
+				</task>
+				<task id="1" pickup="Manchester" delivery="Norwich" weight="3" reward="47516">
+					<bid agent="Counter3" bid="2392"/>
+					<bid agent="Counter2" bid="3289"/>
+				</task>
+				<task id="2" pickup="Cardiff" delivery="Manchester" weight="3" reward="68638">
+					<bid agent="Counter3" bid="2047"/>
+					<bid agent="Counter2" bid="2800"/>
+				</task>
+				<task id="3" pickup="Sheffield" delivery="Portsmouth" weight="3" reward="55553">
+					<bid agent="Counter3" bid="2167"/>
+					<bid agent="Counter2" bid="3041"/>
+				</task>
+				<task id="4" pickup="Liverpool" delivery="Norwich" weight="3" reward="41305">
+					<bid agent="Counter3" bid="3150"/>
+					<bid agent="Counter2" bid="3636"/>
+				</task>
+				<task id="5" pickup="Norwich" delivery="London" weight="3" reward="85625">
+					<bid agent="Counter3" bid="1515"/>
+					<bid agent="Counter2" bid="585"/>
+				</task>
+				<task id="6" pickup="Cardiff" delivery="London" weight="3" reward="64503">
+					<bid agent="Counter3" bid="2128"/>
+					<bid agent="Counter2" bid="2457"/>
+				</task>
+			</tasks>
+			<events>
+				<event id="0" time="0" vehicle="Vehicle 2" move="Birmingham"/>
+				<event id="1" time="0" vehicle="Vehicle 4" pickup="5"/>
+				<event id="2" time="300000000" vehicle="Vehicle 4" move="London"/>
+				<event id="3" time="1311111111" vehicle="Vehicle 2" move="Cardiff"/>
+				<event id="4" time="1577777777" vehicle="Vehicle 4" deliver="5"/>
+				<event id="5" time="2588888887" vehicle="Vehicle 2" pickup="0"/>
+				<event id="6" time="2888888887" vehicle="Vehicle 2" pickup="6"/>
+				<event id="7" time="3188888886" vehicle="Vehicle 2" pickup="2"/>
+				<event id="8" time="3488888886" vehicle="Vehicle 2" move="Birmingham"/>
+				<event id="9" time="4766666663" vehicle="Vehicle 2" move="Manchester"/>
+				<event id="10" time="5821111107" vehicle="Vehicle 2" deliver="2"/>
+				<event id="11" time="6121111106" vehicle="Vehicle 2" pickup="1"/>
+				<event id="12" time="6421111106" vehicle="Vehicle 2" move="Liverpool"/>
+				<event id="13" time="6806666661" vehicle="Vehicle 2" pickup="4"/>
+				<event id="14" time="7106666660" vehicle="Vehicle 2" move="Leeds"/>
+				<event id="15" time="7912222215" vehicle="Vehicle 2" move="Sheffield"/>
+				<event id="16" time="8371111103" vehicle="Vehicle 2" pickup="3"/>
+				<event id="17" time="8671111103" vehicle="Vehicle 2" deliver="0"/>
+				<event id="18" time="8971111103" vehicle="Vehicle 2" move="Birmingham"/>
+				<event id="19" time="9973333324" vehicle="Vehicle 2" move="London"/>
+				<event id="20" time="11284444434" vehicle="Vehicle 2" move="Portsmouth"/>
+				<event id="21" time="12115555544" vehicle="Vehicle 2" deliver="3"/>
+				<event id="22" time="12415555544" vehicle="Vehicle 2" move="London"/>
+				<event id="23" time="13246666654" vehicle="Vehicle 2" deliver="6"/>
+				<event id="24" time="13546666654" vehicle="Vehicle 2" move="Norwich"/>
+				<event id="25" time="14824444431" vehicle="Vehicle 2" deliver="1"/>
+				<event id="26" time="15124444430" vehicle="Vehicle 2" deliver="4"/>
+			</events>
+		</round>
+	</rounds>
+	<statistics>
+		<stat rank="1" agent="Counter3">
+			<total-tasks value="6"/>
+			<total-distance value="1064.2"/>
+			<total-cost value="5321"/>
+			<total-reward value="11884"/>
+			<total-profit value="6563"/>
+		</stat>
+		<stat rank="2" agent="Counter2">
+			<total-tasks value="1"/>
+			<total-distance value="115.0"/>
+			<total-cost value="575"/>
+			<total-reward value="585"/>
+			<total-profit value="10"/>
+		</stat>
+	</statistics>
+</history>

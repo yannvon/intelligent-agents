@@ -30,7 +30,7 @@ public class CounterStrat implements AuctionBehavior {
 	 * Integrate probability of certain tasks, willing to take tasks at deficit ?
 	 * 
 	 */
-	public static final boolean VERBOSE = true;
+	public static final boolean VERBOSE = false;
 
 	private static final double STARTING_RATIO = 0.;
 	private static final double SECURE_FACTOR = 0.75;

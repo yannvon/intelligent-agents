@@ -1,0 +1,51 @@
+### auction.xml ###
+      Agents        |  Win - Draw - Lose  |      Counter2       |      Counter3       |     Centralized     | CentralizedReorder 
+     Counter2       |      5 - 0 - 1      |          -          |  WIN (7580 : 1385)  |  WIN (5758 : 5469)  |  WIN (6237 : 2623) 
+     Counter3       |      5 - 0 - 1      |  WIN (8995 : 1918)  |          -          |  WIN (5702 : 5469)  | WIN (12405 : 3671) 
+    Centralized     |      1 - 0 - 5      | LOSE (3626 : 4529)  | LOSE (1936 : 10191) |          -          |  WIN (8268 : 725)  
+CentralizedReorder  |      1 - 0 - 5      | LOSE (3626 : 4529)  | LOSE (1936 : 10191) |  WIN (6121 : 2121)  |          -         
+
+First company results
+  # wins   : 8
+  # draws  : 0
+  # losses : 4
+
+
+### auction2.xml ###
+      Agents       | Win - Draw - Lose  |      Counter2      |    Centralized     |      Counter3      | CentralizedReorder
+     Counter2      |     3 - 0 - 3      |         -          | LOSE (653 : 3601)  | LOSE (985 : 1494)  | LOSE (217 : 2362) 
+   Centralized     |     3 - 0 - 3      | LOSE (1243 : 3574) |         -          | LOSE (1243 : 3459) | WIN (3778 : 2998) 
+     Counter3      |     3 - 0 - 3      | LOSE (920 : 1363)  | LOSE (688 : 3601)  |         -          | LOSE (268 : 2362) 
+CentralizedReorder |     3 - 0 - 3      | LOSE (1243 : 3574) | WIN (3067 : 2583)  | LOSE (1243 : 3459) |         -         
+
+First company results
+  # wins   : 2
+  # draws  : 0
+  # losses : 10
+
+
+### auction3.xml ###
+      Agents       | Win - Draw - Lose  | CentralizedReorder |    Centralized     |      Counter2      |      Counter3     
+CentralizedReorder |     3 - 0 - 3      |         -          | WIN (12831 : 158)  |  WIN (3791 : 306)  | WIN (3791 : -929) 
+   Centralized     |     3 - 0 - 3      |  WIN (12831 : 83)  |         -          | WIN (3791 : -918)  | WIN (3791 : -929) 
+     Counter2      |     3 - 0 - 3      | WIN (12380 : 4808) | WIN (8745 : 5539)  |         -          | WIN (6949 : 3466) 
+     Counter3      |     3 - 0 - 3      | WIN (11332 : 3941) | WIN (7100 : 4973)  | WIN (7487 : 3586)  |         -         
+
+First company results
+  # wins   : 12
+  # draws  : 0
+  # losses : 0
+
+
+### auction4.xml ###
+      Agents       | Win - Draw - Lose  |      Counter3      |      Counter2      |    Centralized     | CentralizedReorder
+     Counter3      |     5 - 0 - 1      |         -          |  WIN (6563 : 10)   |  WIN (4450 : 559)  |  WIN (9551 : 218) 
+     Counter2      |     5 - 0 - 1      |  WIN (6389 : 10)   |         -          |  WIN (4276 : 559)  |  WIN (9272 : 218) 
+   Centralized     |     1 - 0 - 5      | LOSE (550 : 2112)  | LOSE (550 : 2043)  |         -          |   WIN (3849 : 0)  
+CentralizedReorder |     1 - 0 - 5      | LOSE (550 : 2112)  | LOSE (550 : 2043)  |  WIN (3142 : 214)  |         -         
+
+First company results
+  # wins   : 8
+  # draws  : 0
+  # losses : 4
+

@@ -16,6 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 //the list of imports
 
@@ -23,6 +24,7 @@ import java.util.Random;
  * A class responsible for planning in a centralized way. This was optimized for
  * Assignment 4, and will feature some additional improvements.
  */
+@SuppressWarnings("unused")
 public class CentralizedPlanning {
 
 	private static final boolean VERBOSE = false;
@@ -54,16 +56,19 @@ public class CentralizedPlanning {
 		timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
 		// the plan method cannot execute more than timeout_plan milliseconds
 		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
+		
 		System.out.println("Plan has " + timeout_plan + "ms to finish");
 
 		this.distribution = distribution;
 		this.agent = agent;
 		this.random = new Random(2019);
 	}
+	
+
+	
+	
 
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-		long time_start = System.currentTimeMillis();
-
 		// Return immediately if no tasks available
 		if (tasks.isEmpty()) {
 			List<Plan> plans = new ArrayList<>();
@@ -72,11 +77,62 @@ public class CentralizedPlanning {
 			}
 			return plans;
 		}
+		
+
+		ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
+		ActionEntry[] best = shuffle(vehicles, currentSolution, timeout_plan);
+
+		/*
+		 * Construct plan
+		 */
+		List<Plan> plans = new ArrayList<Plan>();
+		for (int vId = 0; vId < best.length; vId++) {
+			City current = vehicles.get(vId).getCurrentCity();
+			Plan plan = new Plan(current);
+
+			ActionEntry next = best[vId].next;
+			while (next != null) {
+				City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
+				for (City city : current.pathTo(nextCity)) {
+					plan.appendMove(city);
+				}
+
+				if (next.pickup) {
+					plan.appendPickup(next.task);
+				} else {
+					plan.appendDelivery(next.task);
+				}
+				next = next.next;
+				current = nextCity;
+			}
+			plans.add(plan);
+
+		}
+
+		return plans;
+	}
+	
+	
+	public ActionEntry[] shuffle(List<Vehicle> vehicles,ActionEntry[] currentSolution,long timeout) {
+		
+		boolean hasTasks = false;
+		for(ActionEntry a : currentSolution) {
+			hasTasks |= a.next != null;
+		}
+		if(!hasTasks) {
+			return currentSolution;
+		}
+		
+		
+		
+		long time_start = System.currentTimeMillis();
 
 		/*
 		 * Initialization
 		 */
-		ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
+		
+		
+		
 		int iteration = 0;
 		double temperature = STARTING_TEMPERATURE;
 		double lastTemp = temperature;
@@ -96,12 +152,13 @@ public class CentralizedPlanning {
 
 			// Linearly decreasing temperature
 			double temp_linear = STARTING_TEMPERATURE - (STARTING_TEMPERATURE - FINAL_TEMPERATURE)
-					* (currentTime - time_start) / (timeout_plan * SECURE_FACTOR);
+					* (currentTime - time_start) / (timeout * SECURE_FACTOR);
 			double proba_linear = (temp_linear - FINAL_TEMPERATURE) / (STARTING_TEMPERATURE - FINAL_TEMPERATURE);
 
 			if (random.nextDouble() < proba_linear) {
 				// OPTION 1: Compute (almost) random neighbor
 				selectedN = computeRandomNeighbor(currentSolution, vehicles);
+				
 			} else {
 				// OPTION 2: Get best neighbor of neighborSet for a random task & vehicle.
 				List<ActionEntry[]> neighbors = computeNeighbors(currentSolution, vehicles);
@@ -145,7 +202,7 @@ public class CentralizedPlanning {
 			 */
 			currentTime = System.currentTimeMillis();
 			temperature = STARTING_TEMPERATURE
-					* Math.pow(LAMBDA, (currentTime - time_start) / (timeout_plan * SECURE_FACTOR));
+					* Math.pow(LAMBDA, (currentTime - time_start) / (timeout * SECURE_FACTOR));
 			iteration++;
 
 			/*
@@ -177,8 +234,8 @@ public class CentralizedPlanning {
 			}
 
 			// end the loop once we approach the end of timeout
-		} while (currentTime - time_start < SECURE_FACTOR * timeout_plan);
-
+		} while (currentTime - time_start < SECURE_FACTOR * timeout);
+		
 		/*
 		 * Print final result
 		 */
@@ -194,42 +251,7 @@ public class CentralizedPlanning {
 				System.out.println(best[v.id()]);
 			}
 		}
-
-		/*
-		 * Construct plan
-		 */
-		List<Plan> plans = new ArrayList<Plan>();
-		for (int vId = 0; vId < best.length; vId++) {
-			City current = vehicles.get(vId).getCurrentCity();
-			Plan plan = new Plan(current);
-
-			ActionEntry next = best[vId].next;
-			while (next != null) {
-				City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
-				for (City city : current.pathTo(nextCity)) {
-					plan.appendMove(city);
-				}
-
-				if (next.pickup) {
-					plan.appendPickup(next.task);
-				} else {
-					plan.appendDelivery(next.task);
-				}
-				next = next.next;
-				current = nextCity;
-			}
-			plans.add(plan);
-
-		}
-
-		long time_end = System.currentTimeMillis();
-		long duration = time_end - time_start;
-
-		if (VERBOSE) {
-			System.out.println("The plan was generated in " + duration + " milliseconds.");
-		}
-
-		return plans;
+		return best;
 	}
 
 	/**
