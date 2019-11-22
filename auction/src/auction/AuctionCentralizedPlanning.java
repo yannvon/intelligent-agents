@@ -1,9 +1,12 @@
 package auction;
 
+import logist.LogistSettings;
+
 //the list of imports
 
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
+import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -12,6 +15,7 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -52,6 +56,7 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
     private ActionEntry[] potentialSolution;
     private ActionEntry potentialPickupActionEntry;
     private ActionEntry potentialDeliveryActionEntry;
+	private long timeout_plan;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution,
@@ -74,6 +79,15 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         for (int i = 0; i < agent.vehicles().size(); i++) {
             currentSolution[i] = new ActionEntry(i);
         }
+        
+        LogistSettings ls = null;
+        try {
+			ls = Parsers.parseSettings("config" + File.separator + "settings_auction.xml");
+		} catch (Exception exc) {
+			System.out.println("There was a problem loading the configuration file.");
+		}
+        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
+		
     }
 
     @Override
@@ -170,9 +184,9 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         centralizedPlanning.setup(this.distribution, this.agent);
 
         // Plan
-        List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
+        ActionEntry[] best =centralizedPlanning.shuffle(vehicles,potentialSolution,timeout_plan);
 
-        return  plans;
+        return  centralizedPlanning.planFromSolution(best, vehicles);
 
     }
 

@@ -82,6 +82,19 @@ public class CentralizedPlanning {
 		ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
 		ActionEntry[] best = shuffle(vehicles, currentSolution, timeout_plan);
 
+		
+
+		return planFromSolution(best,vehicles);
+	}
+	
+	
+	/**
+	 * Construct a plan from a solution of centralized planning
+	 * @param best the solution
+	 * @param vehicles
+	 * @return the plan from the solution
+	 */
+	public List<Plan> planFromSolution(ActionEntry[] best, List<Vehicle> vehicles) {
 		/*
 		 * Construct plan
 		 */
@@ -108,11 +121,20 @@ public class CentralizedPlanning {
 			plans.add(plan);
 
 		}
-
 		return plans;
 	}
-	
-	
+
+
+
+
+
+	/**
+	 * Shuffle a solution for timeout millisecond
+	 * @param vehicles the list of vehicles in the solution
+	 * @param currentSolution the current solution
+	 * @param timeout the time in millisecond before ending the shuffle
+	 * @return the best plan of the shuffle
+	 */
 	public ActionEntry[] shuffle(List<Vehicle> vehicles,ActionEntry[] currentSolution,long timeout) {
 		
 		boolean hasTasks = false;
@@ -320,7 +342,7 @@ public class CentralizedPlanning {
 				continue;
 			}
 			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeVTask(a, vehicles, randomVid, vId);
+			boolean valid = changeVTask(a,a[randomVid].next.task, vehicles, randomVid, vId);
 			if (valid) {
 				neighbors.add(a);
 			}
@@ -440,7 +462,7 @@ public class CentralizedPlanning {
 				continue;
 			}
 			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeVTask(a, vehicles, randomVid, vId);
+			boolean valid = changeVTask(a,a[randomVid].next.task, vehicles, randomVid, vId);
 			if (valid) {
 				return a;
 			}
@@ -499,8 +521,16 @@ public class CentralizedPlanning {
 	 * @param to
 	 * @return true if the solution is valid
 	 */
-	private boolean changeVTask(ActionEntry[] a, List<Vehicle> vehicles, int from, int to) {
+	private boolean changeVTask(ActionEntry[] a,Task t, List<Vehicle> vehicles, int from, int to) {
 		ActionEntry toMoveP = a[from].next;
+		
+		// Find the delivery of the task
+		while (toMoveP.task != t) {
+			// faster
+			toMoveP = toMoveP.next;
+		}
+		
+		
 		ActionEntry toMoveD = toMoveP.next;
 
 		// Find the delivery of the task
