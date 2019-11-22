@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<agents>
+	<!-- An auto-generated list of agents and their behavior classes -->
+	<!--  - jar directory : agents/ -->
+	<!--  - generated on  : Thu Nov 21 20:45:23 CET 2019 -->
+	<agent name="CounterStrat">
+		<set class-path="agents/MultiAgent.jar"/>
+		<set class-name="auction.CounterStrat"/>
+	</agent>
+	<agent name="CounterStrat2">
+		<set class-path="agents/MultiAgent.jar"/>
+		<set class-name="auction.CounterStrat2"/>
+	</agent>
+	<agent name="AuctionMultiAgents">
+		<set class-path="agents/MultiAgent.jar"/>
+		<set class-name="auction.AuctionMultiAgents"/>
+	</agent>
+	<agent name="AuctionCentralizedPlanning">
+		<set class-path="agents/MultiAgent.jar"/>
+		<set class-name="auction.AuctionCentralizedPlanning"/>
+	</agent>
+</agents>

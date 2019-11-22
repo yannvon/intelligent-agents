@@ -31,7 +31,7 @@ import logist.topology.Topology.City;
 @SuppressWarnings("unused")
 public class FirstStrategy implements AuctionBehavior {
 
-	private static final boolean VERBOSE = true;
+	private static final boolean VERBOSE = false;
 
 	/* Environment */
 	TaskDistribution td;

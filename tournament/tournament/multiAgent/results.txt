@@ -1,0 +1,25 @@
+### auction.xml ###
+          Agents           |     Win - Draw - Lose      |        CounterStrat        |       CounterStrat2        |     AuctionMultiAgents     | AuctionCentralizedPlanning
+       CounterStrat        |         5 - 0 - 1          |             -              |     WIN (6435 : 1264)      |     WIN (10806 : 1687)     |     WIN (10969 : 2914)    
+      CounterStrat2        |         5 - 0 - 1          |     WIN (13216 : 155)      |             -              |     WIN (10387 : 2114)     |     WIN (12329 : 5455)    
+    AuctionMultiAgents     |         1 - 0 - 5          |     LOSE (771 : 3950)      |     LOSE (667 : 3954)      |             -              |      WIN (8654 : 658)     
+AuctionCentralizedPlanning |         1 - 0 - 5          |     LOSE (1478 : 8782)     |    LOSE (1936 : 10191)     |     WIN (6428 : 1587)      |             -             
+
+First company results
+  # wins   : 8
+  # draws  : 0
+  # losses : 4
+
+
+### auction4.xml ###
+          Agents           |     Win - Draw - Lose      |       CounterStrat2        |        CounterStrat        | AuctionCentralizedPlanning |     AuctionMultiAgents    
+      CounterStrat2        |         5 - 0 - 1          |             -              |      WIN (6563 : 10)       |     WIN (10184 : 616)      |      WIN (10161 : 60)     
+       CounterStrat        |         5 - 0 - 1          |      WIN (4890 : 10)       |             -              |       WIN (8064 : 0)       |      WIN (7025 : 525)     
+AuctionCentralizedPlanning |         1 - 0 - 5          |     LOSE (550 : 2112)      |     LOSE (385 : 3660)      |             -              |      WIN (3142 : 10)      
+    AuctionMultiAgents     |         1 - 0 - 5          |     LOSE (100 : 1034)      |      LOSE (100 : 898)      |      WIN (8654 : 658)      |             -             
+
+First company results
+  # wins   : 8
+  # draws  : 0
+  # losses : 4
+

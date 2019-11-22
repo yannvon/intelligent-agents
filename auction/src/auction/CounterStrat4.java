@@ -19,7 +19,7 @@ import java.util.*;
  * handles them sequentially.
  */
 @SuppressWarnings("unused")
-public class CounterStrat2 implements AuctionBehavior {
+public class CounterStrat4 implements AuctionBehavior {
 
 	/*
 	 * Some ideas: 1) - Add some randomness -> hides intentions and other - When
@@ -32,8 +32,7 @@ public class CounterStrat2 implements AuctionBehavior {
 	 */
 	public static final boolean VERBOSE = false;
 
-	private static final double STARTING_RATIO = 0.;
-	private static final double STARTING_SECURE_FACTOR = 0.75;
+	private static final double STARTING_RATIO = 0.5;
 
 	private static final double TAX = 10;
 
@@ -57,11 +56,11 @@ public class CounterStrat2 implements AuctionBehavior {
 	private ActionEntry[] potentialOpponentSolution;
 
 	private double ratio;
-	private double secureFactor;
 
 	private double opponentRatio;
 
 	private boolean maximizingReward = false;
+
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -91,7 +90,6 @@ public class CounterStrat2 implements AuctionBehavior {
 
 		ratio = STARTING_RATIO;
 		opponentRatio = 0;
-		secureFactor = STARTING_SECURE_FACTOR;
 	}
 
 	@Override
@@ -101,9 +99,9 @@ public class CounterStrat2 implements AuctionBehavior {
 			Long opBid = agent.id() == 0 ? bids[1] : bids[0];
 			if (opBid != null) {
 				double opMarginalCost = potentialOpponentCost - currentOpponentCost;
-				double simRatio = opBid / opMarginalCost;
+				double simRatio = opBid / (opMarginalCost+TAX);
 
-				if (simRatio < 3.0 && simRatio > 0) { // TO NOT HAVE TO BIG RATIO FOR SMALL MARGINAL COST
+				if (simRatio < 3.0 && simRatio > 0.5) { // TO NOT HAVE TO BIG RATIO FOR SMALL MARGINAL COST
 					if (opponentRatio < 0.1) {
 						opponentRatio = opBid / opMarginalCost;
 					} else {
@@ -128,16 +126,11 @@ public class CounterStrat2 implements AuctionBehavior {
 			potentialCost = -1;
 
 			ratio += 0.05;
-			if (maximizingReward) {
-				secureFactor *= 1.1;
-			}
 		} else {
 			// Option 2: Auction was lost
 
 			if (!maximizingReward) {
 				ratio -= 0.15;
-			} else {
-				secureFactor *= 0.85;
 			}
 
 			currentOpponentSolution = potentialOpponentSolution;
@@ -197,15 +190,17 @@ public class CounterStrat2 implements AuctionBehavior {
 			System.out.println("op sim ratio: " + opponentRatio);
 		}
 
-		double bid = (marginalCost + TAX) * ratio;
 
-		double opBid = marginalOpponentCost * opponentRatio;
-		maximizingReward = bid < opBid * secureFactor;
+		double opBid =( marginalOpponentCost+TAX) * opponentRatio;
+		
+		
+		maximizingReward = marginalCost < opBid*0.9;
 		if (maximizingReward) {
-			bid = opBid * secureFactor;
+			return (long) (opBid *0.9);
+		}else{
+			return (long) ((marginalCost + marginalOpponentCost +TAX) /2.0);
 		}
 
-		return (long) Math.round(bid);
 	}
 
 	@Override

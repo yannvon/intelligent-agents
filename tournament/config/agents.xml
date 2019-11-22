@@ -8,11 +8,6 @@
 		<set class-path="bin/"/>
 		<set class-name="template.AuctionTemplate"/>
 	</agent>
-	
-	<agent name="auction-destroyer">
-		<set class-path="bin/"/>
-		<set class-name="template.TemplateDestroyer"/>
-	</agent>
 
 	<agent name="auction-noreorder">
 		<set class-path="bin/"/>
@@ -22,11 +17,6 @@
 	<agent name="auction-cplanning">
 		<set class-path="bin/"/>
 		<set class-name="auction.AuctionCentralizedPlanning"/>
-	</agent>
-	
-	<agent name="auction-cplanning2">
-		<set class-path="bin/"/>
-		<set class-name="auction.AuctionReorderCentralized"/>
 	</agent>
 
 	<agent name="auction-decentralized">
@@ -39,17 +29,10 @@
 		<set class-name="auction.CounterStrat"/>
 	</agent>
 	
-	<agent name="auction-counter2">
+		<agent name="auction-counter2">
 		<set class-path="bin/"/>
 		<set class-name="auction.CounterStrat2"/>
 	</agent>
-	
-	<agent name="auction-multiAgent">
-		<set class-path="bin/"/>
-		<set class-name="auction.AuctionMultiAgents"/>
-	</agent>
-	
-	
 	
 	
 </agents>

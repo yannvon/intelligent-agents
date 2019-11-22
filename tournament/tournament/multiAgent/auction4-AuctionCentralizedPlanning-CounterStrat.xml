@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<history configuration="config/auction4.xml">
+	<agents>
+		<agent name="AuctionCentralizedPlanning">
+			<vehicle name="Vehicle 1"/>
+			<vehicle name="Vehicle 2"/>
+		</agent>
+		<agent name="CounterStrat">
+			<vehicle name="Vehicle 3"/>
+			<vehicle name="Vehicle 4"/>
+		</agent>
+	</agents>
+	<rounds>
+		<round id="1">
+			<tasks>
+				<task id="0" pickup="Cardiff" delivery="Sheffield" weight="3" reward="69479">
+					<bid agent="AuctionCentralizedPlanning" bid="2922"/>
+					<bid agent="CounterStrat" bid="0"/>
+				</task>
+				<task id="1" pickup="Manchester" delivery="Norwich" weight="3" reward="47516">
+					<bid agent="AuctionCentralizedPlanning" bid="2909"/>
+					<bid agent="CounterStrat" bid="2598"/>
+				</task>
+				<task id="2" pickup="Cardiff" delivery="Manchester" weight="3" reward="68638">
+					<bid agent="AuctionCentralizedPlanning" bid="2852"/>
+					<bid agent="CounterStrat" bid="1856"/>
+				</task>
+				<task id="3" pickup="Sheffield" delivery="Portsmouth" weight="3" reward="55553">
+					<bid agent="AuctionCentralizedPlanning" bid="2664"/>
+					<bid agent="CounterStrat" bid="2324"/>
+				</task>
+				<task id="4" pickup="Liverpool" delivery="Norwich" weight="3" reward="41305">
+					<bid agent="AuctionCentralizedPlanning" bid="3266"/>
+					<bid agent="CounterStrat" bid="2390"/>
+				</task>
+				<task id="5" pickup="Norwich" delivery="London" weight="3" reward="85625">
+					<bid agent="AuctionCentralizedPlanning" bid="1483"/>
+					<bid agent="CounterStrat" bid="388"/>
+				</task>
+				<task id="6" pickup="Cardiff" delivery="London" weight="3" reward="64503">
+					<bid agent="AuctionCentralizedPlanning" bid="2715"/>
+					<bid agent="CounterStrat" bid="5619"/>
+				</task>
+			</tasks>
+			<events>
+				<event id="0" time="0" vehicle="Vehicle 2" move="Birmingham"/>
+				<event id="1" time="0" vehicle="Vehicle 4" pickup="5"/>
+				<event id="2" time="300000000" vehicle="Vehicle 4" move="London"/>
+				<event id="3" time="1311111111" vehicle="Vehicle 2" move="Cardiff"/>
+				<event id="4" time="1577777777" vehicle="Vehicle 4" deliver="5"/>
+				<event id="5" time="1877777777" vehicle="Vehicle 4" move="Birmingham"/>
+				<event id="6" time="2588888887" vehicle="Vehicle 2" pickup="6"/>
+				<event id="7" time="2888888887" vehicle="Vehicle 2" move="Birmingham"/>
+				<event id="8" time="3188888887" vehicle="Vehicle 4" move="Cardiff"/>
+				<event id="9" time="4166666664" vehicle="Vehicle 2" move="London"/>
+				<event id="10" time="4466666664" vehicle="Vehicle 4" pickup="2"/>
+				<event id="11" time="4766666664" vehicle="Vehicle 4" pickup="0"/>
+				<event id="12" time="5066666663" vehicle="Vehicle 4" move="Birmingham"/>
+				<event id="13" time="5477777774" vehicle="Vehicle 2" deliver="6"/>
+				<event id="14" time="6344444440" vehicle="Vehicle 4" move="Manchester"/>
+				<event id="15" time="7398888883" vehicle="Vehicle 4" deliver="2"/>
+				<event id="16" time="7698888883" vehicle="Vehicle 4" pickup="1"/>
+				<event id="17" time="7998888883" vehicle="Vehicle 4" move="Liverpool"/>
+				<event id="18" time="8384444438" vehicle="Vehicle 4" pickup="4"/>
+				<event id="19" time="8684444438" vehicle="Vehicle 4" move="Leeds"/>
+				<event id="20" time="9489999993" vehicle="Vehicle 4" move="Sheffield"/>
+				<event id="21" time="9948888881" vehicle="Vehicle 4" pickup="3"/>
+				<event id="22" time="10248888880" vehicle="Vehicle 4" deliver="0"/>
+				<event id="23" time="10548888880" vehicle="Vehicle 4" move="Birmingham"/>
+				<event id="24" time="11551111102" vehicle="Vehicle 4" move="London"/>
+				<event id="25" time="12862222212" vehicle="Vehicle 4" move="Portsmouth"/>
+				<event id="26" time="13693333322" vehicle="Vehicle 4" deliver="3"/>
+				<event id="27" time="13993333322" vehicle="Vehicle 4" move="London"/>
+				<event id="28" time="14824444432" vehicle="Vehicle 4" move="Norwich"/>
+				<event id="29" time="16102222209" vehicle="Vehicle 4" deliver="4"/>
+				<event id="30" time="16402222209" vehicle="Vehicle 4" deliver="1"/>
+			</events>
+		</round>
+	</rounds>
+	<statistics>
+		<stat rank="1" agent="CounterStrat">
+			<total-tasks value="6"/>
+			<total-distance value="1179.2"/>
+			<total-cost value="5896"/>
+			<total-reward value="9556"/>
+			<total-profit value="3660"/>
+		</stat>
+		<stat rank="2" agent="AuctionCentralizedPlanning">
+			<total-tasks value="1"/>
+			<total-distance value="466.0"/>
+			<total-cost value="2330"/>
+			<total-reward value="2715"/>
+			<total-profit value="385"/>
+		</stat>
+	</statistics>
+</history>
