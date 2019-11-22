@@ -184,9 +184,8 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         centralizedPlanning.setup(this.distribution, this.agent);
 
         // Plan
-        ActionEntry[] best =centralizedPlanning.shuffle(vehicles,potentialSolution,timeout_plan);
 
-        return  centralizedPlanning.planFromSolution(best, vehicles);
+        return  centralizedPlanning.plan(vehicles,tasks);
 
     }
 

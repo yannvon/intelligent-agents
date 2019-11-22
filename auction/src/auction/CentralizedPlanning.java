@@ -56,17 +56,13 @@ public class CentralizedPlanning {
 		timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
 		// the plan method cannot execute more than timeout_plan milliseconds
 		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-		
+
 		System.out.println("Plan has " + timeout_plan + "ms to finish");
 
 		this.distribution = distribution;
 		this.agent = agent;
 		this.random = new Random(2019);
 	}
-	
-
-	
-	
 
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		// Return immediately if no tasks available
@@ -77,20 +73,17 @@ public class CentralizedPlanning {
 			}
 			return plans;
 		}
-		
 
 		ActionEntry[] currentSolution = initialSolution(vehicles, tasks);
 		ActionEntry[] best = shuffle(vehicles, currentSolution, timeout_plan);
 
-		
-
-		return planFromSolution(best,vehicles);
+		return planFromSolution(best, vehicles);
 	}
-	
-	
+
 	/**
 	 * Construct a plan from a solution of centralized planning
-	 * @param best the solution
+	 * 
+	 * @param best     the solution
 	 * @param vehicles
 	 * @return the plan from the solution
 	 */
@@ -124,37 +117,30 @@ public class CentralizedPlanning {
 		return plans;
 	}
 
-
-
-
-
 	/**
 	 * Shuffle a solution for timeout millisecond
-	 * @param vehicles the list of vehicles in the solution
+	 * 
+	 * @param vehicles        the list of vehicles in the solution
 	 * @param currentSolution the current solution
-	 * @param timeout the time in millisecond before ending the shuffle
+	 * @param timeout         the time in millisecond before ending the shuffle
 	 * @return the best plan of the shuffle
 	 */
-	public ActionEntry[] shuffle(List<Vehicle> vehicles,ActionEntry[] currentSolution,long timeout) {
-		
+	public ActionEntry[] shuffle(List<Vehicle> vehicles, ActionEntry[] currentSolution, long timeout) {
+
 		boolean hasTasks = false;
-		for(ActionEntry a : currentSolution) {
+		for (ActionEntry a : currentSolution) {
 			hasTasks |= a.next != null;
 		}
-		if(!hasTasks) {
+		if (!hasTasks) {
 			return currentSolution;
 		}
-		
-		
-		
+
 		long time_start = System.currentTimeMillis();
 
 		/*
 		 * Initialization
 		 */
-		
-		
-		
+
 		int iteration = 0;
 		double temperature = STARTING_TEMPERATURE;
 		double lastTemp = temperature;
@@ -180,7 +166,7 @@ public class CentralizedPlanning {
 			if (random.nextDouble() < proba_linear) {
 				// OPTION 1: Compute (almost) random neighbor
 				selectedN = computeRandomNeighbor(currentSolution, vehicles);
-				
+
 			} else {
 				// OPTION 2: Get best neighbor of neighborSet for a random task & vehicle.
 				List<ActionEntry[]> neighbors = computeNeighbors(currentSolution, vehicles);
@@ -257,7 +243,7 @@ public class CentralizedPlanning {
 
 			// end the loop once we approach the end of timeout
 		} while (currentTime - time_start < SECURE_FACTOR * timeout);
-		
+
 		/*
 		 * Print final result
 		 */
@@ -334,6 +320,14 @@ public class CentralizedPlanning {
 			randomVid = random.nextInt(solution.length);
 		}
 
+		// compute length
+		ActionEntry c = solution[randomVid].next;
+		while (c.next != null) {
+			c = c.next;
+		}
+		int lenght = c.time;
+		Task t = c.task;
+
 		/*
 		 * Change a task from one vehicle to another
 		 */
@@ -342,9 +336,19 @@ public class CentralizedPlanning {
 				continue;
 			}
 			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeVTask(a,a[randomVid].next.task, vehicles, randomVid, vId);
+			boolean valid = changeVTask(a, vehicles, t, randomVid, vId);
 			if (valid) {
-				neighbors.add(a);
+				ActionEntry c2 = a[vId].next;
+				while (c2.next != null) {
+					c2 = c2.next;
+				}
+				int lenght2 = c2.time;
+				int iP = random.nextInt(lenght2 - 1) + 1;
+				int iD = random.nextInt(lenght2 - iP) + iP + 1;
+				boolean valid2 = changeTaskOrder(a, vehicles, vId, t, iP, iD);
+				if (valid2) {
+					neighbors.add(a);
+				}
 			}
 
 		}
@@ -352,12 +356,6 @@ public class CentralizedPlanning {
 		/*
 		 * Changing task order
 		 */
-		// compute length
-		ActionEntry c = solution[randomVid].next;
-		while (c.next != null) {
-			c = c.next;
-		}
-		int lenght = c.time;
 
 		// pick random task
 		int tId = random.nextInt(lenght) + 1;
@@ -365,8 +363,6 @@ public class CentralizedPlanning {
 		while (c.time != tId) {
 			c = c.next;
 		}
-
-		Task t = c.task;
 
 		// For all positions
 		for (int iP = 1; iP < lenght; iP++) {
@@ -455,6 +451,22 @@ public class CentralizedPlanning {
 		while (solution[randomVid].next == null) {
 			randomVid = random.nextInt(solution.length);
 		}
+
+		// compute length
+		ActionEntry c = solution[randomVid].next;
+		while (c.next != null) {
+			c = c.next;
+		}
+		int lenght = c.time;
+
+		// pick random task
+		int tId = random.nextInt(lenght) + 1;
+		c = solution[randomVid].next;
+		while (c.time != tId) {
+			c = c.next;
+		}
+		Task t = c.task;
+
 		int i = 0;
 		while (i++ < 1000) {
 			int vId = random.nextInt(vehicles.size());
@@ -462,9 +474,20 @@ public class CentralizedPlanning {
 				continue;
 			}
 			ActionEntry[] a = ActionEntry.copy(solution);
-			boolean valid = changeVTask(a,a[randomVid].next.task, vehicles, randomVid, vId);
+			boolean valid = changeVTask(a, vehicles, t, randomVid, vId);
 			if (valid) {
-				return a;
+				ActionEntry c2 = a[vId].next;
+				while (c2.next != null) {
+					c2 = c2.next;
+				}
+				int lenght2 = c2.time;
+				int iP = random.nextInt(lenght2 - 1) + 1;
+				int iD = random.nextInt(lenght2 - iP) + iP + 1;
+				boolean valid2 = changeTaskOrder(a, vehicles, vId, t, iP, iD);
+
+				if (valid2) {
+					return a;
+				}
 			}
 		}
 		// no neighbors where valid
@@ -514,23 +537,23 @@ public class CentralizedPlanning {
 
 	/**
 	 * move a task from one vehicle to another
-	 *
+	 * 
 	 * @param a
 	 * @param vehicles
-	 * @param from
-	 * @param to
+	 * @param t        tasks
+	 * @param from     vehicle to pick the task from
+	 * @param to       vehicle where to put the task
 	 * @return true if the solution is valid
 	 */
-	private boolean changeVTask(ActionEntry[] a,Task t, List<Vehicle> vehicles, int from, int to) {
+	private boolean changeVTask(ActionEntry[] a, List<Vehicle> vehicles, Task t, int from, int to) {
 		ActionEntry toMoveP = a[from].next;
-		
+
 		// Find the delivery of the task
 		while (toMoveP.task != t) {
 			// faster
 			toMoveP = toMoveP.next;
 		}
-		
-		
+
 		ActionEntry toMoveD = toMoveP.next;
 
 		// Find the delivery of the task
