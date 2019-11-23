@@ -1,11 +1,14 @@
 package auction;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
-import experts.Average;
+import experts.Arx;
 import experts.Expert;
+import experts.Ratio;
 import logist.LogistSettings;
 
 //the list of imports
@@ -19,32 +22,26 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
+import logist.topology.Topology.City;
+
 
 /**
- * A very simple auction agent that assigns all tasks to its first vehicles and
- * handles them sequentially.
+ * A agent that behaves in two phases:
+ * TODO
  */
 @SuppressWarnings("unused")
-public class WeigthedMajority implements AuctionBehavior {
+public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
-	/*
-	 * Some ideas: 1) - Add some randomness -> hides intentions and other - When
-	 * computing marginal cost, just check where in plan you could integrate new
-	 * task, without reordering This then becomes lowest bid ready to take. Then do
-	 * same for adversary and check what his marginal cost would be. Bid one below
-	 * (?) this value if higher than personal one. - Centralized in the end. 2)
-	 * Integrate probability of certain tasks, willing to take tasks at deficit ?
-	 * 
-	 */
 	private static final boolean VERBOSE = false;
 	private static final boolean SHUFFLE = false;
 	
-	
-
 	private static final double STARTING_RATIO = 0.5;
 	private static final double STARTING_SECURE_FACTOR = 0.75;
 
 	private static final double TAX = 10;
+
+	private static final int PHASE1_END = 5;
+
 
 	private Topology topology;
 	private TaskDistribution distribution;
@@ -69,7 +66,8 @@ public class WeigthedMajority implements AuctionBehavior {
 	private int currentExpert;
 	private Expert[] experts;
 	private Long[] expertsBids;
-	
+
+
 	CentralizedPlanning centralizedPlanning;
 	private long timeout_bid;
 	
@@ -77,7 +75,8 @@ public class WeigthedMajority implements AuctionBehavior {
 	
 	private double[] weights ;
 
-
+	private int nAuctions;
+	private HashMap<Task, Double> taskProbabilities;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -120,21 +119,33 @@ public class WeigthedMajority implements AuctionBehavior {
 		this.marginalCost = 0;
 		
 		this.currentExpert = 0;
-		this.experts = new Expert[] {new Average()};
+
+		this.experts = new Expert[] {new Arx(0.2), new Ratio(1.1, TAX, 1.0)};
 		this.expertsBids = new Long[experts.length];
 		this.weights = new double[experts.length];
-		for(int i= 0;i<experts.length;i++) {
+		for(int i= 0; i < experts.length; i++) {
 			weights[i] = 1.0/experts.length;
 		}
-		
+
+
+		// Initializations for phase 1
+		this.nAuctions = 0;
+		this.taskProbabilities = new HashMap<>();
+
+		for (City c1: topology.cities()) {
+			for (City c2: topology.cities()) {
+
+				Task t = new Task(0, c1, c2, 0, distribution.weight(c1, c2));
+				this.taskProbabilities.put(t, distribution.probability(c1, c2));
+			}
+		}
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
-		
-		boolean won = winner == agent.id();
-		
+		nAuctions++;
 
+		boolean won = winner == agent.id();
 
 		if (won) {
 
@@ -152,39 +163,44 @@ public class WeigthedMajority implements AuctionBehavior {
 			potentialOpponentCost = -1;
 
 		}
-		
-		Long opBid;
-		if(agent.id() == 0 && bids.length>1) {
-			opBid = bids[1];
-		}else {
-			opBid = bids[0];
-		}
-		double sumW = 0.0;
-		for(int eId =0; eId<experts.length;eId++) {
-			boolean expertWin = opBid == null | opBid>expertsBids[eId];
-			experts[eId].update(expertWin, opBid);
-			
-			double reward =expertWin? expertsBids[eId] -marginalCost:0.0;
-			double maxReward = opBid-marginalCost;
-			double multipli;
-			if(opBid ==null || opBid<0l) {
-				multipli = reward>0.0 ? reward: 1;
-			}else if(reward<0){
-				multipli = 1.0;
+
+		if (nAuctions > PHASE1_END) {
+
+			Long opBid;
+			if(agent.id() == 0 && bids.length>1) {
+				opBid = bids[1];
 			}else {
-				 multipli= 1.0 + reward/(maxReward);
-			};		
-			weights[eId]*=multipli ;
-			sumW += weights[eId];
-		}
-		int max = 0;
-		for(int eId =0; eId<experts.length;eId++) {
-			weights[eId] = weights[eId]/sumW;
-			if(weights[max]<weights[eId]) {
-				max = eId;
+				opBid = bids[0];
 			}
+			double sumW = 0.0;
+			for(int eId =0; eId<experts.length;eId++) {
+				boolean expertWin = opBid == null | opBid>expertsBids[eId];
+				experts[eId].update(expertWin, opBid);
+
+				double reward =expertWin? expertsBids[eId] -marginalCost:0.0;
+				double maxReward = opBid-marginalCost;
+				double multipli;
+				if(opBid ==null || opBid<0l) {
+					multipli = reward>0.0 ? reward: 1;
+				}else if(reward<0){
+					multipli = 1.0;
+				}else {
+					multipli= 1.0 + reward/(maxReward);
+				};
+				weights[eId]*=multipli ;
+				sumW += weights[eId];
+			}
+			int max = 0;
+			for(int eId =0; eId<experts.length;eId++) {
+				weights[eId] = weights[eId]/sumW;
+				if(weights[max]<weights[eId]) {
+					max = eId;
+				}
+			}
+			currentExpert = max;
+
 		}
-		currentExpert = max;
+
 
 	}
 
@@ -199,8 +215,11 @@ public class WeigthedMajority implements AuctionBehavior {
 		if (this.maxVehicleCapacity < task.weight)
 			return null;
 
+
+
+
 		/*
-		 * STEP 1: Find own marginal cost (under no reordering assumption)
+		 * Find own marginal cost (under no reordering assumption)
 		 *
 		 * By going over all vehicles and all possible slots
 		 */
@@ -219,13 +238,39 @@ public class WeigthedMajority implements AuctionBehavior {
 			opponentCost = computeCost(potentialOpponentSolution, vehicles);
 		}
 		double marginalOpponentCost = opponentCost - currentOpponentCost;
-		
-		//compute all bids
-		for(int eId =0; eId<experts.length;eId++) {
-			expertsBids[eId]= experts[eId].bid(marginalCost, marginalOpponentCost);
+
+		// Initialize bid
+		long bid = Math.round(marginalCost);
+
+		if (nAuctions < PHASE1_END) {
+			/*
+			 * --- PHASE 1 ---
+			 *
+			 * Find conservative estimate of savings on the future marginal cost when taking task t.
+			 */
+
+			double savings = savings(task);
+			bid -= 0.2 * savings;	// FIXME constant
+
+			System.out.println("Savings: " + savings);
+
+
+		} else {
+			/*
+			 * --- PHASE 2 ---
+			 *
+			 * Use multiplicative weight update method to choose an expert advice.
+			 */
+
+			//compute all bids
+			for(int eId =0; eId<experts.length;eId++) {
+				expertsBids[eId]= experts[eId].bid(marginalCost, marginalOpponentCost);
+			}
+
+			bid = expertsBids[currentExpert];
+
 		}
-		
-		long bid = expertsBids[currentExpert];
+
 
 		if (VERBOSE) {
 			System.out.println("Current cost: " + currentCost);
@@ -392,4 +437,45 @@ public class WeigthedMajority implements AuctionBehavior {
 		return sum;
 	}
 
+	private double savings(Task task) {
+
+		double minSavings = Double.MAX_VALUE;
+
+		for (Vehicle v : vehicles) {
+			double sumOfMoveSavings = 0;
+
+			List<City> path = task.pickupCity.pathTo(task.deliveryCity);
+			City currentCity = task.pickupCity;
+
+			for(City nextCity : path) {
+
+				// For all moves on shortest path for task t
+				double moveSavings = 0;
+
+				moveSavings += currentCity.distanceTo(nextCity) * v.costPerKm();
+
+				// Get likelihood of savings
+				double likelihood = 0;
+				int totalTasks = this.taskProbabilities.size();
+
+				for (Map.Entry<Task, Double> e : this.taskProbabilities.entrySet()) {
+					Task t = e.getKey();
+
+					if (t.weight - v.capacity() < 0 && t.pickupCity.pathTo(t.deliveryCity).contains(nextCity)) { //FIXME use current weight FIXME make sure same move FIXME completely wrong now
+						likelihood += (1.0 / totalTasks) * e.getValue();
+					}
+				}
+
+				moveSavings *= likelihood;
+				sumOfMoveSavings += moveSavings;
+			}
+
+			// Conservatively pick lowest estimate across all vehicles
+			if (sumOfMoveSavings < minSavings) {
+				minSavings = sumOfMoveSavings * nAuctions;
+			}
+		}
+
+		return minSavings;
+	}
 }
