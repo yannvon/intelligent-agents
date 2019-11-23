@@ -24,6 +24,8 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
+import auction.AuctionHelper;
+
 
 /**
  * A agent that behaves in two phases:
@@ -41,6 +43,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 	private static final double TAX = 10;
 
 	private static final int PHASE1_END = 5;
+	private static final int N_EXPECTED_TASK = 5;
 
 
 	private Topology topology;
@@ -460,14 +463,16 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
 				for (Map.Entry<Task, Double> e : this.taskProbabilities.entrySet()) {
 					Task t = e.getKey();
-
-					if (t.weight - v.capacity() < 0 && t.pickupCity.pathTo(t.deliveryCity).contains(nextCity)) { //FIXME use current weight FIXME make sure same move FIXME completely wrong now
+					//FIXME use current weight FIXME make sure same move FIXME completely wrong now
+					if (t.weight - v.capacity() < 0 && t.pickupCity.pathTo(t.deliveryCity).contains(nextCity)) {
 						likelihood += (1.0 / totalTasks) * e.getValue();
 					}
 				}
 
 				moveSavings *= likelihood;
-				sumOfMoveSavings += moveSavings;
+				double probabilityThisIsLastTask = (1 - AuctionHelper.cumulativePoissonDistribution(N_EXPECTED_TASK, nAuctions));
+				sumOfMoveSavings += moveSavings * probabilityThisIsLastTask;
+				System.out.println("Poission p at "+ nAuctions + " = " + probabilityThisIsLastTask);
 			}
 
 			// Conservatively pick lowest estimate across all vehicles

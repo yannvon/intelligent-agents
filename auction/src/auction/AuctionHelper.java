@@ -27,4 +27,36 @@ public class AuctionHelper {
 		System.out.println();
 
 	}
+
+	/**
+	 * For a random variable X whose values are distributed according to Poisson distribution with mean m,
+	 * this method returns P(X <= x).
+	 *
+	 * @param m mean
+	 * @param x rv
+	 */
+	public static double cumulativePoissonDistribution(double m, int x) {
+		double cumulative = 0;
+		for (int i = 0; i <= x; i++) {
+			cumulative += poisson(m, i);
+		}
+
+		return cumulative;
+	}
+
+	/**
+	 * For a random variable X whose values are distributed according to the Possion distribution,
+	 * this method returns P(X = x).
+	 * @param m
+	 * @param y
+	 * @return
+	 */
+	private static double poisson(double m, int y) {
+		// Compute factorial
+		long fact = 1;
+		for (int i = 2; i <= y; i++) {
+			fact = fact * i;
+		}
+		return Math.exp(-m) * Math.pow(m, y) / fact;
+	}
 }
