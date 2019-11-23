@@ -272,8 +272,10 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 			 */
 
 			//compute all bids
+			long weightedBid = 0;
 			for(int eId =0; eId<experts.length;eId++) {
 				expertsBids[eId]= experts[eId].bid(marginalCost, marginalOpponentCost);
+				weightedBid+= expertsBids[eId]*weights[eId];
 			}
 
 			bid = expertsBids[currentExpert];
