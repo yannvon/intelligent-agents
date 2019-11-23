@@ -30,7 +30,7 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-import auction.AuctionHelper;
+import static auction.AuctionHelper.cumulativePoissonDistribution;
 
 
 /**
@@ -50,6 +50,8 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
 	private static final int PHASE1_END = 5;
 	private static final int N_EXPECTED_TASK = 5;
+	private static final double PHASE_1_SAVINGS_FACTOR = 1;
+
 
 
 	private Topology topology;
@@ -259,9 +261,9 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 			 */
 
 			double savings = savings(task);
-			bid -= 0.2 * savings;	// FIXME constant
+			bid -= PHASE_1_SAVINGS_FACTOR * savings;
 
-			System.out.println("Savings: " + savings);
+			// System.out.println("Savings: " + savings);
 
 
 		} else {
@@ -311,7 +313,6 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 	}
 
 	private List<Plan> planCentralized(TaskSet tasks) {
-
 
 		// Plan
 		List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
@@ -478,17 +479,16 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 				}
 
 				moveSavings *= likelihood;
-				double probabilityThisIsLastTask = (1 - AuctionHelper.cumulativePoissonDistribution(N_EXPECTED_TASK, nAuctions));
-				sumOfMoveSavings += moveSavings * probabilityThisIsLastTask;
-				System.out.println("Poission p at "+ nAuctions + " = " + probabilityThisIsLastTask);
+				sumOfMoveSavings += moveSavings;
 			}
 
 			// Conservatively pick lowest estimate across all vehicles
 			if (sumOfMoveSavings < minSavings) {
-				minSavings = sumOfMoveSavings * nAuctions;
+				minSavings = sumOfMoveSavings;
 			}
 		}
-
-		return minSavings;
+		double probabilityThisIsLastTask = (1 - cumulativePoissonDistribution(N_EXPECTED_TASK, nAuctions));
+		// System.out.println("Poisson p at "+ nAuctions + " = " + probabilityThisIsLastTask);
+		return minSavings * probabilityThisIsLastTask;
 	}
 }
