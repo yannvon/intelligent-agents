@@ -199,7 +199,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 				double multipli;
 				if(opBid ==null || opBid<0l) {
 					multipli = reward>0.0 ? reward: 1;
-				}else if(reward<0){
+				}else if(reward<0 || maxReward < 0){	// FIXME crucial part of algorithm
 					multipli = 1.0;
 				}else {
 					multipli= 1.0 + reward/(maxReward);
