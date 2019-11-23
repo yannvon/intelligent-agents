@@ -40,7 +40,7 @@ import static auction.AuctionHelper.cumulativePoissonDistribution;
 @SuppressWarnings("unused")
 public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
-	private static final boolean VERBOSE = true;
+	private static final boolean VERBOSE = false;
 	private static final boolean SHUFFLE = false;
 	
 	private static final double STARTING_RATIO = 0.5;
@@ -263,7 +263,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 			double savings = savings(task);
 			bid -= PHASE_1_SAVINGS_FACTOR * savings;
 
-			System.out.println("Savings: " + savings);
+			// System.out.println("Savings: " + savings);
 
 
 		} else {
@@ -486,7 +486,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 			}
 		}
 		double probabilityThisIsLastTask = (1 - cumulativePoissonDistribution(N_EXPECTED_TASK, nAuctions));
-		System.out.println("Poisson p at "+ nAuctions + " = " + probabilityThisIsLastTask);
+		// System.out.println("Poisson p at "+ nAuctions + " = " + probabilityThisIsLastTask);
 		return minSavings * probabilityThisIsLastTask;
 	}
 }
