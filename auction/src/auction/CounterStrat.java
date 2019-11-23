@@ -14,6 +14,9 @@ import logist.topology.Topology.City;
 
 import java.util.*;
 
+import helpers.ActionEntry;
+import helpers.AuctionHelper;
+
 /**
  * A very simple auction agent that assigns all tasks to its first vehicles and
  * handles them sequentially.

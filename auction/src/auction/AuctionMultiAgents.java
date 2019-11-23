@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import auction.AuctionHelper;
+import helpers.AuctionHelper;
 import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;

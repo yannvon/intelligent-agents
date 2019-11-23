@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import auction.AuctionHelper;
-import auction.CentralizedPlanning;
+import helpers.AuctionHelper;
+import helpers.CentralizedPlanning;
 import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;

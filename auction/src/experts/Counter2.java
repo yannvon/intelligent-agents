@@ -44,7 +44,7 @@ public class Counter2 implements Expert {
 					if (opponentRatio < 0.1) {
 						opponentRatio = opBid / opMarginalCost;
 					} else {
-						opponentRatio = (opponentRatio * 0.7) + (0.3 * (opBid / opMarginalCost));
+						opponentRatio = (opponentRatio * 0.6) + (0.4 * (opBid / opMarginalCost));
 					}
 				}
 			}

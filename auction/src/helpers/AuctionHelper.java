@@ -1,4 +1,4 @@
-package auction;
+package helpers;
 
 import logist.plan.Plan;
 import logist.simulation.Vehicle;

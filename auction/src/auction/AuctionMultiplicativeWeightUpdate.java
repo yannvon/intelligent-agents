@@ -1,5 +1,7 @@
 package auction;
 
+import static helpers.AuctionHelper.cumulativePoissonDistribution;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +17,9 @@ import experts.MaxMarginal;
 import experts.Ratio;
 import experts.RatioCustom;
 import experts.Secure;
+import helpers.ActionEntry;
+import helpers.AuctionHelper;
+import helpers.CentralizedPlanning;
 import logist.LogistSettings;
 
 //the list of imports
@@ -29,8 +34,6 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
-
-import static auction.AuctionHelper.cumulativePoissonDistribution;
 
 
 /**
@@ -131,7 +134,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 		
 		this.currentExpert = 0;
 
-		this.experts = new Expert[] {new MaxMarginal()};
+		this.experts = new Expert[] {new MaxMarginal(),new Ratio(0.8, TAX, 1),new RatioCustom(0.8, TAX, 1, (x,y)->y?x*1.1:x*0.8),new Counter2(0.8, 0.8, 0.9, TAX)};
 		this.expertsBids = new Long[experts.length];
 		this.weights = new double[experts.length];
 		for(int i= 0; i < experts.length; i++) {
@@ -280,7 +283,8 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 				weightedBid+= expertsBids[eId]*weights[eId];
 			}
 
-			bid = expertsBids[currentExpert];
+			//bid = expertsBids[currentExpert];
+			bid = weightedBid;
 
 		}
 

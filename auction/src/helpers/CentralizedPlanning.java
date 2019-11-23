@@ -1,4 +1,4 @@
-package auction;
+package helpers;
 
 import logist.LogistSettings;
 import logist.agent.Agent;

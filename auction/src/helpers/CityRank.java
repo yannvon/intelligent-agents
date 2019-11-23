@@ -1,4 +1,4 @@
-package auction;
+package helpers;
 
 import logist.task.TaskDistribution;
 import logist.topology.Topology;
@@ -30,7 +30,6 @@ public class CityRank {
      */
     public static final double DAMPING_FACTOR_DEFAULT = 0.85d;
 
-    private final Topology topology;
     private final TaskDistribution distribution;
     private HashSet<City> vertices;
 
@@ -76,7 +75,6 @@ public class CityRank {
      *                      iterations change less than this value
      */
     public CityRank(Topology topology, TaskDistribution distribution, double dampingFactor, int maxIterations, double tolerance) {
-        this.topology = topology;
         this.distribution = distribution;
         this.scores = new HashMap<>();
 

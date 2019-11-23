@@ -1,4 +1,4 @@
-package auction;
+package helpers;
 
 import logist.task.Task;
 import logist.topology.Topology.City;
@@ -7,7 +7,7 @@ import logist.topology.Topology.City;
  * Class describing an action
  *
  */
-class ActionEntry {
+public class ActionEntry {
 	public ActionEntry next, prev;
 	public int vehicleId; // FIXME necessary?
 	public boolean pickup;
