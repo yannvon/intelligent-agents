@@ -36,7 +36,6 @@ public class TemplateDestroyer implements AuctionBehavior {
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
 			Agent agent) {
-
 		this.topology = topology;
 		this.distribution = distribution;
 		this.agent = agent;
@@ -95,7 +94,7 @@ public class TemplateDestroyer implements AuctionBehavior {
 
 
 		// Display performance
-		AuctionHelper.displayPerformance("Template provided", tasks, plans, vehicles);
+		AuctionHelper.displayPerformance("Template destroyer", tasks, plans, vehicles);
 
 		return plans;
 	}
