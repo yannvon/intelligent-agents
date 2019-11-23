@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.sun.corba.se.spi.orbutil.fsm.Action;
 import experts.Arx;
 import experts.Average;
 import experts.Counter2;
@@ -84,6 +85,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
 	CentralizedPlanning centralizedPlanning;
 	private long timeout_bid;
+	private long timeout_plan;
 	
 	private double marginalCost;
 	
@@ -103,6 +105,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
 		// the setup method cannot last more than timeout_setup milliseconds
 		timeout_bid = ls.get(LogistSettings.TimeoutKey.BID);
+		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
 
 		this.topology = topology;
 		this.distribution = distribution;
@@ -319,7 +322,10 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 	private List<Plan> planCentralized(TaskSet tasks) {
 
 		// Plan
-		List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
+		ActionEntry[] bestSolution = centralizedPlanning.shuffle(this.vehicles, currentSolution, Math.round(timeout_plan * 0.9));	// FIXME secure factor
+
+		// Get plan from new task set
+		List<Plan> plans = centralizedPlanning.planFromSolutionAndTaskSet(bestSolution, this.vehicles, tasks);
 
 		return plans;
 
