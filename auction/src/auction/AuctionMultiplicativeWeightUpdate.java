@@ -7,8 +7,14 @@ import java.util.Map;
 import java.util.Random;
 
 import experts.Arx;
+import experts.Average;
+import experts.Counter2;
+import experts.EstimateOp;
 import experts.Expert;
+import experts.MaxMarginal;
 import experts.Ratio;
+import experts.RatioCustom;
+import experts.Secure;
 import logist.LogistSettings;
 
 //the list of imports
@@ -120,7 +126,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 		
 		this.currentExpert = 0;
 
-		this.experts = new Expert[] {new Arx(0.2), new Ratio(1.1, TAX, 1.0)};
+		this.experts = new Expert[] {new MaxMarginal()};
 		this.expertsBids = new Long[experts.length];
 		this.weights = new double[experts.length];
 		for(int i= 0; i < experts.length; i++) {
