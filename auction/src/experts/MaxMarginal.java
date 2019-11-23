@@ -1,10 +1,10 @@
 package experts;
 
-public class MinMarginal implements Expert {
+public class MaxMarginal implements Expert {
 
 	@Override
 	public Long bid(double marginalCost, double opponentMarginalCost) {
-		return (long) Math.min(marginalCost, opponentMarginalCost);
+		return (long) Math.max(marginalCost, opponentMarginalCost);
 	}
 
 	@Override

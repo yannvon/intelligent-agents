@@ -1,0 +1,27 @@
+### auction.xml ###
+      Agents        |  Win - Draw - Lose  |      Counter3       |  TemplateDestroyer  |     Centralized     |       Average       |      Template      
+     Counter3       |      7 - 0 - 1      |          -          | WIN (17082 : 2122)  |  WIN (7623 : 2962)  |  WIN (4411 : -443)  |  WIN (21672 : 179) 
+ TemplateDestroyer  |      6 - 0 - 2      | LOSE (2297 : 15023) |          -          | WIN (11383 : 6076)  | WIN (14787 : 12712) |  WIN (28658 : 473) 
+    Centralized     |      4 - 0 - 4      | LOSE (1936 : 10465) | LOSE (2820 : 16784) |          -          |  WIN (6690 : 2353)  |  WIN (8438 : 614)  
+      Average       |      3 - 0 - 5      |   WIN (492 : 73)    | LOSE (9304 : 14179) | LOSE (2205 : 7899)  |          -          | WIN (14928 : 3954) 
+     Template       |      0 - 0 - 8      | LOSE (868 : 12685)  |  LOSE (15 : 36874)  | LOSE (791 : 10379)  | LOSE (2082 : 19345) |          -         
+
+First company results
+  # wins   : 11
+  # draws  : 0
+  # losses : 9
+
+
+### auction2.xml ###
+      Agents       | Win - Draw - Lose  |      Counter3      |      Average       |    Centralized     | TemplateDestroyer  |      Template     
+     Counter3      |     7 - 0 - 1      |         -          |  WIN (789 : 567)   | WIN (2816 : 2144)  | WIN (3324 : 1002)  |  WIN (5040 : 250) 
+     Average       |     5 - 0 - 3      |  WIN (1287 : 60)   |         -          | LOSE (2342 : 4623) | WIN (5868 : 4626)  |  WIN (6238 : 423) 
+   Centralized     |     4 - 0 - 4      | LOSE (1243 : 3571) | WIN (5199 : 2548)  |         -          | LOSE (2315 : 5124) |  WIN (6538 : 337) 
+TemplateDestroyer  |     4 - 0 - 4      | LOSE (1247 : 1942) | LOSE (4148 : 5354) | WIN (6567 : 2777)  |         -          |  WIN (8017 : 53)  
+     Template      |     0 - 0 - 8      | LOSE (100 : 6763)  | LOSE (704 : 5591)  | LOSE (380 : 5647)  |  LOSE (90 : 8833)  |         -         
+
+First company results
+  # wins   : 11
+  # draws  : 0
+  # losses : 9
+

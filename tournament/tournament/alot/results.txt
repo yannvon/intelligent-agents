@@ -1,0 +1,14 @@
+### auction.xml ###
+       Agents        |  Win - Draw - Lose   |       Counter2       |      Counter2_2      |      MultiAgent      |        Ratio         |     MinMarginal      |       Template      
+      Counter2       |      10 - 0 - 0      |          -           |   WIN (9351 : 635)   |  WIN (6634 : -2967)  |  WIN (7263 : -2064)  |  WIN (5823 : -4130)  |  WIN (14766 : 657)  
+     Counter2_2      |      7 - 0 - 3       |   LOSE (1 : 7932)    |          -           |  WIN (1426 : -3218)  |  WIN (2913 : -998)   |  WIN (303 : -4130)   |  WIN (12112 : 797)  
+     MultiAgent      |      5 - 0 - 5       | LOSE (-5245 : 6604)  |   WIN (921 : -662)   |          -           | WIN (-1891 : -3033)  | LOSE (-3893 : -2170) |  WIN (8140 : 1873)  
+       Ratio         |      4 - 0 - 6       | LOSE (-2999 : 4578)  |  LOSE (-2331 : 20)   | WIN (-2074 : -6217)  |          -           | WIN (-2174 : -6372)  |   LOSE (-3081 : 0)  
+    MinMarginal      |      2 - 0 - 8       | LOSE (-6836 : 4504)  | LOSE (-3392 : -672)  | LOSE (-4181 : -2170) | LOSE (-3616 : -2954) |          -           |  LOSE (-1931 : 473) 
+      Template       |      2 - 0 - 8       |  LOSE (1314 : 8306)  |  LOSE (29 : 14298)   | LOSE (2267 : 16285)  |   LOSE (29 : 1646)   |   LOSE (29 : 1881)   |          -          
+
+First company results
+  # wins   : 14
+  # draws  : 0
+  # losses : 16
+

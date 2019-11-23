@@ -5,7 +5,7 @@ public class RatioCustom extends Ratio {
 
 	public RatioCustom(double startingRatio, double tax, double minRatio, Updater up ) {
 		super(startingRatio, tax, minRatio);
-		// TODO Auto-generated constructor stub
+		this.up=up;
 	}
 	
 	
@@ -19,9 +19,10 @@ public class RatioCustom extends Ratio {
 
 	}
 
+	@FunctionalInterface
+	public interface Updater {
+	  double update(double ratio, boolean win);
+	}
 }
 
-@FunctionalInterface
-interface Updater {
-  double update(double ratio, boolean win);
-}
+
