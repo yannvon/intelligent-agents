@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Random;
 
+import experts.Average;
 import experts.Expert;
 import logist.LogistSettings;
 
@@ -119,7 +120,7 @@ public class WeigthedMajority implements AuctionBehavior {
 		this.marginalCost = 0;
 		
 		this.currentExpert = 0;
-		this.experts = new Expert[] {};
+		this.experts = new Expert[] {new Average()};
 		this.expertsBids = new Long[experts.length];
 		this.weights = new double[experts.length];
 		for(int i= 0;i<experts.length;i++) {
@@ -248,7 +249,7 @@ public class WeigthedMajority implements AuctionBehavior {
 
 		List<Plan> plans = planCentralized(tasks);
 
-		AuctionHelper.displayPerformance("Counter2 with centralized planning", tasks, plans, vehicles);
+		AuctionHelper.displayPerformance(getClass().toString(), tasks, plans, vehicles);
 
 		return plans;
 	}
