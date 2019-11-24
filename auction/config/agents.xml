@@ -14,47 +14,7 @@
 		<set class-name="auction.AuctionRandomBaseline"/>
 	</agent>
 
-	<agent name="auction-destroyer">
-		<set class-path="bin/"/>
-		<set class-name="template.TemplateDestroyer"/>
-	</agent>
-
-	<agent name="auction-noreorder">
-		<set class-path="bin/"/>
-		<set class-name="deprecated.AuctionNoReorder"/>
-	</agent>
-
-	<agent name="auction-cplanning">
-		<set class-path="bin/"/>
-		<set class-name="deprecated.AuctionCentralizedPlanning"/>
-	</agent>
-	
-	<agent name="auction-cplanning2">
-		<set class-path="bin/"/>
-		<set class-name="deprecated.AuctionReorderCentralized"/>
-	</agent>
-
-	<agent name="auction-decentralized">
-		<set class-path="bin/"/>
-		<set class-name="deprecated.FirstStrategy"/>
-	</agent>
-	
-	<agent name="auction-counter">
-		<set class-path="bin/"/>
-		<set class-name="deprecated.CounterStrat"/>
-	</agent>
-	
-	<agent name="auction-counter2">
-		<set class-path="bin/"/>
-		<set class-name="deprecated.CounterStrat2"/>
-	</agent>
-	
-	<agent name="auction-multiAgent">
-		<set class-path="bin/"/>
-		<set class-name="deprecated.AuctionMultiAgents"/>
-	</agent>
-
-	<agent name="auction-intelligent">
+	<agent name="auction-main-46">
 		<set class-path="bin/"/>
 		<set class-name="auction.AuctionMultiplicativeWeightUpdate"/>
 	</agent>
