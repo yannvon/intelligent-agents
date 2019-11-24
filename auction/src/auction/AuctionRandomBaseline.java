@@ -17,6 +17,8 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -99,7 +101,8 @@ public class AuctionRandomBaseline implements AuctionBehavior {
 
         // Create log file
         if (LOG) {
-            this.log = new Logger(this.getClass().getName() + "_log.csv");
+            String time = new SimpleDateFormat("ddHHmmss'.txt'").format(new Date());
+            this.log = new Logger(this.getClass().getName() + "_log"+time+".csv");
             this.sumBidsWon = 0L;
         }
     }
