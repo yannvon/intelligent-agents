@@ -1,20 +1,23 @@
 package experts;
 
-public class Counter2 implements Expert {
+public class Adaptive implements Expert {
 	private double ratio;
 
 	private double opponentRatio;
-	
+
 	private double secureFactor;
 
 	private boolean maximizingReward = false;
-	
+
 	private double tax;
-	
+
 	private double opMarginalCost;
-	
-	
-	public Counter2(double startingRatio,double startingOpRatio,double startingSecureFactor,double tax) {
+
+	/**
+	 * Expert that keeps track of correctness of opponents estimate and tries to maximize gains when able to do so.
+	 * It updates its own ration additively and the opponents ratio in a multiplicative way.
+	 */
+	public Adaptive(double startingRatio, double startingOpRatio, double startingSecureFactor, double tax) {
 		this.secureFactor = startingSecureFactor;
 		this.opponentRatio = startingOpRatio;
 		this.ratio = startingRatio;

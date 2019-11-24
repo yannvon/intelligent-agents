@@ -8,23 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import com.sun.corba.se.spi.orbutil.fsm.Action;
-import experts.Arx;
-import experts.Average;
-import experts.Counter2;
-import experts.EstimateOp;
-import experts.Expert;
-import experts.MaxMarginal;
-import experts.Ratio;
-import experts.RatioCustom;
-import experts.Secure;
+import experts.*;
 import helpers.ActionEntry;
 import helpers.AuctionHelper;
 import helpers.CentralizedPlanning;
 import logist.LogistSettings;
 
 //the list of imports
-
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.config.Parsers;
@@ -55,7 +45,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
     private static final double STARTING_RATIO = 0.5;
     private static final double STARTING_SECURE_FACTOR = 0.75;
 
-    private static final double TAX = 10;
+    private static final double TAX = 2;
 
     private static final int PHASE1_END = 5;
     private static final int N_EXPECTED_TASK = 5;
@@ -151,11 +141,11 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
         this.marginalCost = 0;
         this.currentExpert = 0;
 
-        // Choose all experts that we think are the best performing
+        // --- IMPORTANT : Choose all experts that we think are the best performing ---
         this.experts = new Expert[]{new MaxMarginal(),
-                                    new Ratio(0.8, TAX, 1),
-                                    new RatioCustom(0.8, TAX, 1, (x, y) -> y ? x * 1.1 : x * 0.8),
-                                    new Counter2(0.8, 0.8, 0.9, TAX)};
+                                    new Ratio(1, TAX, 1),
+                                    new RatioCustom(1, TAX, 1, (x, y) -> y ? x * 1.1 : x * 0.8),
+                                    new Adaptive(1, 0.8, 0.9, TAX)};
 
         this.expertsBids = new Long[experts.length];
         this.weights = new double[experts.length];
