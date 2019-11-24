@@ -1,4 +1,4 @@
-package auction;
+package deprecated;
 
 //the list of imports
 
@@ -23,7 +23,7 @@ import helpers.CentralizedPlanning;
  * handles them sequentially.
  */
 @SuppressWarnings("unused")
-public class CounterStrat3 implements AuctionBehavior {
+public class CounterStrat2 implements AuctionBehavior {
 
 	/*
 	 * Some ideas: 1) - Add some randomness -> hides intentions and other - When
@@ -37,7 +37,7 @@ public class CounterStrat3 implements AuctionBehavior {
 	public static final boolean VERBOSE = false;
 	public static final boolean LOG = false;
 
-	private static final double STARTING_RATIO = 0.5;
+	private static final double STARTING_RATIO = 0.;
 	private static final double STARTING_SECURE_FACTOR = 0.75;
 
 	private static final double TAX = 10;
@@ -67,8 +67,6 @@ public class CounterStrat3 implements AuctionBehavior {
 	private double opponentRatio;
 
 	private boolean maximizingReward = false;
-
-	private int nbFails;
 
 	private Logger log;
 	private Long sumBidsWon;
@@ -102,7 +100,6 @@ public class CounterStrat3 implements AuctionBehavior {
 		ratio = STARTING_RATIO;
 		opponentRatio = 0;
 		secureFactor = STARTING_SECURE_FACTOR;
-		nbFails = 1;
 
 		// Create log file
 		if (LOG) {
@@ -144,12 +141,12 @@ public class CounterStrat3 implements AuctionBehavior {
 			potentialSolution = null;
 			potentialCost = -1;
 
-			if (LOG) {
-				sumBidsWon += bids[winner];
-			}
 			ratio += 0.05;
 			if (maximizingReward) {
-				secureFactor *= (1. + (0.1/nbFails));
+				secureFactor *= 1.1;
+			}
+			if (LOG) {
+				sumBidsWon += bids[winner];
 			}
 		} else {
 			// Option 2: Auction was lost
@@ -158,7 +155,6 @@ public class CounterStrat3 implements AuctionBehavior {
 				ratio -= 0.15;
 			} else {
 				secureFactor *= 0.85;
-				nbFails++;
 			}
 
 			currentOpponentSolution = potentialOpponentSolution;

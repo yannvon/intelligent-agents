@@ -1,4 +1,4 @@
-package auction;
+package deprecated;
 
 //the list of imports
 

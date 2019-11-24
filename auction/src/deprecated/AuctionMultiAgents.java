@@ -1,4 +1,4 @@
-package auction;
+package deprecated;
 
 //the list of imports
 import java.util.ArrayList;
@@ -6,9 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import helpers.AuctionHelper;
-import helpers.Logger;
-import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;
 import logist.simulation.Vehicle;

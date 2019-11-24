@@ -1,10 +1,10 @@
-package auction;
+package deprecated;
 
-import helpers.ActionEntry;
-import helpers.AuctionHelper;
-import helpers.CentralizedPlanning;
 import helpers.Logger;
 import logist.LogistSettings;
+
+//the list of imports
+
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.config.Parsers;
@@ -19,7 +19,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Random;
 
-//the list of imports
+import helpers.ActionEntry;
+import helpers.AuctionHelper;
+import helpers.CentralizedPlanning;
 
 /**
  * A simple agent that:
@@ -28,7 +30,7 @@ import java.util.Random;
  * 	- Performs centralized planning in the end to save some distance
  */
 @SuppressWarnings("unused")
-public class AuctionBaseline implements AuctionBehavior {
+public class AuctionReorderCentralized implements AuctionBehavior {
 
 	/*
 
@@ -135,7 +137,6 @@ public class AuctionBaseline implements AuctionBehavior {
             if (LOG) {
                 sumBidsWon += bids[winner];
             }
-
         } else {
             // Option 2: Auction was lost
             if (VERBOSE) {
@@ -188,7 +189,7 @@ public class AuctionBaseline implements AuctionBehavior {
         // double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
         // double bid = ratio * marginalCost;
         double bid = marginalCost;
-        bid += 1;
+        bid += random.nextDouble() * 100;
 
         return (long) Math.round(bid);
     }
@@ -203,6 +204,7 @@ public class AuctionBaseline implements AuctionBehavior {
 
         // Invoke the centralized planner to save costs
         List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
+
 
 
         // Display performance
@@ -262,7 +264,6 @@ public class AuctionBaseline implements AuctionBehavior {
         // FIXME Effet de bords (not nice)
         potentialSolution = bestPlan;
         potentialCost = lowestTotalCostFound;
-
 
 
         // Debug output
