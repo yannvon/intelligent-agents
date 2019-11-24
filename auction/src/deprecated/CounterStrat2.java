@@ -1,7 +1,8 @@
-package auction;
+package deprecated;
 
 //the list of imports
 
+import helpers.Logger;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
@@ -10,19 +11,19 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
 import java.util.*;
 
 import helpers.ActionEntry;
 import helpers.AuctionHelper;
+import helpers.CentralizedPlanning;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicles and
  * handles them sequentially.
  */
 @SuppressWarnings("unused")
-public class CounterStrat implements AuctionBehavior {
+public class CounterStrat2 implements AuctionBehavior {
 
 	/*
 	 * Some ideas: 1) - Add some randomness -> hides intentions and other - When
@@ -34,9 +35,10 @@ public class CounterStrat implements AuctionBehavior {
 	 * 
 	 */
 	public static final boolean VERBOSE = false;
+	public static final boolean LOG = false;
 
-	private static final double STARTING_RATIO = 0.5;
-	private static final double SECURE_FACTOR = 0.75;
+	private static final double STARTING_RATIO = 0.;
+	private static final double STARTING_SECURE_FACTOR = 0.75;
 
 	private static final double TAX = 10;
 
@@ -60,10 +62,14 @@ public class CounterStrat implements AuctionBehavior {
 	private ActionEntry[] potentialOpponentSolution;
 
 	private double ratio;
+	private double secureFactor;
 
 	private double opponentRatio;
 
 	private boolean maximizingReward = false;
+
+	private Logger log;
+	private Long sumBidsWon;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -93,16 +99,31 @@ public class CounterStrat implements AuctionBehavior {
 
 		ratio = STARTING_RATIO;
 		opponentRatio = 0;
+		secureFactor = STARTING_SECURE_FACTOR;
+
+		// Create log file
+		if (LOG) {
+			this.log = new Logger("Log: " + this.getClass().getName());
+			this.sumBidsWon = 0L;
+		}
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 
 		if (bids.length == 2) {
-			long opBid = agent.id() == 0 ? bids[1] : bids[0];
-			double opMarginalCost = potentialOpponentCost - currentOpponentCost;
-			if(opMarginalCost > 10.0) {
-				opponentRatio = opBid / opMarginalCost;
+			Long opBid = agent.id() == 0 ? bids[1] : bids[0];
+			if (opBid != null) {
+				double opMarginalCost = potentialOpponentCost - currentOpponentCost;
+				double simRatio = opBid / opMarginalCost;
+
+				if (simRatio < 3.0 && simRatio > 0) { // TO NOT HAVE TO BIG RATIO FOR SMALL MARGINAL COST
+					if (opponentRatio < 0.1) {
+						opponentRatio = opBid / opMarginalCost;
+					} else {
+						opponentRatio = (opponentRatio * 0.7) + (0.3 * (opBid / opMarginalCost));
+					}
+				}
 			}
 		}
 
@@ -121,11 +142,19 @@ public class CounterStrat implements AuctionBehavior {
 			potentialCost = -1;
 
 			ratio += 0.05;
+			if (maximizingReward) {
+				secureFactor *= 1.1;
+			}
+			if (LOG) {
+				sumBidsWon += bids[winner];
+			}
 		} else {
 			// Option 2: Auction was lost
 
 			if (!maximizingReward) {
 				ratio -= 0.15;
+			} else {
+				secureFactor *= 0.85;
 			}
 
 			currentOpponentSolution = potentialOpponentSolution;
@@ -135,6 +164,7 @@ public class CounterStrat implements AuctionBehavior {
 			potentialOpponentCost = -1;
 
 		}
+
 		if (ratio < 1.) {
 			ratio = 1.;
 		}
@@ -147,6 +177,10 @@ public class CounterStrat implements AuctionBehavior {
 			}
 			System.out.println();
 			System.out.flush();
+		}
+		if (LOG) {
+			double currentReward = sumBidsWon - currentCost;
+			log.logToFile(previous.id, currentReward);
 		}
 	}
 
@@ -176,18 +210,20 @@ public class CounterStrat implements AuctionBehavior {
 			System.out.println("Current cost: " + currentCost);
 			System.out.println("Cost with potential Task:" + costWithNewTask);
 			System.out.println("Marginal cost of adding Task: " + marginalCost);
+			System.out.println("ratio: " + ratio);
 			System.out.println();
 			System.out.println("sim op cost: " + currentOpponentCost);
 			System.out.println("sim op Cost with potential Task:" + opponentCost);
 			System.out.println("sim op Marginal cost: " + marginalOpponentCost);
+			System.out.println("op sim ratio: " + opponentRatio);
 		}
 
 		double bid = (marginalCost + TAX) * ratio;
 
 		double opBid = marginalOpponentCost * opponentRatio;
-		maximizingReward = bid < opBid * SECURE_FACTOR;
+		maximizingReward = bid < opBid * secureFactor;
 		if (maximizingReward) {
-			bid = opBid * SECURE_FACTOR;
+			bid = opBid * secureFactor;
 		}
 
 		return (long) Math.round(bid);
@@ -196,60 +232,26 @@ public class CounterStrat implements AuctionBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-		if (VERBOSE) {
-			System.out.println("--- PLANNING PHASE ---");
-			System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-		}
+		List<Plan> plans = planCentralized(tasks);
 
-		List<Plan> plans = new ArrayList<Plan>();
-		for (int vId = 0; vId < this.vehicles.size(); vId++) {
-			Plan plan = planFromActionEntry(this.vehicles.get(vId), currentSolution[vId], tasks);
-			plans.add(plan);
-		}
-
-		double reward = tasks.rewardSum();
-		for (Plan p : plans) {
-			reward -= (p.totalDistance() * vehicles.get(0).costPerKm());
-		}
-
-		AuctionHelper.displayPerformance("Counter with centralized planning", tasks, plans, vehicles);
+		AuctionHelper.displayAndLogPerformance("Counter2 with centralized planning", tasks, plans, vehicles, log);
 
 		return plans;
 	}
 
-	private Plan planFromActionEntry(Vehicle v, ActionEntry actionEntry, TaskSet tasks) {
-		City current = v.getCurrentCity();
-		Plan plan = new Plan(current);
+	private List<Plan> planCentralized(TaskSet tasks) {
 
-		ActionEntry next = actionEntry.next;
-		while (next != null) {
-			City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
-			for (City city : current.pathTo(nextCity)) {
-				plan.appendMove(city);
-			}
+		// Create instance of centralized planner
+		CentralizedPlanning centralizedPlanning = new CentralizedPlanning();
 
-			// Find real task
-			int taskId = next.task.id;
-			Task realTask = null;
-			for (Task t : tasks) {
-				if (t.id == taskId) {
-					realTask = t;
-				}
-			}
-			if (realTask == null) {
-				throw new Error("Task " + taskId + " does not exist.");
-			}
+		// Setup
+		centralizedPlanning.setup(this.distribution, this.agent);
 
-			if (next.pickup) {
-				plan.appendPickup(realTask);
-			} else {
-				plan.appendDelivery(realTask);
-			}
-			next = next.next;
-			current = nextCity;
-		}
+		// Plan
+		List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
 
-		return plan;
+		return plans;
+
 	}
 
 	private double addingTaskCost(Task t) {
@@ -258,7 +260,7 @@ public class CounterStrat implements AuctionBehavior {
 
 	private double addingTaskCost(Task t, boolean opponent) {
 
-		double lowestTotalCostFound = Double.POSITIVE_INFINITY;
+		double lowestTotalCostFound = Double.MAX_VALUE;
 		ActionEntry[] bestPlan = null;
 		ActionEntry[] current = opponent ? currentOpponentSolution : currentSolution;
 

@@ -1,12 +1,12 @@
 package template;
 
 //the list of imports
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import helpers.AuctionHelper;
 import helpers.CentralizedPlanning;
+import helpers.Logger;
 import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;
@@ -32,6 +32,7 @@ public class TemplateDestroyer implements AuctionBehavior {
 	private Random random;
 	private Vehicle vehicle;
 	private City currentCity,opCity;
+
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
@@ -94,7 +95,7 @@ public class TemplateDestroyer implements AuctionBehavior {
 
 
 		// Display performance
-		AuctionHelper.displayPerformance("Template destroyer", tasks, plans, vehicles);
+		// AuctionHelper.displayAndLogPerformance("Template destroyer", tasks, plans, vehicles);
 
 		return plans;
 	}

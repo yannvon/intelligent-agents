@@ -1,4 +1,4 @@
-package auction;
+package deprecated;
 
 //the list of imports
 import java.util.ArrayList;
@@ -14,6 +14,7 @@ import java.util.Set;
 
 import javax.print.DocFlavor.STRING;
 
+import helpers.Logger;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
@@ -53,6 +54,8 @@ public class FirstStrategy implements AuctionBehavior {
 
 	private double currentCost;
 
+
+
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
@@ -87,6 +90,7 @@ public class FirstStrategy implements AuctionBehavior {
 		if (ratio < 1) {
 			ratio = 1;
 		}
+
 	}
 
 	@Override

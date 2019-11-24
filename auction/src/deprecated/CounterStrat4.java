@@ -1,50 +1,45 @@
-package auction;
-
-import logist.LogistSettings;
+package deprecated;
 
 //the list of imports
 
+import helpers.Logger;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
-import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import helpers.ActionEntry;
 import helpers.AuctionHelper;
 import helpers.CentralizedPlanning;
 
 /**
- * A simple agent that:
- * 	- Checks marginal costs without reordering tasks, but picks best spot in sequence
- * 	- Adds something on top marginal cost randomly
- * 	- Performs centralized planning in the end to save some distance
+ * A very simple auction agent that assigns all tasks to its first vehicles and
+ * handles them sequentially.
  */
 @SuppressWarnings("unused")
-public class AuctionCentralizedPlanning implements AuctionBehavior {
+public class CounterStrat4 implements AuctionBehavior {
 
-	/*
+    /*
+     * Some ideas: 1) - Add some randomness -> hides intentions and other - When
+     * computing marginal cost, just check where in plan you could integrate new
+     * task, without reordering This then becomes lowest bid ready to take. Then do
+     * same for adversary and check what his marginal cost would be. Bid one below
+     * (?) this value if higher than personal one. - Centralized in the end. 2)
+     * Integrate probability of certain tasks, willing to take tasks at deficit ?
+     *
+     */
+    public static final boolean VERBOSE = false;
+    public static final boolean LOG = false;
 
-	Further ideas:
-	- Add some randomness -> hides intentions and other
-	- When computing marginal cost, just check where in plan you could integrate new task, without reordering
-	This then becomes lowest bid ready to take. Then do same for adversary and check what his marginal cost would be.
-	Bid one below (?) this value if higher than personal one. -> IMPOSSIBLE
-	- Centralized in the end.
-	- Integrate probability of certain tasks, willing to take tasks at deficit ?
+    private static final double STARTING_RATIO = 0.5;
 
-	 */
-	public static final boolean VERBOSE = false;
+    private static final double TAX = 10;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -58,21 +53,33 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 
     private double potentialCost;
     private ActionEntry[] potentialSolution;
-    private ActionEntry potentialPickupActionEntry;
-    private ActionEntry potentialDeliveryActionEntry;
-	private long timeout_plan;
+
+    private ActionEntry[] currentOpponentSolution;
+    private double currentOpponentCost;
+
+    private double potentialOpponentCost;
+    private ActionEntry[] potentialOpponentSolution;
+
+    private double ratio;
+
+    private double opponentRatio;
+
+    private boolean maximizingReward = false;
+
+    private Logger log;
+    private Long sumBidsWon;
+
 
     @Override
-    public void setup(Topology topology, TaskDistribution distribution,
-                      Agent agent) {
+    public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
         this.topology = topology;
         this.distribution = distribution;
         this.agent = agent;
         this.vehicles = agent.vehicles();
         this.maxVehicleCapacity = Integer.MIN_VALUE;
-        for (Vehicle v: vehicles) {
-            this.maxVehicleCapacity =  (v.capacity() > this.maxVehicleCapacity) ? v.capacity() : this.maxVehicleCapacity;
+        for (Vehicle v : vehicles) {
+            this.maxVehicleCapacity = (v.capacity() > this.maxVehicleCapacity) ? v.capacity() : this.maxVehicleCapacity;
         }
 
         long seed = -9019554669489983951L * this.hashCode() * agent.id();
@@ -83,25 +90,45 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         for (int i = 0; i < agent.vehicles().size(); i++) {
             currentSolution[i] = new ActionEntry(i);
         }
-        
-        LogistSettings ls = null;
-        try {
-			ls = Parsers.parseSettings("config" + File.separator + "settings_auction.xml");
-		} catch (Exception exc) {
-			System.out.println("There was a problem loading the configuration file.");
-		}
-        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-		
+
+        this.currentOpponentSolution = new ActionEntry[agent.vehicles().size()];
+        for (int i = 0; i < agent.vehicles().size(); i++) {
+            currentOpponentSolution[i] = new ActionEntry(i);
+        }
+
+        ratio = STARTING_RATIO;
+        opponentRatio = 0;
+
+        // Create log file
+        if (LOG) {
+            this.log = new Logger("Log: " + this.getClass().getName());
+            this.sumBidsWon = 0L;
+        }
     }
 
     @Override
     public void auctionResult(Task previous, int winner, Long[] bids) {
+
+        if (bids.length == 2) {
+            Long opBid = agent.id() == 0 ? bids[1] : bids[0];
+            if (opBid != null) {
+                double opMarginalCost = potentialOpponentCost - currentOpponentCost;
+                double simRatio = opBid / (opMarginalCost + TAX);
+
+                if (simRatio < 3.0 && simRatio > 0.5) { // TO NOT HAVE TO BIG RATIO FOR SMALL MARGINAL COST
+                    if (opponentRatio < 0.1) {
+                        opponentRatio = opBid / opMarginalCost;
+                    } else {
+                        opponentRatio = (opponentRatio * 0.7) + (0.3 * (opBid / opMarginalCost));
+                    }
+                }
+            }
+        }
+
         if (winner == agent.id()) {
 
             // Option 1: Auction was won
-            if (VERBOSE) {
-                System.out.println("Auction " + previous.id + " won");
-            }
+
             if (potentialSolution == null || currentCost < 0) {
                 throw new Error("Unexpected behavior, no bid was made, yet bid was won");
             }
@@ -111,18 +138,42 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 
             potentialSolution = null;
             potentialCost = -1;
+
+            ratio += 0.05;
+            if (LOG) {
+                sumBidsWon += bids[winner];
+            }
         } else {
             // Option 2: Auction was lost
-            if (VERBOSE) {
-                System.out.println("Auction lost");
+
+            if (!maximizingReward) {
+                ratio -= 0.15;
             }
+
+            currentOpponentSolution = potentialOpponentSolution;
+            currentOpponentCost = potentialOpponentCost;
+
+            potentialOpponentSolution = null;
+            potentialOpponentCost = -1;
+
         }
+
+        if (ratio < 1.) {
+            ratio = 1.;
+        }
+
         if (VERBOSE) {
+            System.out.println();
+            System.out.println("BIDS " + previous.id + " : ");
             for (int i = 0; i < bids.length; i++) {
                 System.out.print("Bid " + i + ": " + bids[i] + " ");
             }
             System.out.println();
             System.out.flush();
+        }
+        if (LOG) {
+            double currentReward = sumBidsWon - currentCost;
+            log.logToFile(previous.id, currentReward);
         }
     }
 
@@ -130,7 +181,8 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
     public Long askPrice(Task task) {
 
         if (VERBOSE) {
-            System.out.println("--- TASK " + task.id + "---");
+            System.out.println();
+            System.out.println("AGENT " + agent.id() + "--- TASK " + task.id + "---");
         }
 
         if (this.maxVehicleCapacity < task.weight)
@@ -144,40 +196,43 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         double costWithNewTask = addingTaskCost(task);
         double marginalCost = costWithNewTask - currentCost;
 
+        double opponentCost = addingTaskCost(task, true);
+        double marginalOpponentCost = opponentCost - currentOpponentCost;
+
         if (VERBOSE) {
             System.out.println("Current cost: " + currentCost);
             System.out.println("Cost with potential Task:" + costWithNewTask);
             System.out.println("Marginal cost of adding Task: " + marginalCost);
+            System.out.println("ratio: " + ratio);
+            System.out.println();
+            System.out.println("sim op cost: " + currentOpponentCost);
+            System.out.println("sim op Cost with potential Task:" + opponentCost);
+            System.out.println("sim op Marginal cost: " + marginalOpponentCost);
+            System.out.println("op sim ratio: " + opponentRatio);
         }
 
 
-        // Final bid
-        // double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
-        // double bid = ratio * marginalCost;
-        double bid = marginalCost;
-        bid += random.nextDouble() * 1000;
+        double opBid = (marginalOpponentCost + TAX) * opponentRatio;
 
-        return (long) Math.round(bid);
+
+        maximizingReward = marginalCost < opBid * 0.9;
+        if (maximizingReward) {
+            return (long) (opBid * 0.9);
+        } else {
+            return (long) ((marginalCost + marginalOpponentCost + TAX) / 2.0);
+        }
+
     }
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-        if (VERBOSE) {
-            System.out.println("--- PLANNING PHASE ---");
-            System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-        }
-
-        // Invoke the centralized planner to save costs
         List<Plan> plans = planCentralized(tasks);
 
-
-        // Display performance
-        AuctionHelper.displayPerformance("NoReorder with centralized planning", tasks, plans, vehicles);
+        AuctionHelper.displayAndLogPerformance("Counter2 with centralized planning", tasks, plans, vehicles, log);
 
         return plans;
     }
-
 
     private List<Plan> planCentralized(TaskSet tasks) {
 
@@ -188,40 +243,45 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         centralizedPlanning.setup(this.distribution, this.agent);
 
         // Plan
+        List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
 
-        return  centralizedPlanning.plan(vehicles,tasks);
+        return plans;
 
     }
 
-
     private double addingTaskCost(Task t) {
+        return addingTaskCost(t, false);
+    }
+
+    private double addingTaskCost(Task t, boolean opponent) {
 
         double lowestTotalCostFound = Double.MAX_VALUE;
         ActionEntry[] bestPlan = null;
+        ActionEntry[] current = opponent ? currentOpponentSolution : currentSolution;
 
         // Go over all vehicles
         for (int vId = 0; vId < agent.vehicles().size(); vId++) {
 
             // Compute number of actions
-            ActionEntry c = currentSolution[vId];
+            ActionEntry c = current[vId];
             while (c.next != null) {
                 c = c.next;
             }
             int nAction = c.time;
 
-
             // Compute cost for all possible task insert positions
 
-            for (int iPickup = 0; iPickup <= nAction; iPickup++) {   //FIXME not <= ?
+            for (int iPickup = 0; iPickup <= nAction; iPickup++) { // FIXME not <= ?
                 int iDelivery = iPickup + 1;
 
                 boolean valid = true;
                 boolean sameFound = true;
 
-                while ((valid || sameFound) && iDelivery <= nAction + 1) { //FIXME not <= nAction + 1
+                while ((valid || sameFound) && iDelivery <= nAction + 1) { // FIXME not <= nAction + 1
 
-                    ActionEntry[] a = ActionEntry.copy(currentSolution);    //FIXME only copy vehicles
-                    valid = addTask(a[vId], agent.vehicles(), vId, t, iPickup, iDelivery); // FIXME can be done more efficiently
+                    ActionEntry[] a = ActionEntry.copy(current); // FIXME only copy vehicles
+                    valid = addTask(a[vId], agent.vehicles(), vId, t, iPickup, iDelivery); // FIXME can be done more
+                    // efficiently
                     if (valid) {
 
                         // Compute cost
@@ -241,10 +301,13 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         }
 
         // FIXME Effet de bords (not nice)
-        potentialSolution = bestPlan;
-        potentialCost = lowestTotalCostFound;
-
-
+        if (opponent) {
+            potentialOpponentSolution = bestPlan;
+            potentialOpponentCost = lowestTotalCostFound;
+        } else {
+            potentialSolution = bestPlan;
+            potentialCost = lowestTotalCostFound;
+        }
 
         // Debug output
         if (VERBOSE) {
@@ -267,12 +330,13 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 
         ActionEntry newPickup = new ActionEntry(task, true);
         ActionEntry newDelivery = new ActionEntry(task, false);
-        // FIXME the task here does not have correct reward yet, so it will have to be fixed later
+        // FIXME the task here does not have correct reward yet, so it will have to be
+        // fixed later
 
         ActionEntry current = a;
 
         // Find correct index for pickup
-        for(int p = iPickup; p > 0; p--) {
+        for (int p = iPickup; p > 0; p--) {
             if (current == null) {
                 throw new Error("Pickup moment is not legal");
             }
@@ -283,7 +347,7 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
         current.add(newPickup);
 
         // Find correct index for delivery
-        for(int d = iDelivery - iPickup; d > 0; d--) { // Need to be careful here
+        for (int d = iDelivery - iPickup; d > 0; d--) { // Need to be careful here
             if (current == null) {
                 throw new Error("Delivery moment is not legal");
             }
@@ -292,7 +356,6 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 
         // Add delivery entry
         current.add(newDelivery);
-
 
         // Update time and load FIXME check
         return a.updateTimeAndLoad(vehicles.get(vId).capacity());
@@ -319,4 +382,3 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
     }
 
 }
-

@@ -118,6 +118,54 @@ public class CentralizedPlanning {
 	}
 
 	/**
+	 * Construct a plan from a solution of centralized planning but that has not the right tasks in its set
+	 *
+	 * @param best     the solution
+	 * @param vehicles
+	 * @param realTasks the real tasks that should be part of the plan
+	 * @return the plan from the solution
+	 */
+	public List<Plan> planFromSolutionAndTaskSet(ActionEntry[] best, List<Vehicle> vehicles, TaskSet realTasks) {
+		/*
+		 * Construct plan
+		 */
+		List<Plan> plans = new ArrayList<Plan>();
+		for (int vId = 0; vId < best.length; vId++) {
+			City current = vehicles.get(vId).getCurrentCity();
+			Plan plan = new Plan(current);
+
+			ActionEntry next = best[vId].next;
+			while (next != null) {
+				City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
+				for (City city : current.pathTo(nextCity)) {
+					plan.appendMove(city);
+				}
+
+				// Find real task
+				Task realNextTask = null;
+				for(Task t : realTasks) {
+					if(t.id == next.task.id) {
+						realNextTask = t;
+					}
+				}
+				if (realNextTask == null) {
+					throw new Error("Internal error: no task won with that id");
+				}
+				if (next.pickup) {
+					plan.appendPickup(realNextTask);
+				} else {
+					plan.appendDelivery(realNextTask);
+				}
+				next = next.next;
+				current = nextCity;
+			}
+			plans.add(plan);
+
+		}
+		return plans;
+	}
+
+	/**
 	 * Shuffle a solution for timeout millisecond
 	 * 
 	 * @param vehicles        the list of vehicles in the solution

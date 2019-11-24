@@ -1,5 +1,6 @@
-package auction;
+package deprecated;
 
+import helpers.Logger;
 import logist.LogistSettings;
 
 //the list of imports
@@ -13,10 +14,8 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -31,7 +30,7 @@ import helpers.CentralizedPlanning;
  * 	- Performs centralized planning in the end to save some distance
  */
 @SuppressWarnings("unused")
-public class AuctionReorderCentralized implements AuctionBehavior {
+public class AuctionCentralizedPlanning implements AuctionBehavior {
 
 	/*
 
@@ -45,6 +44,7 @@ public class AuctionReorderCentralized implements AuctionBehavior {
 
 	 */
 	public static final boolean VERBOSE = false;
+    public static final boolean LOG = false;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -60,9 +60,10 @@ public class AuctionReorderCentralized implements AuctionBehavior {
     private ActionEntry[] potentialSolution;
     private ActionEntry potentialPickupActionEntry;
     private ActionEntry potentialDeliveryActionEntry;
-    CentralizedPlanning centralizedPlanning ;
-    
-    private long timeout_bid,timeout_setup,timeout_plan;
+	private long timeout_plan;
+
+    private Logger log;
+    private Long sumBidsWon;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution,
@@ -72,21 +73,6 @@ public class AuctionReorderCentralized implements AuctionBehavior {
         this.distribution = distribution;
         this.agent = agent;
         this.vehicles = agent.vehicles();
-        
-    	LogistSettings ls = null;
-		try {
-			ls = Parsers.parseSettings("config" + File.separator + "settings_auction.xml");
-		} catch (Exception exc) {
-			System.out.println("There was a problem loading the configuration file.");
-		}
-
-		// the setup method cannot last more than timeout_setup milliseconds
-		timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
-		// the plan method cannot execute more than timeout_plan milliseconds
-		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-		
-		timeout_bid = ls.get(LogistSettings.TimeoutKey.BID);
-        
         this.maxVehicleCapacity = Integer.MIN_VALUE;
         for (Vehicle v: vehicles) {
             this.maxVehicleCapacity =  (v.capacity() > this.maxVehicleCapacity) ? v.capacity() : this.maxVehicleCapacity;
@@ -100,11 +86,20 @@ public class AuctionReorderCentralized implements AuctionBehavior {
         for (int i = 0; i < agent.vehicles().size(); i++) {
             currentSolution[i] = new ActionEntry(i);
         }
-        // Create instance of centralized planner
-        centralizedPlanning = new CentralizedPlanning();
+        
+        LogistSettings ls = null;
+        try {
+			ls = Parsers.parseSettings("config" + File.separator + "settings_auction.xml");
+		} catch (Exception exc) {
+			System.out.println("There was a problem loading the configuration file.");
+		}
+        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
 
-        // Setup
-        centralizedPlanning.setup(distribution, agent);
+        // Create log file
+        if (LOG) {
+            this.log = new Logger("Log: " + this.getClass().getName());
+            this.sumBidsWon = 0L;
+        }
     }
 
     @Override
@@ -124,6 +119,11 @@ public class AuctionReorderCentralized implements AuctionBehavior {
 
             potentialSolution = null;
             potentialCost = -1;
+
+            if (LOG) {
+                sumBidsWon += bids[winner];
+            }
+
         } else {
             // Option 2: Auction was lost
             if (VERBOSE) {
@@ -136,6 +136,10 @@ public class AuctionReorderCentralized implements AuctionBehavior {
             }
             System.out.println();
             System.out.flush();
+        }
+        if (LOG) {
+            double currentReward = sumBidsWon - currentCost;
+            log.logToFile(previous.id, currentReward);
         }
     }
 
@@ -155,10 +159,6 @@ public class AuctionReorderCentralized implements AuctionBehavior {
          * By going over all vehicles and all possible slots
          */
         double costWithNewTask = addingTaskCost(task);
-        
-        centralizedPlanning.shuffle(vehicles, currentSolution,timeout_bid/4);
-        
-        
         double marginalCost = costWithNewTask - currentCost;
 
         if (VERBOSE) {
@@ -186,16 +186,29 @@ public class AuctionReorderCentralized implements AuctionBehavior {
         }
 
         // Invoke the centralized planner to save costs
-        List<Plan> plans = centralizedPlanning.plan(this.vehicles, tasks);
-
+        List<Plan> plans = planCentralized(tasks);
 
 
         // Display performance
-        AuctionHelper.displayPerformance("NoReorder with centralized planning", tasks, plans, vehicles);
+        AuctionHelper.displayAndLogPerformance("NoReorder with centralized planning", tasks, plans, vehicles, log);
 
         return plans;
     }
 
+
+    private List<Plan> planCentralized(TaskSet tasks) {
+
+        // Create instance of centralized planner
+        CentralizedPlanning centralizedPlanning = new CentralizedPlanning();
+
+        // Setup
+        centralizedPlanning.setup(this.distribution, this.agent);
+
+        // Plan
+
+        return  centralizedPlanning.plan(vehicles,tasks);
+
+    }
 
 
     private double addingTaskCost(Task t) {

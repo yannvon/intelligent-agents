@@ -4,6 +4,9 @@ import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.TaskSet;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 
 /**
@@ -11,12 +14,18 @@ import java.util.List;
  */
 public class AuctionHelper {
 
-	public static void displayPerformance(String agentName, TaskSet tasks, List<Plan> plans, List<Vehicle> vehicles) {
+	public static void displayAndLogPerformance(String agentName, TaskSet tasks, List<Plan> plans,
+												List<Vehicle> vehicles, Logger log) {
 		double reward = tasks.rewardSum();
 		double totalDistance = 0;
 		for (Plan p : plans) {
 			totalDistance += p.totalDistance();
 			reward -= (p.totalDistance() * vehicles.get(0).costPerKm());
+		}
+
+		// Log final reward after planning again
+		if (log != null) {
+			log.logToFile(-1, reward);
 		}
 
 		System.out.println();
