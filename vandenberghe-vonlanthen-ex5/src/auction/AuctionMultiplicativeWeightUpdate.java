@@ -42,7 +42,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
     private static final boolean VERBOSE = false;
     private static final boolean SHUFFLE = true;
-    public static final boolean LOG = false;
+    public static final boolean LOG = true;
 
     private static final double STARTING_RATIO = 0.5;
     private static final double STARTING_SECURE_FACTOR = 0.75;
@@ -106,7 +106,6 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
         // Set basic attributes
         this.topology = topology;
-        
         this.distribution = distribution;
         this.agent = agent;
         this.vehicles = agent.vehicles();

@@ -1,38 +1,41 @@
-package auction;
+package deprecated;
 
 //the list of imports
-import helpers.ActionEntry;
-import helpers.AuctionHelper;
-import helpers.CentralizedPlanning;
+
 import helpers.Logger;
-import logist.LogistSettings;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
-import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
+import logist.topology.Topology.City;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
+import helpers.ActionEntry;
+import helpers.AuctionHelper;
 
 /**
- * A simple agent that:
- * 	- Checks marginal costs without reordering tasks, but picks best spot in sequence
- * 	- Performs SLS on top of that
- * 	- Adds a constant value on top of marginal cost
- * 	- Performs centralized planning in the end to augment reward
+ * A very simple auction agent that assigns all tasks to its first vehicles and
+ * handles them sequentially.
  */
 @SuppressWarnings("unused")
-public class AuctionRandomBaseline implements AuctionBehavior {
+public class AuctionNoReorder implements AuctionBehavior {
 
+	/*
+	Some ideas:
+	1)
+	- Add some randomness -> hides intentions and other
+	- When computing marginal cost, just check where in plan you could integrate new task, without reordering
+	This then becomes lowest bid ready to take. Then do same for adversary and check what his marginal cost would be.
+	Bid one below (?) this value if higher than personal one.
+	- Centralized in the end.
+	2) Integrate probability of certain tasks, willing to take tasks at deficit ?
+
+	 */
 	public static final boolean VERBOSE = false;
     public static final boolean LOG = false;
 
@@ -48,11 +51,6 @@ public class AuctionRandomBaseline implements AuctionBehavior {
 
     private double potentialCost;
     private ActionEntry[] potentialSolution;
-    private ActionEntry potentialPickupActionEntry;
-    private ActionEntry potentialDeliveryActionEntry;
-    CentralizedPlanning centralizedPlanning ;
-    
-    private long timeout_bid,timeout_setup,timeout_plan;
 
     private Logger log;
     private Long sumBidsWon;
@@ -65,21 +63,6 @@ public class AuctionRandomBaseline implements AuctionBehavior {
         this.distribution = distribution;
         this.agent = agent;
         this.vehicles = agent.vehicles();
-        
-    	LogistSettings ls = null;
-		try {
-			ls = Parsers.parseSettings("config" + File.separator + "settings_auction.xml");
-		} catch (Exception exc) {
-			System.out.println("There was a problem loading the configuration file.");
-		}
-
-		// the setup method cannot last more than timeout_setup milliseconds
-		timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
-		// the plan method cannot execute more than timeout_plan milliseconds
-		timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-		
-		timeout_bid = ls.get(LogistSettings.TimeoutKey.BID);
-        
         this.maxVehicleCapacity = Integer.MIN_VALUE;
         for (Vehicle v: vehicles) {
             this.maxVehicleCapacity =  (v.capacity() > this.maxVehicleCapacity) ? v.capacity() : this.maxVehicleCapacity;
@@ -93,16 +76,10 @@ public class AuctionRandomBaseline implements AuctionBehavior {
         for (int i = 0; i < agent.vehicles().size(); i++) {
             currentSolution[i] = new ActionEntry(i);
         }
-        // Create instance of centralized planner
-        centralizedPlanning = new CentralizedPlanning();
-
-        // Setup
-        centralizedPlanning.setup(distribution, agent);
 
         // Create log file
         if (LOG) {
-            String time = new SimpleDateFormat("ddHHmmss'.txt'").format(new Date());
-            this.log = new Logger(this.getClass().getName() + "_log"+time+".csv");
+            this.log = new Logger("Log: " + this.getClass().getName());
             this.sumBidsWon = 0L;
         }
     }
@@ -128,6 +105,7 @@ public class AuctionRandomBaseline implements AuctionBehavior {
             if (LOG) {
                 sumBidsWon += bids[winner];
             }
+
         } else {
             // Option 2: Auction was lost
             if (VERBOSE) {
@@ -158,15 +136,11 @@ public class AuctionRandomBaseline implements AuctionBehavior {
             return null;
 
         /*
-         * Find own marginal cost (under no reordering assumption), then use SLS
+         * STEP 1: Find own marginal cost (under no reordering assumption)
          *
          * By going over all vehicles and all possible slots
          */
         double costWithNewTask = addingTaskCost(task);
-        
-        centralizedPlanning.shuffle(vehicles, currentSolution,timeout_bid);
-        
-        
         double marginalCost = costWithNewTask - currentCost;
 
         if (VERBOSE) {
@@ -179,47 +153,68 @@ public class AuctionRandomBaseline implements AuctionBehavior {
         // Final bid
         // double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
         // double bid = ratio * marginalCost;
-        double bid = marginalCost;
-        bid += random.nextDouble() * 10;
+        double bid = marginalCost + 1000 * random.nextDouble();
 
-        return Math.round(bid);
+        return (long) Math.round(bid);
     }
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-        List<Plan> plans = planCentralized(tasks);
+        if (VERBOSE) {
+            System.out.println("--- PLANNING PHASE ---");
+            System.out.println("Agent " + agent.id() + " has tasks " + tasks);
+        }
 
-        AuctionHelper.displayAndLogPerformance(getClass().toString(), tasks, plans, vehicles, log);
+        List<Plan> plans = new ArrayList<Plan>();
+        for (int vId = 0; vId < this.vehicles.size(); vId++) {
+            Plan plan = planFromActionEntry(this.vehicles.get(vId), currentSolution[vId], tasks);
+            plans.add(plan);
+        }
 
-        return plans;
-    }
-
-    /**
-     * Use the centralized planner starting from our current best solution to try and find a better schedule.
-     *
-     * @param tasks tasks that were won at auction
-     * @return a plan for each vehicle
-     */
-    private List<Plan> planCentralized(TaskSet tasks) {
-
-        // Plan
-        ActionEntry[] bestSolution =
-                centralizedPlanning.shuffle(this.vehicles, currentSolution, Math.round(timeout_plan * 0.9));
-
-        // Get plan from new task set
-        List<Plan> plans = centralizedPlanning.planFromSolutionAndTaskSet(bestSolution, this.vehicles, tasks);
+        // Display performance
+        AuctionHelper.displayAndLogPerformance("NoReorder", tasks, plans, vehicles, log);
 
         return plans;
     }
 
 
-    /**
-     * Compute cost of adding a task to current schedule.
-     *
-     * @param t task
-     * @return cost
-     */
+    private Plan planFromActionEntry(Vehicle v, ActionEntry actionEntry, TaskSet tasks) {
+        City current = v.getCurrentCity();
+        Plan plan = new Plan(current);
+
+        ActionEntry next = actionEntry.next;
+        while (next != null) {
+            City nextCity = next.pickup ? next.task.pickupCity : next.task.deliveryCity;
+            for (City city : current.pathTo(nextCity)) {
+                plan.appendMove(city);
+            }
+
+            // Find real task
+            int taskId = next.task.id;
+            Task realTask = null;
+            for (Task t: tasks) {
+                if (t.id == taskId) {
+                    realTask = t;
+                }
+            }
+            if (realTask == null) {
+                throw new Error("Task " + taskId + " does not exist.");
+            }
+
+            if (next.pickup) {
+                plan.appendPickup(realTask);
+            } else {
+                plan.appendDelivery(realTask);
+            }
+            next = next.next;
+            current = nextCity;
+        }
+
+        return plan;
+    }
+
+
     private double addingTaskCost(Task t) {
 
         double lowestTotalCostFound = Double.MAX_VALUE;
@@ -238,16 +233,16 @@ public class AuctionRandomBaseline implements AuctionBehavior {
 
             // Compute cost for all possible task insert positions
 
-            for (int iPickup = 0; iPickup <= nAction; iPickup++) {
+            for (int iPickup = 0; iPickup <= nAction; iPickup++) {   //FIXME not <= ?
                 int iDelivery = iPickup + 1;
 
                 boolean valid = true;
                 boolean sameFound = true;
 
-                while ((valid || sameFound) && iDelivery <= nAction + 1) {
+                while ((valid || sameFound) && iDelivery <= nAction + 1) { //FIXME not <= nAction + 1
 
-                    ActionEntry[] a = ActionEntry.copy(currentSolution);
-                    valid = addTask(a[vId], agent.vehicles(), vId, t, iPickup, iDelivery);
+                    ActionEntry[] a = ActionEntry.copy(currentSolution);    //FIXME only copy vehicles
+                    valid = addTask(a[vId], agent.vehicles(), vId, t, iPickup, iDelivery); // FIXME can be done more efficiently
                     if (valid) {
 
                         // Compute cost
@@ -266,6 +261,7 @@ public class AuctionRandomBaseline implements AuctionBehavior {
             }
         }
 
+        // FIXME Effet de bords (not nice)
         potentialSolution = bestPlan;
         potentialCost = lowestTotalCostFound;
 
@@ -290,6 +286,7 @@ public class AuctionRandomBaseline implements AuctionBehavior {
 
         ActionEntry newPickup = new ActionEntry(task, true);
         ActionEntry newDelivery = new ActionEntry(task, false);
+        // FIXME the task here does not have correct reward yet, so it will have to be fixed later
 
         ActionEntry current = a;
 
@@ -315,16 +312,15 @@ public class AuctionRandomBaseline implements AuctionBehavior {
         // Add delivery entry
         current.add(newDelivery);
 
-        // Update time and load
+
+        // Update time and load FIXME check
         return a.updateTimeAndLoad(vehicles.get(vId).capacity());
     }
 
     /**
-     * Compute cost for a given schedule.
-     *
-     * @param actions a list of actionEntries
-     * @param vehicles a list of vehicles
-     * @return cost of the proposed schedule
+     * @param actions
+     * @param vehicles
+     * @return
      */
     private double computeCost(ActionEntry[] actions, List<Vehicle> vehicles) {
         double sum = 0;

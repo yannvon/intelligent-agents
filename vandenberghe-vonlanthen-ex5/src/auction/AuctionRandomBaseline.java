@@ -34,7 +34,7 @@ import java.util.Random;
 public class AuctionRandomBaseline implements AuctionBehavior {
 
 	public static final boolean VERBOSE = false;
-    public static final boolean LOG = false;
+    public static final boolean LOG = true;
 
     private Topology topology;
     private TaskDistribution distribution;
