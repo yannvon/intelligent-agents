@@ -41,8 +41,8 @@ import logist.topology.Topology.City;
 public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
     private static final boolean VERBOSE = false;
-    private static final boolean SHUFFLE = false;
-    public static final boolean LOG = true;
+    private static final boolean SHUFFLE = true;
+    public static final boolean LOG = false;
 
     private static final double STARTING_RATIO = 0.5;
     private static final double STARTING_SECURE_FACTOR = 0.75;
@@ -51,7 +51,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
     private static final int PHASE1_END = 5;
     private static final int N_EXPECTED_TASK = 5;
-    private static final double PHASE_1_SAVINGS_FACTOR = 0.2;
+    private static final double PHASE_1_SAVINGS_FACTOR = 1;
 
     private Topology topology;
     private TaskDistribution distribution;
