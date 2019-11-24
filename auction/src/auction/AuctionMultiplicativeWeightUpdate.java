@@ -12,6 +12,7 @@ import experts.*;
 import helpers.ActionEntry;
 import helpers.AuctionHelper;
 import helpers.CentralizedPlanning;
+import helpers.Logger;
 import logist.LogistSettings;
 
 //the list of imports
@@ -41,6 +42,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
     private static final boolean VERBOSE = false;
     private static final boolean SHUFFLE = false;
+    public static final boolean LOG = true;
 
     private static final double STARTING_RATIO = 0.5;
     private static final double STARTING_SECURE_FACTOR = 0.75;
@@ -84,6 +86,9 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
     private int nAuctions;
     private HashMap<Task, Double> taskProbabilities;
+
+    private Logger log;
+    private Long sumBidsWon;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -152,6 +157,12 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
         for (int i = 0; i < experts.length; i++) {
             weights[i] = 1.0 / experts.length;
         }
+
+        // Create log file
+        if (LOG) {
+            this.log = new Logger("Log: " + this.getClass().getName());
+            this.sumBidsWon = 0L;
+        }
     }
 
     @Override
@@ -166,6 +177,11 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
             potentialSolution = null;
             potentialCost = -1;
+
+            if (LOG) {
+                sumBidsWon += bids[winner];
+            }
+
         } else {
             currentOpponentSolution = potentialOpponentSolution;
             currentOpponentCost = potentialOpponentCost;
@@ -211,6 +227,11 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
                 }
             }
             currentExpert = max;
+        }
+
+        if (LOG) {
+            double currentReward = sumBidsWon - currentCost;
+            log.logToFile(previous.id, currentReward);
         }
     }
 
@@ -315,7 +336,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
         List<Plan> plans = planCentralized(tasks);
 
-        AuctionHelper.displayPerformance(getClass().toString(), tasks, plans, vehicles);
+        AuctionHelper.displayAndLogPerformance(getClass().toString(), tasks, plans, vehicles, log);
 
         return plans;
     }

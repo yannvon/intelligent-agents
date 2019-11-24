@@ -8,7 +8,17 @@
 		<set class-path="bin/"/>
 		<set class-name="template.AuctionTemplate"/>
 	</agent>
-	
+
+	<agent name="auction-baseline">
+		<set class-path="bin/"/>
+		<set class-name="auction.AuctionBaseline"/>
+	</agent>
+
+	<agent name="auction-randombaseline">
+		<set class-path="bin/"/>
+		<set class-name="auction.AuctionRandomBaseline"/>
+	</agent>
+
 	<agent name="auction-destroyer">
 		<set class-path="bin/"/>
 		<set class-name="template.TemplateDestroyer"/>
@@ -49,12 +59,10 @@
 		<set class-name="auction.AuctionMultiAgents"/>
 	</agent>
 
-	<agent name="auction-multiweight">
+	<agent name="auction-intelligent">
 		<set class-path="bin/"/>
 		<set class-name="auction.AuctionMultiplicativeWeightUpdate"/>
 	</agent>
-
-
 
 
 </agents>

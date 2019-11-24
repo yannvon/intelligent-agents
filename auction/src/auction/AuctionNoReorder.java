@@ -2,6 +2,7 @@ package auction;
 
 //the list of imports
 
+import helpers.Logger;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
@@ -36,6 +37,7 @@ public class AuctionNoReorder implements AuctionBehavior {
 
 	 */
 	public static final boolean VERBOSE = false;
+    public static final boolean LOG = false;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -49,6 +51,9 @@ public class AuctionNoReorder implements AuctionBehavior {
 
     private double potentialCost;
     private ActionEntry[] potentialSolution;
+
+    private Logger log;
+    private Long sumBidsWon;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution,
@@ -71,6 +76,12 @@ public class AuctionNoReorder implements AuctionBehavior {
         for (int i = 0; i < agent.vehicles().size(); i++) {
             currentSolution[i] = new ActionEntry(i);
         }
+
+        // Create log file
+        if (LOG) {
+            this.log = new Logger("Log: " + this.getClass().getName());
+            this.sumBidsWon = 0L;
+        }
     }
 
     @Override
@@ -90,6 +101,11 @@ public class AuctionNoReorder implements AuctionBehavior {
 
             potentialSolution = null;
             potentialCost = -1;
+
+            if (LOG) {
+                sumBidsWon += bids[winner];
+            }
+
         } else {
             // Option 2: Auction was lost
             if (VERBOSE) {
@@ -102,6 +118,10 @@ public class AuctionNoReorder implements AuctionBehavior {
             }
             System.out.println();
             System.out.flush();
+        }
+        if (LOG) {
+            double currentReward = sumBidsWon - currentCost;
+            log.logToFile(previous.id, currentReward);
         }
     }
 
@@ -153,7 +173,7 @@ public class AuctionNoReorder implements AuctionBehavior {
         }
 
         // Display performance
-        AuctionHelper.displayPerformance("NoReorder", tasks, plans, vehicles);
+        AuctionHelper.displayAndLogPerformance("NoReorder", tasks, plans, vehicles, log);
 
         return plans;
     }

@@ -1,5 +1,6 @@
 package auction;
 
+import helpers.Logger;
 import logist.LogistSettings;
 
 //the list of imports
@@ -13,10 +14,8 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -45,6 +44,7 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 
 	 */
 	public static final boolean VERBOSE = false;
+    public static final boolean LOG = false;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -61,6 +61,9 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
     private ActionEntry potentialPickupActionEntry;
     private ActionEntry potentialDeliveryActionEntry;
 	private long timeout_plan;
+
+    private Logger log;
+    private Long sumBidsWon;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution,
@@ -91,7 +94,12 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 			System.out.println("There was a problem loading the configuration file.");
 		}
         timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
-		
+
+        // Create log file
+        if (LOG) {
+            this.log = new Logger("Log: " + this.getClass().getName());
+            this.sumBidsWon = 0L;
+        }
     }
 
     @Override
@@ -111,6 +119,11 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 
             potentialSolution = null;
             potentialCost = -1;
+
+            if (LOG) {
+                sumBidsWon += bids[winner];
+            }
+
         } else {
             // Option 2: Auction was lost
             if (VERBOSE) {
@@ -123,6 +136,10 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
             }
             System.out.println();
             System.out.flush();
+        }
+        if (LOG) {
+            double currentReward = sumBidsWon - currentCost;
+            log.logToFile(previous.id, currentReward);
         }
     }
 
@@ -173,7 +190,7 @@ public class AuctionCentralizedPlanning implements AuctionBehavior {
 
 
         // Display performance
-        AuctionHelper.displayPerformance("NoReorder with centralized planning", tasks, plans, vehicles);
+        AuctionHelper.displayAndLogPerformance("NoReorder with centralized planning", tasks, plans, vehicles, log);
 
         return plans;
     }

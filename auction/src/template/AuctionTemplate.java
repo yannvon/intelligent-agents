@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 import helpers.AuctionHelper;
+import helpers.Logger;
 import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;
@@ -88,7 +89,7 @@ public class AuctionTemplate implements AuctionBehavior {
 
 
 		// Display performance
-		AuctionHelper.displayPerformance("Template provided", tasks, plans, vehicles);
+		// AuctionHelper.displayAndLogPerformance("Template provided", tasks, plans, vehicles);
 
 		return plans;
 	}

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import helpers.AuctionHelper;
+import helpers.Logger;
 import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;
@@ -29,6 +30,7 @@ public class AuctionMultiAgents implements AuctionBehavior {
 	private static final int MAX_TASK_DELIB = 10;
 	
 	private static final boolean VERBOSE = true;
+	public static final boolean LOG = false;
 
 	private Topology topology;
 	private TaskDistribution distribution;

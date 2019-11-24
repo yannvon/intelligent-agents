@@ -1,5 +1,6 @@
 package auction;
 
+import helpers.Logger;
 import logist.LogistSettings;
 
 //the list of imports
@@ -13,10 +14,8 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -45,6 +44,7 @@ public class AuctionReorderCentralized implements AuctionBehavior {
 
 	 */
 	public static final boolean VERBOSE = false;
+    public static final boolean LOG = false;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -63,6 +63,9 @@ public class AuctionReorderCentralized implements AuctionBehavior {
     CentralizedPlanning centralizedPlanning ;
     
     private long timeout_bid,timeout_setup,timeout_plan;
+
+    private Logger log;
+    private Long sumBidsWon;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution,
@@ -105,6 +108,12 @@ public class AuctionReorderCentralized implements AuctionBehavior {
 
         // Setup
         centralizedPlanning.setup(distribution, agent);
+
+        // Create log file
+        if (LOG) {
+            this.log = new Logger("Log: " + this.getClass().getName());
+            this.sumBidsWon = 0L;
+        }
     }
 
     @Override
@@ -124,6 +133,10 @@ public class AuctionReorderCentralized implements AuctionBehavior {
 
             potentialSolution = null;
             potentialCost = -1;
+
+            if (LOG) {
+                sumBidsWon += bids[winner];
+            }
         } else {
             // Option 2: Auction was lost
             if (VERBOSE) {
@@ -136,6 +149,10 @@ public class AuctionReorderCentralized implements AuctionBehavior {
             }
             System.out.println();
             System.out.flush();
+        }
+        if (LOG) {
+            double currentReward = sumBidsWon - currentCost;
+            log.logToFile(previous.id, currentReward);
         }
     }
 
@@ -172,7 +189,7 @@ public class AuctionReorderCentralized implements AuctionBehavior {
         // double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
         // double bid = ratio * marginalCost;
         double bid = marginalCost;
-        bid += random.nextDouble() * 1000;
+        bid += random.nextDouble() * 100;
 
         return (long) Math.round(bid);
     }
@@ -191,7 +208,7 @@ public class AuctionReorderCentralized implements AuctionBehavior {
 
 
         // Display performance
-        AuctionHelper.displayPerformance("NoReorder with centralized planning", tasks, plans, vehicles);
+        AuctionHelper.displayAndLogPerformance("NoReorder with centralized planning", tasks, plans, vehicles, log);
 
         return plans;
     }
@@ -247,7 +264,6 @@ public class AuctionReorderCentralized implements AuctionBehavior {
         // FIXME Effet de bords (not nice)
         potentialSolution = bestPlan;
         potentialCost = lowestTotalCostFound;
-
 
 
         // Debug output

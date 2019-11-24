@@ -2,6 +2,7 @@ package auction;
 
 //the list of imports
 
+import helpers.Logger;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
@@ -10,7 +11,6 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
 import java.util.*;
 
@@ -35,6 +35,7 @@ public class CounterStrat2 implements AuctionBehavior {
 	 * 
 	 */
 	public static final boolean VERBOSE = false;
+	public static final boolean LOG = false;
 
 	private static final double STARTING_RATIO = 0.;
 	private static final double STARTING_SECURE_FACTOR = 0.75;
@@ -67,6 +68,9 @@ public class CounterStrat2 implements AuctionBehavior {
 
 	private boolean maximizingReward = false;
 
+	private Logger log;
+	private Long sumBidsWon;
+
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
@@ -96,6 +100,12 @@ public class CounterStrat2 implements AuctionBehavior {
 		ratio = STARTING_RATIO;
 		opponentRatio = 0;
 		secureFactor = STARTING_SECURE_FACTOR;
+
+		// Create log file
+		if (LOG) {
+			this.log = new Logger("Log: " + this.getClass().getName());
+			this.sumBidsWon = 0L;
+		}
 	}
 
 	@Override
@@ -135,6 +145,9 @@ public class CounterStrat2 implements AuctionBehavior {
 			if (maximizingReward) {
 				secureFactor *= 1.1;
 			}
+			if (LOG) {
+				sumBidsWon += bids[winner];
+			}
 		} else {
 			// Option 2: Auction was lost
 
@@ -164,6 +177,10 @@ public class CounterStrat2 implements AuctionBehavior {
 			}
 			System.out.println();
 			System.out.flush();
+		}
+		if (LOG) {
+			double currentReward = sumBidsWon - currentCost;
+			log.logToFile(previous.id, currentReward);
 		}
 	}
 
@@ -217,7 +234,7 @@ public class CounterStrat2 implements AuctionBehavior {
 
 		List<Plan> plans = planCentralized(tasks);
 
-		AuctionHelper.displayPerformance("Counter2 with centralized planning", tasks, plans, vehicles);
+		AuctionHelper.displayAndLogPerformance("Counter2 with centralized planning", tasks, plans, vehicles, log);
 
 		return plans;
 	}

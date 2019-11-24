@@ -2,6 +2,7 @@ package auction;
 
 //the list of imports
 
+import helpers.Logger;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
@@ -10,7 +11,6 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import logist.topology.Topology.City;
 
 import java.util.*;
 
@@ -35,6 +35,7 @@ public class CounterStrat3 implements AuctionBehavior {
 	 * 
 	 */
 	public static final boolean VERBOSE = false;
+	public static final boolean LOG = false;
 
 	private static final double STARTING_RATIO = 0.5;
 	private static final double STARTING_SECURE_FACTOR = 0.75;
@@ -69,6 +70,9 @@ public class CounterStrat3 implements AuctionBehavior {
 
 	private int nbFails;
 
+	private Logger log;
+	private Long sumBidsWon;
+
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
@@ -99,6 +103,12 @@ public class CounterStrat3 implements AuctionBehavior {
 		opponentRatio = 0;
 		secureFactor = STARTING_SECURE_FACTOR;
 		nbFails = 1;
+
+		// Create log file
+		if (LOG) {
+			this.log = new Logger("Log: " + this.getClass().getName());
+			this.sumBidsWon = 0L;
+		}
 	}
 
 	@Override
@@ -134,6 +144,9 @@ public class CounterStrat3 implements AuctionBehavior {
 			potentialSolution = null;
 			potentialCost = -1;
 
+			if (LOG) {
+				sumBidsWon += bids[winner];
+			}
 			ratio += 0.05;
 			if (maximizingReward) {
 				secureFactor *= (1. + (0.1/nbFails));
@@ -168,6 +181,10 @@ public class CounterStrat3 implements AuctionBehavior {
 			}
 			System.out.println();
 			System.out.flush();
+		}
+		if (LOG) {
+			double currentReward = sumBidsWon - currentCost;
+			log.logToFile(previous.id, currentReward);
 		}
 	}
 
@@ -221,7 +238,7 @@ public class CounterStrat3 implements AuctionBehavior {
 
 		List<Plan> plans = planCentralized(tasks);
 
-		AuctionHelper.displayPerformance("Counter2 with centralized planning", tasks, plans, vehicles);
+		AuctionHelper.displayAndLogPerformance("Counter2 with centralized planning", tasks, plans, vehicles, log);
 
 		return plans;
 	}

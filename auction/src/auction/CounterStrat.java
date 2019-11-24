@@ -2,6 +2,7 @@ package auction;
 
 //the list of imports
 
+import helpers.Logger;
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
@@ -34,6 +35,7 @@ public class CounterStrat implements AuctionBehavior {
 	 * 
 	 */
 	public static final boolean VERBOSE = false;
+	public static final boolean LOG = false;
 
 	private static final double STARTING_RATIO = 0.5;
 	private static final double SECURE_FACTOR = 0.75;
@@ -65,6 +67,9 @@ public class CounterStrat implements AuctionBehavior {
 
 	private boolean maximizingReward = false;
 
+	private Logger log;
+	private Long sumBidsWon;
+
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
@@ -93,6 +98,12 @@ public class CounterStrat implements AuctionBehavior {
 
 		ratio = STARTING_RATIO;
 		opponentRatio = 0;
+
+		// Create log file
+		if (LOG) {
+			this.log = new Logger("Log: " + this.getClass().getName());
+			this.sumBidsWon = 0L;
+		}
 	}
 
 	@Override
@@ -121,6 +132,9 @@ public class CounterStrat implements AuctionBehavior {
 			potentialCost = -1;
 
 			ratio += 0.05;
+			if (LOG) {
+				sumBidsWon += bids[winner];
+			}
 		} else {
 			// Option 2: Auction was lost
 
@@ -147,6 +161,10 @@ public class CounterStrat implements AuctionBehavior {
 			}
 			System.out.println();
 			System.out.flush();
+		}
+		if (LOG) {
+			double currentReward = sumBidsWon - currentCost;
+			log.logToFile(previous.id, currentReward);
 		}
 	}
 
@@ -212,7 +230,7 @@ public class CounterStrat implements AuctionBehavior {
 			reward -= (p.totalDistance() * vehicles.get(0).costPerKm());
 		}
 
-		AuctionHelper.displayPerformance("Counter with centralized planning", tasks, plans, vehicles);
+		AuctionHelper.displayAndLogPerformance("Counter with centralized planning", tasks, plans, vehicles, log);
 
 		return plans;
 	}
