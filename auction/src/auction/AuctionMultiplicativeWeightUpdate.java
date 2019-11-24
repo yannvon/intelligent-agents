@@ -160,7 +160,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
         // Create log file
         if (LOG) {
-            this.log = new Logger("Log: " + this.getClass().getName());
+            this.log = new Logger(this.getClass().getName() + "_log.csv");
             this.sumBidsWon = 0L;
         }
     }
@@ -225,6 +225,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
                 if (weights[max] < weights[eId]) {
                     max = eId;
                 }
+                System.out.println("Task " + previous.id + " Expert" + eId + " weight: " + weights[eId]);
             }
             currentExpert = max;
         }

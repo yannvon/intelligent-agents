@@ -99,7 +99,7 @@ public class AuctionRandomBaseline implements AuctionBehavior {
 
         // Create log file
         if (LOG) {
-            this.log = new Logger("Log: " + this.getClass().getName());
+            this.log = new Logger(this.getClass().getName() + "_log.csv");
             this.sumBidsWon = 0L;
         }
     }
