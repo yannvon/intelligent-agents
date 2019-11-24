@@ -1,0 +1,47 @@
+### auction.xml ###
+      Agents        |  Win - Draw - Lose  |      Counter2       |    MultiAgentNew    |     MultiAgent     
+     Counter2       |      4 - 0 - 0      |          -          |  WIN (7488 : 497)   | WIN (6634 : -2967) 
+   MultiAgentNew    |      1 - 0 - 3      |  LOSE (824 : 3769)  |          -          | WIN (-4513 : -4704)
+    MultiAgent      |      1 - 0 - 3      | LOSE (-5245 : 6604) | WIN (-581 : -1216)  |          -         
+
+First company results
+  # wins   : 4
+  # draws  : 0
+  # losses : 2
+
+
+### auction2.xml ###
+      Agents        |  Win - Draw - Lose  |     MultiAgent      |    MultiAgentNew    |      Counter2      
+    MultiAgent      |      4 - 0 - 0      |          -          | WIN (-1087 : -1167) |  WIN (-289 : -746) 
+   MultiAgentNew    |      2 - 0 - 2      |  LOSE (-233 : 909)  |          -          |  WIN (486 : -441)  
+     Counter2       |      0 - 0 - 4      |  LOSE (-431 : 205)  |  LOSE (573 : 1492)  |          -         
+
+First company results
+  # wins   : 3
+  # draws  : 0
+  # losses : 3
+
+
+### auction3.xml ###
+      Agents        |  Win - Draw - Lose  |     MultiAgent      |    MultiAgentNew    |      Counter2      
+    MultiAgent      |      2 - 0 - 2      |          -          |  WIN (1961 : -686)  | WIN (-386 : -2422) 
+   MultiAgentNew    |      2 - 0 - 2      | WIN (-3125 : -5653) |          -          | WIN (-1428 : -1903)
+     Counter2       |      2 - 0 - 2      |  WIN (7191 : 482)   |  WIN (5395 : 1379)  |          -         
+
+First company results
+  # wins   : 6
+  # draws  : 0
+  # losses : 0
+
+
+### auction4.xml ###
+      Agents        |  Win - Draw - Lose  |      Counter2       |     MultiAgent      |    MultiAgentNew   
+     Counter2       |      4 - 0 - 0      |          -          | WIN (5344 : -4704)  | WIN (5160 : -2032) 
+    MultiAgent      |      1 - 0 - 3      | LOSE (-2890 : 3074) |          -          | WIN (-736 : -1880) 
+   MultiAgentNew    |      1 - 0 - 3      | LOSE (-969 : 2945)  | WIN (-867 : -4704)  |          -         
+
+First company results
+  # wins   : 4
+  # draws  : 0
+  # losses : 2
+

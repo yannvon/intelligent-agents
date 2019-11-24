@@ -12,3 +12,33 @@ First company results
   # draws  : 0
   # losses : 16
 
+
+### auction2.xml ###
+      Agents        |  Win - Draw - Lose  |        Ratio        |     MultiAgent      |      Counter2       |     Counter2_2      |     MinMarginal     |      Template      
+       Ratio        |      9 - 0 - 1      |          -          | WIN (-358 : -1046)  | LOSE (-793 : -749)  |  WIN (184 : -630)   |   WIN (620 : 94)    |    WIN (820 : 0)   
+    MultiAgent      |      6 - 0 - 4      | LOSE (-1264 : -949) |          -          |  WIN (-289 : -746)  | LOSE (-1075 : 271)  | LOSE (-1059 : 246)  |  WIN (3738 : 222)  
+     Counter2       |      5 - 0 - 5      | LOSE (-496 : -155)  |  LOSE (-431 : 259)  |          -          | LOSE (-353 : 1154)  | LOSE (-837 : 2315)  |  WIN (4661 : 250)  
+    Counter2_2      |      5 - 0 - 5      |  LOSE (-316 : 545)  |  LOSE (556 : 581)   |  LOSE (166 : 1097)  |          -          | LOSE (1240 : 1391)  |  WIN (2802 : 250)  
+    MinMarginal     |      5 - 0 - 5      |  LOSE (-337 : 545)  |  LOSE (554 : 598)   |  LOSE (423 : 581)   |  LOSE (893 : 1568)  |          -          |  WIN (3670 : 175)  
+     Template       |     0 - 0 - 10      |   LOSE (0 : 811)    |  LOSE (719 : 3440)  |  LOSE (355 : 2432)  |  LOSE (103 : 2923)  |  LOSE (43 : 3264)   |          -         
+
+First company results
+  # wins   : 9
+  # draws  : 0
+  # losses : 21
+
+
+### auction3.xml ###
+       Agents        |  Win - Draw - Lose   |       Counter2       |      MultiAgent      |     MinMarginal      |      Counter2_2      |        Ratio         |       Template      
+      Counter2       |      9 - 0 - 1       |          -           |   WIN (7145 : 482)   |  WIN (5647 : 2751)   |  WIN (5616 : 2440)   |  WIN (5234 : -1792)  |  WIN (21847 : 1018) 
+     MultiAgent      |      6 - 0 - 4       |  WIN (-386 : -2422)  |          -           |   WIN (2750 : 995)   |  WIN (4527 : 1578)   |  WIN (970 : -2635)   |  WIN (9363 : 2362)  
+    MinMarginal      |      5 - 0 - 5       | LOSE (-1528 : -297)  |  WIN (-207 : -4771)  |          -           |  WIN (6542 : -652)   |  WIN (756 : -1540)   |   WIN (4722 : 473)  
+     Counter2_2      |      5 - 0 - 5       | LOSE (-2600 : -1608) |  WIN (-762 : -3823)  |   WIN (3649 : 575)   |          -           |  WIN (315 : -1176)   |  WIN (10466 : 2362) 
+       Ratio         |      4 - 0 - 6       | LOSE (-2374 : -2354) | WIN (-1964 : -5718)  |    WIN (2486 : 0)    |   WIN (3433 : 10)    |          -           |   WIN (3292 : 611)  
+      Template       |      1 - 0 - 9       |  LOSE (588 : 5990)   |  LOSE (1818 : 2907)  |  LOSE (906 : 2992)   |  LOSE (906 : 4840)   |  WIN (667 : -1254)   |          -          
+
+First company results
+  # wins   : 23
+  # draws  : 0
+  # losses : 7
+
