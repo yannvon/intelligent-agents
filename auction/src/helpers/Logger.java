@@ -10,11 +10,11 @@ import java.io.PrintWriter;
  */
 public class Logger {
 
-    private String fileName;
+    //private String fileName;
     private PrintWriter writer;
 
     public Logger(String fileName) {
-        this.fileName = fileName;
+       // this.fileName = fileName;
 
         try {
             this.writer = new PrintWriter(new File(fileName));

@@ -1,0 +1,51 @@
+### auction.xml ###
+      Agents       | Win - Draw - Lose  |      Adaptive      |    MultiWeight1    |   MultiWeight0.2   |       david       
+     Adaptive      |     6 - 0 - 0      |         -          | WIN (7594 : 1378)  | WIN (8881 : 2277)  | WIN (13477 : 1770)
+   MultiWeight1    |     3 - 0 - 3      | LOSE (924 : 2337)  |         -          |  WIN (797 : 445)   | WIN (2867 : 1391) 
+  MultiWeight0.2   |     3 - 0 - 3      | LOSE (323 : 9451)  |  WIN (1641 : 445)  |         -          | WIN (3949 : 1299) 
+      david        |     0 - 0 - 6      | LOSE (-870 : 2620) | LOSE (5088 : 5254) | LOSE (4113 : 7114) |         -         
+
+First company results
+  # wins   : 7
+  # draws  : 0
+  # losses : 5
+
+
+### auction2.xml ###
+      Agents       | Win - Draw - Lose  |    MultiWeight1    |   MultiWeight0.2   |      Adaptive      |       david       
+   MultiWeight1    |     5 - 0 - 1      |         -          |  WIN (1418 : 954)  |  WIN (203 : 123)   |  WIN (2591 : 66)  
+  MultiWeight0.2   |     3 - 0 - 3      |  LOSE (28 : 1623)  |         -          |  WIN (281 : 199)   | LOSE (748 : 1439) 
+     Adaptive      |     2 - 0 - 4      | WIN (1378 : 1331)  | LOSE (-837 : 1906) |         -          | LOSE (-844 : 662) 
+      david        |     2 - 0 - 4      | LOSE (203 : 2062)  | LOSE (249 : 1956)  | LOSE (-113 : 1945) |         -         
+
+First company results
+  # wins   : 5
+  # draws  : 0
+  # losses : 7
+
+
+### auction4.xml ###
+      Agents       | Win - Draw - Lose  |      Adaptive      |       david        |   MultiWeight0.2   |    MultiWeight1   
+     Adaptive      |     4 - 0 - 2      |         -          |  WIN (5569 : -57)  |   WIN (7552 : 0)   |   WIN (5983 : 0)  
+      david        |     4 - 0 - 2      | WIN (-312 : -2682) |         -          |   WIN (3167 : 0)   |   WIN (2855 : 0)  
+  MultiWeight0.2   |     3 - 0 - 3      |  LOSE (1 : 3000)   |  WIN (665 : -57)   |         -          |   WIN (674 : 0)   
+   MultiWeight1    |     1 - 0 - 5      | WIN (-765 : -2682) | LOSE (-179 : -57)  |  LOSE (-170 : 0)   |         -         
+
+First company results
+  # wins   : 9
+  # draws  : 0
+  # losses : 3
+
+
+### auction5.xml ###
+       Agents         |   Win - Draw - Lose   |     MultiWeight1      |    MultiWeight0.2     |         david         |       Adaptive       
+    MultiWeight1      |       5 - 0 - 1       |           -           |  LOSE (-7154 : -19)   |  WIN (6381 : -2710)   |  WIN (6875 : -4821)  
+   MultiWeight0.2     |       4 - 0 - 2       | LOSE (-11909 : -2309) |           -           |   WIN (7931 : -21)    |   WIN (5244 : -915)  
+        david         |       2 - 0 - 4       |   LOSE (-500 : 718)   |  WIN (-4328 : -7282)  |           -           |  LOSE (3182 : 6531)  
+      Adaptive        |       1 - 0 - 5       |  LOSE (-4821 : 6875)  |  LOSE (1055 : 4609)   |  LOSE (-453 : 5740)   |           -          
+
+First company results
+  # wins   : 5
+  # draws  : 0
+  # losses : 7
+

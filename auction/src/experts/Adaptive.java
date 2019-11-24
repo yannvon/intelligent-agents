@@ -55,15 +55,15 @@ public class Adaptive implements Expert {
 		if (win) {
 			ratio += 0.05;
 			if (maximizingReward) {
-				secureFactor *= 1.1;
+				secureFactor *= 1.05;
 			}
 		} else {
 			// Option 2: Auction was lost
 
-			if (!maximizingReward) {
-				ratio -= 0.15;
+			if (maximizingReward) {
+				secureFactor *= 0.88;
 			} else {
-				secureFactor *= 0.85;
+				ratio -= 0.15;
 			}
 
 		}

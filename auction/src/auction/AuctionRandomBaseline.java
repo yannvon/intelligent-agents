@@ -164,7 +164,7 @@ public class AuctionRandomBaseline implements AuctionBehavior {
          */
         double costWithNewTask = addingTaskCost(task);
         
-        centralizedPlanning.shuffle(vehicles, currentSolution,timeout_bid/4);
+        centralizedPlanning.shuffle(vehicles, currentSolution,timeout_bid);
         
         
         double marginalCost = costWithNewTask - currentCost;

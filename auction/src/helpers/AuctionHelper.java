@@ -1,13 +1,10 @@
 package helpers;
 
+import java.util.List;
+
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.TaskSet;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.util.List;
 
 /**
  * Class that contains helper functions used by all agents implemented.

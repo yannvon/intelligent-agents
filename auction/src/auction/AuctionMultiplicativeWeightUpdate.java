@@ -2,7 +2,7 @@ package auction;
 
 import static helpers.AuctionHelper.cumulativePoissonDistribution;
 import static java.lang.Double.max;
-import static jdk.nashorn.internal.objects.NativeMath.min;
+
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -49,9 +49,10 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
 
     private static final double TAX = 2;
 
-    private static final int PHASE1_END = 5;
+    private static final int PHASE1_END = 4;
     private static final int N_EXPECTED_TASK = 5;
-    private static final double PHASE_1_SAVINGS_FACTOR = 0.2;
+    private static final double PHASE_1_SAVINGS_FACTOR = 1;
+	private static final double LAMDA = 1.0;
 
     private Topology topology;
     private TaskDistribution distribution;
@@ -147,10 +148,10 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
         this.currentExpert = 0;
 
         // --- IMPORTANT : Choose all experts that we think are the best performing ---
-        this.experts = new Expert[]{//new MaxMarginal(),
-                                    new Ratio(1, TAX, 1),
+        this.experts = new Expert[]{new MaxMarginal(),
                                     new RatioCustom(1, TAX, 1, (x, y) -> y ? x * 1.1 : x * 0.8),
-                                    new Adaptive(1, 0.8, 0.9, TAX)};
+                                    new Adaptive(1, 0.8, 0.9, TAX)
+                                    };
 
         this.expertsBids = new Long[experts.length];
         this.weights = new double[experts.length];
@@ -201,25 +202,29 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
             } else {
                 opBid = bids[0];
             }
+            
             double sumW = 0.0;
+            System.out.println("\nTask"+ previous.id+ " marginal: "+ String.format("%8.0f",marginalCost) + " OpBid: "+String.format("%7d",opBid) );
             for (int eId = 0; eId < experts.length; eId++) {
                 boolean expertWin = opBid == null || opBid > expertsBids[eId];
                 experts[eId].update(expertWin, opBid);
 
-                double reward = expertWin ? max(0, expertsBids[eId] - marginalCost) : 0.0;
+                
 
                 double maxRewardPossible = (opBid != null) ? opBid - marginalCost : 2000;
+                
+                double reward = expertWin ? max(0, expertsBids[eId] - marginalCost) : 0.;
 
                 double multiplicativeFactor = 1.0;
 
                 if (maxRewardPossible <= 0.01) {
                     multiplicativeFactor = 1.0;
                 } else {
-                    multiplicativeFactor = (reward / maxRewardPossible) + 1;
+                    multiplicativeFactor = (reward / maxRewardPossible)*LAMDA + 1;
                 }
 
                 weights[eId] *= multiplicativeFactor;
-                System.out.println("Task " + previous.id + " Expert" + eId + " multiplicativeFactor: " + multiplicativeFactor);
+                System.out.println(" Expert " + experts[eId].name() +" Bid: "+String.format("%d", expertsBids[eId])+ " multiplicativeFactor: " + multiplicativeFactor);
                 sumW += weights[eId];
             }
             // Normalize weights and find best performing expert
@@ -229,7 +234,7 @@ public class AuctionMultiplicativeWeightUpdate implements AuctionBehavior {
                 if (weights[max] < weights[eId]) {
                     max = eId;
                 }
-                System.out.println("Task " + previous.id + " Expert" + eId + " weight: " + weights[eId]);
+                System.out.println(" Expert" + experts[eId].name() + " weight: " + weights[eId]);
             }
             currentExpert = max;
         }

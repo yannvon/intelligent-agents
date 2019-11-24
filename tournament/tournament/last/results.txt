@@ -1,0 +1,12 @@
+### auction.xml ###
+      Agents        |  Win - Draw - Lose  |      Counter2       |     MultiWeight     |      Baseline       |     MultiAgent     
+     Counter2       |      6 - 0 - 0      |          -          |  WIN (8881 : 2178)  |  WIN (7776 : 572)   | WIN (6634 : -2967) 
+    MultiWeight     |      4 - 0 - 2      |  LOSE (199 : 9451)  |          -          |  WIN (4124 : 139)   | WIN (-4101 : -4704)
+     Baseline       |      2 - 0 - 4      |  LOSE (18 : 11574)  |  LOSE (103 : 869)   |          -          |  WIN (509 : -2944) 
+    MultiAgent      |      0 - 0 - 6      | LOSE (-5245 : 6604) |   LOSE (-238 : 0)   |  LOSE (-467 : 15)   |          -         
+
+First company results
+  # wins   : 6
+  # draws  : 0
+  # losses : 6
+
