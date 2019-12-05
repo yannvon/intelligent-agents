@@ -1,0 +1,12 @@
+### auction.xml ###
+      Agents        |  Win - Draw - Lose  |      Counter2       |        Main         |     Centralized     |      Template      
+     Counter2       |      6 - 0 - 0      |          -          |  WIN (7488 : 497)   |  WIN (8262 : 1859)  |  WIN (14489 : 657) 
+       Main         |      4 - 0 - 2      |  LOSE (907 : 3769)  |          -          |  WIN (8059 : 1197)  |  WIN (11003 : 473) 
+    Centralized     |      2 - 0 - 4      | LOSE (1936 : 10191) |  LOSE (23 : 12638)  |          -          |  WIN (8184 : 614)  
+     Template       |      0 - 0 - 6      | LOSE (1314 : 7830)  | LOSE (329 : 12745)  | LOSE (1477 : 7414)  |          -         
+
+First company results
+  # wins   : 6
+  # draws  : 0
+  # losses : 6
+

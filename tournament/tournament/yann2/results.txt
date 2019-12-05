@@ -1,0 +1,12 @@
+### auction.xml ###
+     Agents       | Win - Draw - Lose |     Adaptive      |   MultiWeight1    |        dd         |  MultiWeight0.2  
+    Adaptive      |     6 - 0 - 0     |         -         | WIN (7594 : 1378) | WIN (13315 : 638) | WIN (8874 : 2178)
+  MultiWeight1    |     2 - 0 - 4     | LOSE (924 : 1688) |         -         | WIN (2867 : 1391) |  WIN (797 : 445) 
+       dd         |     2 - 0 - 4     | LOSE (681 : 2303) | WIN (4367 : -782) |         -         | WIN (5269 : -362)
+ MultiWeight0.2   |     2 - 0 - 4     | LOSE (199 : 9451) | WIN (1641 : 445)  | WIN (3711 : 1391) |         -        
+
+First company results
+  # wins   : 9
+  # draws  : 0
+  # losses : 3
+

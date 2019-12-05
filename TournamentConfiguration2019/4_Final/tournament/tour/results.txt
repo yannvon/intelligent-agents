@@ -1,0 +1,10 @@
+### auction.xml ###
+      Agents        |  Win - Draw - Lose  |       agent51       |       group46      
+      agent51       |      2 - 0 - 0      |          -          | WIN (29219 : 2577) 
+      group46       |      0 - 0 - 2      | LOSE (9116 : 41552) |          -         
+
+First company results
+  # wins   : 1
+  # draws  : 0
+  # losses : 1
+

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<agents>
+	<!-- An auto-generated list of agents and their behavior classes -->
+	<!--  - jar directory : agents/ -->
+	<!--  - generated on  : Sun Nov 24 21:00:17 CET 2019 -->
+	<agent name="auction-main-46">
+		<set class-path="agents/auction-main-46.jar"/>
+		<set class-name="auction.AuctionMultiplicativeWeightUpdate"/>
+	</agent>
+	<agent name="david">
+		<set class-path="agents/david.jar"/>
+		<set class-name="auction.AuctionWM"/>
+	</agent>
+</agents>
