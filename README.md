@@ -1,10 +1,10 @@
-# Intelligent agents
+# CS-430: Intelligent agents
 
 This repository contains all homework assignments for the 2019 intelligent agents class at EPFL.
 
 All assignments aim to solve the **Pickup and Delivery problem**, a problem where one or more trucking companies try to deliver tasks from one city to another at the lowest possible cost. Each company can have multiple vehicles that have different capacities and different cost per kilometer. Tasks can either have a fixed reward or can be auctioned  to the lowest bidder in the case of competing companies.
 
-<img src="img/swiss_map.png" alt="swiss_map" style="zoom:50%;" />
+<img src="img/swiss_map.png" alt="swiss_map" style="zoom:30%;" />
 
 Concretely the assignments are structured as follows:
 
