@@ -13,6 +13,8 @@ Concretely the assignments are structured as follows:
 3. **Centralized agent** using a Stochastic local search algorithm
 4. **Auctioning agent** that uses SLS, multiplicative weight updates and other heuristics
 
+For each of these assignments a **detailed report** of what we have done can be found in the respective folder.
+
 At the end of the course a tournament between the 32 best teams was held. After a group stage the eight group stage winners advanced to a single elimination tournament.
 
 Our auctioning agent finished *4th* at this competition.
